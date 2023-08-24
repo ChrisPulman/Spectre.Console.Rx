@@ -65,8 +65,6 @@ partial class Build : NukeBuild
         .Executes(() =>
         {
             DotNetRestore(s => s.SetProjectFile(Solution));
-
-            Solution.RestoreSolutionWorkloads();
         });
 
     Target Compile => _ => _
