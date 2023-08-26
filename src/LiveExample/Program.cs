@@ -75,6 +75,6 @@ public static class Program
                 .Update(230, () => table.SimpleHeavyBorder())
 
                 // Caption
-                .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]")));
+                .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]")).IsFinished());
     }
 }

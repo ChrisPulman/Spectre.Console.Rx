@@ -115,7 +115,9 @@ public sealed class Status(IAnsiConsole console)
         return await progress.StartAsync(async ctx =>
         {
             var statusContext = new StatusContext(ctx, ctx.AddTask(status), spinnerColumn);
-            return await func(statusContext).ConfigureAwait(false);
+            var result = await func(statusContext).ConfigureAwait(false);
+            _console.Dispose();
+            return result;
         }).ConfigureAwait(false);
     }
 }

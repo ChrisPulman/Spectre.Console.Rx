@@ -6,7 +6,7 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a console.
 /// </summary>
-public interface IAnsiConsole
+public interface IAnsiConsole : IDisposable
 {
     /// <summary>
     /// Gets the console profile.

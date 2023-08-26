@@ -7,7 +7,7 @@ namespace Spectre.Console.Rx;
 /// A console recorder used to record output from a console.
 /// </summary>
 [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "Only used for scoping")]
-public class Recorder(IAnsiConsole console) : IAnsiConsole, IDisposable
+public class Recorder(IAnsiConsole console) : IAnsiConsole
 {
     private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
     private readonly List<IRenderable> _recorded = new();
@@ -33,6 +33,7 @@ public class Recorder(IAnsiConsole console) : IAnsiConsole, IDisposable
     public void Dispose()
     {
         // Only used for scoping.
+        _console.Dispose();
     }
 
     /// <inheritdoc/>

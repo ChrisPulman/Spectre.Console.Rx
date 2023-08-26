@@ -6,7 +6,7 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents an exclusivity mode.
 /// </summary>
-public interface IExclusivityMode
+public interface IExclusivityMode : IDisposable
 {
     /// <summary>
     /// Runs the specified function in exclusive mode.

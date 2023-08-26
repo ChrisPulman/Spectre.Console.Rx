@@ -16,6 +16,7 @@ public sealed class ProgressContext : IContext
     private readonly IAnsiConsole _console;
     private readonly ProgressRenderer _renderer;
     private int _taskId;
+    private bool _disposedValue;
 
     internal ProgressContext(IAnsiConsole console, ProgressRenderer renderer)
     {
@@ -103,11 +104,34 @@ public sealed class ProgressContext : IContext
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Releases unmanaged and - optionally - managed resources.
+    /// </summary>
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
     internal IReadOnlyList<ProgressTask> GetTasks()
     {
         lock (_taskLock)
         {
             return new List<ProgressTask>(_tasks);
+        }
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _console.Dispose();
+            }
+
+            _disposedValue = true;
         }
     }
 }

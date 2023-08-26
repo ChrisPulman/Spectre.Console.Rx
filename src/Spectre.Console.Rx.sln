@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProgressThreadExample", "Pr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{15A30A6D-9A94-4A7C-A74B-D7A9CB36C216}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CombinedExample", "CombinedExample\CombinedExample.csproj", "{00E6E161-7DD9-49BB-AEDC-FFFD0447368E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{CB209C31-2CD2-4188-A088-18E68DF23788}.Release|Any CPU.Build.0 = Release|Any CPU
 		{15A30A6D-9A94-4A7C-A74B-D7A9CB36C216}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{15A30A6D-9A94-4A7C-A74B-D7A9CB36C216}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00E6E161-7DD9-49BB-AEDC-FFFD0447368E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00E6E161-7DD9-49BB-AEDC-FFFD0447368E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00E6E161-7DD9-49BB-AEDC-FFFD0447368E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00E6E161-7DD9-49BB-AEDC-FFFD0447368E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,6 +67,7 @@ Global
 		{9B8D02EB-C0CB-42B1-B44C-74471D83A8C2} = {E17E245C-D501-46B4-A804-A68241982088}
 		{51ACCE14-F44D-455B-A5E9-AEC71F7C6F61} = {E17E245C-D501-46B4-A804-A68241982088}
 		{CB209C31-2CD2-4188-A088-18E68DF23788} = {E17E245C-D501-46B4-A804-A68241982088}
+		{00E6E161-7DD9-49BB-AEDC-FFFD0447368E} = {E17E245C-D501-46B4-A804-A68241982088}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2FADF055-54C6-4DE5-98D0-D6F352AB1EFA}

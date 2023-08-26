@@ -8,6 +8,7 @@ internal sealed class AnsiConsoleFacade : IAnsiConsole
     private readonly object _renderLock;
     private readonly AnsiConsoleBackend _ansiBackend;
     private readonly LegacyConsoleBackend _legacyBackend;
+    private bool _disposedValue;
 
     public AnsiConsoleFacade(Profile profile, IExclusivityMode exclusivityMode)
     {
@@ -48,6 +49,13 @@ internal sealed class AnsiConsoleFacade : IAnsiConsole
         }
     }
 
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
     private IAnsiConsoleBackend GetBackend()
     {
         if (Profile.Capabilities.Ansi)
@@ -56,5 +64,18 @@ internal sealed class AnsiConsoleFacade : IAnsiConsole
         }
 
         return _legacyBackend;
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                ExclusivityMode.Dispose();
+            }
+
+            _disposedValue = true;
+        }
     }
 }

@@ -11,6 +11,7 @@ public sealed class StatusContext : IContext
     private readonly ProgressContext _context;
     private readonly ProgressTask _task;
     private readonly SpinnerColumn _spinnerColumn;
+    private bool _disposedValue;
 
     internal StatusContext(ProgressContext context, ProgressTask task, SpinnerColumn spinnerColumn)
     {
@@ -18,6 +19,14 @@ public sealed class StatusContext : IContext
         _task = task ?? throw new ArgumentNullException(nameof(task));
         _spinnerColumn = spinnerColumn ?? throw new ArgumentNullException(nameof(spinnerColumn));
     }
+
+    /// <summary>
+    /// Gets a value indicating whether this instance is finished.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if this instance is finished; otherwise, <c>false</c>.
+    /// </value>
+    public bool IsFinished { get; internal set; }
 
     /// <summary>
     /// Gets or sets the current status.
@@ -51,6 +60,16 @@ public sealed class StatusContext : IContext
     /// </summary>
     public void Refresh() => _context.Refresh();
 
+    /// <summary>
+    /// Releases unmanaged and - optionally - managed resources.
+    /// </summary>
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
     private void SetStatus(string status)
     {
         if (status is null)
@@ -69,5 +88,18 @@ public sealed class StatusContext : IContext
         }
 
         _spinnerColumn.Spinner = spinner;
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _context.Dispose();
+            }
+
+            _disposedValue = true;
+        }
     }
 }

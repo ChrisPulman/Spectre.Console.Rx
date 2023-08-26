@@ -110,6 +110,7 @@ public sealed class LiveDisplay(IAnsiConsole console, IRenderable target)
             finally
             {
                 renderer.Completed(AutoClear);
+                _console.Dispose();
             }
         }).ConfigureAwait(false);
     }

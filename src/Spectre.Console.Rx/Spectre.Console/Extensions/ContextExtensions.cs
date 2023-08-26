@@ -68,6 +68,33 @@ public static class ContextExtensions
     }
 
     /// <summary>
+    /// Schedules the specified action.
+    /// </summary>
+    /// <typeparam name="T">The type.</typeparam>
+    /// <param name="context">The context.</param>
+    /// <param name="action">The action.</param>
+    /// <returns>
+    /// A <see cref="Task" /> representing the asynchronous operation.
+    /// </returns>
+    [SuppressMessage("Roslynator", "RCS1175:Unused 'this' parameter.", Justification = "Extension Method")]
+    public static Task<T> Schedule<T>(this IContext context, Func<SpectreConsoleScheduler, Task<T>> action)
+    {
+        var consoleScheduler = new SpectreConsoleScheduler();
+        var lockTillComplete = new SemaphoreSlim(1);
+        lockTillComplete.Wait();
+        T result = default!;
+        consoleScheduler.Schedule(async () =>
+        {
+            result = await action(consoleScheduler);
+            lockTillComplete.Release();
+        });
+
+        lockTillComplete.Wait();
+        lockTillComplete.Dispose();
+        return Task.FromResult(result);
+    }
+
+    /// <summary>
     /// Schedules the specified is complete.
     /// </summary>
     /// <param name="context">The context.</param>
@@ -76,7 +103,7 @@ public static class ContextExtensions
     /// <returns>
     /// A <see cref="Task" /> representing the asynchronous operation.
     /// </returns>
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Not Desired")]
+    [SuppressMessage("Roslynator", "RCS1175:Unused 'this' parameter.", Justification = "Extension Method")]
     public static Task Schedule(this IContext context, Func<bool> isComplete, Action<SpectreConsoleScheduler> action)
     {
         var consoleScheduler = new SpectreConsoleScheduler();

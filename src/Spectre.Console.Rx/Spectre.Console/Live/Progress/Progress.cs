@@ -147,6 +147,7 @@ public sealed class Progress
             finally
             {
                 renderer.Completed(AutoClear);
+                _console.Dispose();
             }
 
             return result;

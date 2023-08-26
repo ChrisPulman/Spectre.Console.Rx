@@ -3,12 +3,11 @@
 
 namespace Spectre.Console.Rx.Internal;
 
-internal sealed class DefaultExclusivityMode : IExclusivityMode, IDisposable
+internal sealed class DefaultExclusivityMode : IExclusivityMode
 {
-    private readonly SemaphoreSlim _semaphore;
-    private bool _disposedValue;
+    private SemaphoreSlim _semaphore;
 
-    public DefaultExclusivityMode() => _semaphore = new SemaphoreSlim(1, 1);
+    public DefaultExclusivityMode() => _semaphore = new(1, 1);
 
     public T Run<T>(Func<T> func)
     {
@@ -60,16 +59,10 @@ internal sealed class DefaultExclusivityMode : IExclusivityMode, IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (!_disposedValue)
+        if (disposing)
         {
-            if (disposing)
-            {
-                _semaphore.Dispose();
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
-            _disposedValue = true;
+            _semaphore.Dispose();
+            _semaphore = new(1, 1);
         }
     }
 }
