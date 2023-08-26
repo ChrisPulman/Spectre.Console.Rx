@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Spectre.Console;
 using Spectre.Console.Rx;
 
 namespace Progress;
@@ -33,28 +32,18 @@ public static class Program
             {
                 ctx.AddTask("Deleting Custom Formats").MaxValue(cfs.Count),
             })
+            .ObserveOn(AnsiConsoleRx.Scheduler)
             .Subscribe(
             ctx =>
             {
                 var rng = new Random();
 
                 cfs.ToObservable()
-                    .Select(x => Observable.FromAsync(async ct =>
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(rng.Next(1, 5)), ct);
-                    }))
+                    .Select(_ => Observable.FromAsync(async ct => await Task.Delay(TimeSpan.FromSeconds(rng.Next(1, 5)), ct), AnsiConsoleRx.Scheduler))
                     .Merge(8)
-                    .Subscribe(_ =>
-                    {
-                        ctx.tasks[0].Increment(1); // Not thread safe; needs to invoke on the thread that subscribed; not sure if this is ObserveOn or SubscribeOn
-                    });
+                    .ObserveOn(SpectreConsoleScheduler.Instance)
+                    .Subscribe(_ => ctx.tasks[0].Increment(1));
             },
-            () =>
-            {
-                // Render a message when the sequence completes
-                AnsiConsole.MarkupLine("[blue]Done![/]");
-            });
-
-        Console.ReadLine();
+            () => AnsiConsole.MarkupLine("[blue]Done![/]")); // Render a message when the sequence completes
     }
 }

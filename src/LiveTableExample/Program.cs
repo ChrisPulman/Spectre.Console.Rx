@@ -3,8 +3,7 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
-using Spectre.Console;
+using System.Reactive.Linq;
 using Spectre.Console.Rx;
 
 namespace LiveTable;
@@ -45,31 +44,31 @@ public static class Program
             p.AutoClear(false)
             .Overflow(VerticalOverflow.Ellipsis)
             .Cropping(VerticalOverflowCropping.Bottom))
-            .Subscribe(async ctx =>
+            .ObserveOn(AnsiConsoleRx.Scheduler)
+            .Do(_ =>
             {
                 // Add some initial rows
                 foreach (var a in Enumerable.Range(0, NumberOfRows))
                 {
                     AddExchangeRateRow(table);
                 }
-
+            })
+            .CombineLatest(Observable.Interval(TimeSpan.FromMilliseconds(400)), (ctx, _) => ctx)
+            .Subscribe(ctx =>
+            {
                 // Continously update the table
-                while (true)
+                // More rows than we want?
+                if (table.Rows.Count > NumberOfRows)
                 {
-                    // More rows than we want?
-                    if (table.Rows.Count > NumberOfRows)
-                    {
-                        // Remove the first one
-                        table.Rows.RemoveAt(0);
-                    }
-
-                    // Add a new row
-                    AddExchangeRateRow(table);
-
-                    // Refresh and wait for a while
-                    ctx.Refresh();
-                    await Task.Delay(400);
+                    // Remove the first one
+                    table.Rows.RemoveAt(0);
                 }
+
+                // Add a new row
+                AddExchangeRateRow(table);
+
+                // Refresh and wait for a while
+                ctx.Refresh();
             });
 
         Console.ReadLine();

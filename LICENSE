@@ -1,5 +1,13 @@
 MIT License
 
+A large portion of this code is based on the work of the following people:
+Copyright (c) 2020 Patrik Svensson, Phil Scott, Nils Andresen
+
+The original code can be found at https://github.com/spectreconsole/spectre.console
+
+The derivitive work is as follows:
+Added support for Reactive Extensions (Rx) with a scheduler to make things work as expected.
+
 Copyright (c) 2023 Chris Pulman
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

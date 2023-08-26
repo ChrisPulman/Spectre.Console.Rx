@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
-using System.Threading;
-using Spectre.Console;
 using Spectre.Console.Rx;
 
 namespace Progress;
@@ -23,7 +21,8 @@ public static class Program
         AnsiConsole.MarkupLine("[yellow]Initializing warp drive[/]...");
 
         // Show progress
-        AnsiConsoleRx.Progress(p => p.AutoClear(false)
+        AnsiConsoleRx.Progress(p =>
+            p.AutoClear(false)
             .Columns(new ProgressColumn[]
             {
                     new TaskDescriptionColumn(),    // Task description
@@ -33,7 +32,7 @@ public static class Program
                     new SpinnerColumn(),            // Spinner
             }))
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .Subscribe(ctx =>
+            .Subscribe(async ctx =>
             {
                 var random = new Random(DateTime.Now.Millisecond);
 
@@ -41,64 +40,56 @@ public static class Program
                 var tasks = CreateTasks(ctx, random);
                 var warpTask = ctx.AddTask("Going to warp", autoStart: false).IsIndeterminate();
 
-                // Wait for all tasks (except the indeterminate one) to complete
-                while (!ctx.IsFinished)
-                {
-                    // Increment progress
-                    foreach (var (task, increment) in tasks)
+                await ctx.Schedule(
+                    TimeSpan.FromMilliseconds(100),
+                    () => ctx.IsFinished,
+                    () =>
                     {
-                        task.Increment(random.NextDouble() * increment);
-                    }
+                        // Increment progress
+                        foreach (var (task, increment) in tasks)
+                        {
+                            task.Increment(random.NextDouble() * increment);
+                        }
 
-                    // Write some random things to the terminal
-                    if (random.NextDouble() < 0.1)
-                    {
-                        WriteLogMessage();
-                    }
-
-                    ctx.Refresh();
-
-                    // Simulate some delay
-                    Thread.Sleep(100);
-                }
+                        // Write some random things to the terminal
+                        if (random.NextDouble() < 0.1)
+                        {
+                            WriteLogMessage();
+                        }
+                    });
 
                 // Now start the "warp" task
-                warpTask.StartTask();
-                warpTask.IsIndeterminate(false);
-                while (!ctx.IsFinished)
-                {
-                    warpTask.Increment(12 * random.NextDouble());
-
-                    // Simulate some delay
-                    Thread.Sleep(100);
-                }
+                warpTask.StartTask().IsIndeterminate(false);
+                await ctx.Schedule(
+                    TimeSpan.FromMilliseconds(100),
+                    () => warpTask.Increment(12 * random.NextDouble()));
 
                 // Done
-                AnsiConsole.MarkupLine("[green]Done![/]");
+                await ctx.Schedule(_ => WriteLogMessage("[green]Done![/]"));
             });
-
-        Console.ReadLine();
     }
 
-    private static List<(ProgressTask Task, int Delay)> CreateTasks(ProgressContext progress, Random random)
+    private static List<(ProgressTask Task, int Delay)> CreateTasks(ProgressContext context, Random random)
     {
         var tasks = new List<(ProgressTask, int)>();
         while (tasks.Count < 5)
         {
             if (DescriptionGenerator.TryGenerate(out var name))
             {
-                tasks.Add((progress.AddTask(name), random.Next(2, 10)));
+                tasks.Add((context.AddTask(name), random.Next(2, 10)));
             }
         }
 
         return tasks;
     }
 
-    private static void WriteLogMessage()
-    {
-        AnsiConsole.MarkupLine(
+    private static void WriteLogMessage() => AnsiConsole.MarkupLine(
             "[grey]LOG:[/] " +
             DescriptionGenerator.Generate() +
             "[grey]...[/]");
-    }
+
+    private static void WriteLogMessage(string message) => AnsiConsole.MarkupLine(
+            "[grey]LOG:[/] " +
+            message +
+            "[grey]...[/]");
 }

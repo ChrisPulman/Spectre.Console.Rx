@@ -3,7 +3,6 @@
 
 using System;
 using System.Reactive.Linq;
-using Spectre.Console;
 using Spectre.Console.Rx;
 
 namespace Live;
@@ -24,7 +23,7 @@ public static class Program
         AnsiConsoleRx.Live(table, ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
             .ObserveOn(AnsiConsoleRx.Scheduler)
             .Subscribe(ctx =>
-            {
+
                 // Columns
                 ctx.Update(230, () => table.AddColumn("Release date"))
                 .Update(230, () => table.AddColumn("Title"))
@@ -76,9 +75,6 @@ public static class Program
                 .Update(230, () => table.SimpleHeavyBorder())
 
                 // Caption
-                .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]"));
-            });
-
-        Console.ReadLine();
+                .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]")).IsFinished());
     }
 }

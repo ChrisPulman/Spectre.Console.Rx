@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Spectre.Console.Rendering;
 
 namespace Spectre.Console.Rx;
 
@@ -15,6 +14,7 @@ public static class AnsiConsoleRx
 {
     private static readonly object _lock = new();
     private static readonly List<ProgressTask> _tasks = new();
+    private static readonly SemaphoreSlim _lockTillComplete = new(1, 1);
 
     /// <summary>
     /// Gets the scheduler.
@@ -22,7 +22,7 @@ public static class AnsiConsoleRx
     /// <value>
     /// The scheduler.
     /// </value>
-    public static IScheduler Scheduler { get; } = new SpectreConsoleScheduler();
+    public static ISpectreConsoleScheduler Scheduler => SpectreConsoleScheduler.Instance;
 
     /// <summary>
     /// Creates a new <see cref="Progress" /> instance.
@@ -31,31 +31,36 @@ public static class AnsiConsoleRx
     /// <returns>
     /// A <see cref="Progress" /> instance.
     /// </returns>
-    public static IObservable<ProgressContext> Progress(Func<Progress, Progress>? addProperties = null) =>
-        Observable.Create<ProgressContext>(observer =>
-            new CompositeDisposable
-                {
-                    Scheduler.Schedule(async () => await AnsiConsole
-                            .Progress()
-                            .AddProgressProperties(addProperties)
-                            .StartAsync(async ctx =>
-                            {
-                                observer.OnNext(ctx);
-                                while (!ctx.IsFinished)
-                                {
-                                    await Task.Yield();
-                                }
+    public static IObservable<ProgressContext> Progress(Func<Progress, Progress>? addProperties = null)
+    {
+        _lockTillComplete.Wait();
+        return Observable.Create<ProgressContext>(async observer =>
+         {
+             await AnsiConsole
+                  .Progress()
+                  .AddProgressProperties(addProperties)
+                  .StartAsync(async ctx =>
+                  {
+                      observer.OnNext(ctx);
+                      while (!ctx.IsFinished)
+                      {
+                          await Task.Yield();
+                      }
 
-                                observer.OnCompleted();
-                            })),
-                    Disposable.Create(() =>
-                    {
-                        lock (_lock)
-                        {
-                            _tasks.Clear();
-                        }
-                    })
-                });
+                      ctx.Dispose();
+                      observer.OnCompleted();
+                      return Task.FromResult(Unit.Default);
+                  });
+
+             return Disposable.Create(() =>
+              {
+                  lock (_lock)
+                  {
+                      _tasks.Clear();
+                  }
+              });
+         }).SubscribeOn(Scheduler).Finally(() => _lockTillComplete.Release());
+    }
 
     /// <summary>
     /// Statuses the specified status.
@@ -63,34 +68,63 @@ public static class AnsiConsoleRx
     /// <param name="status">The status.</param>
     /// <param name="addProperties">The add properties.</param>
     /// <returns>A StatusContext.</returns>
-    public static IObservable<StatusContext> Status(string status, Func<Status, Status>? addProperties = null) =>
-        Observable.Create<StatusContext>(observer =>
-        {
-            var complete = false;
-            return new CompositeDisposable
-                {
-                    Scheduler.Schedule(async () => await AnsiConsole
-                            .Status()
-                            .AddStatusProperties(addProperties)
-                            .StartAsync(status, async ctx =>
-                            {
-                                observer.OnNext(ctx);
-                                while (!complete)
-                                {
-                                    await Task.Yield();
-                                }
+    public static IObservable<StatusContext> Status(string status, Func<Status, Status>? addProperties = null)
+    {
+        _lockTillComplete.Wait();
+        return Observable.Create<StatusContext>(async observer =>
+         {
+             await AnsiConsole
+                 .Status()
+                 .AddStatusProperties(addProperties)
+                 .StartAsync(status, async ctx =>
+                 {
+                     observer.OnNext(ctx);
+                     while (!ctx.IsFinished)
+                     {
+                         await Task.Yield();
+                     }
 
-                                observer.OnCompleted();
-                            })),
-                    Disposable.Create(() =>
+                     ctx.Dispose();
+                     observer.OnCompleted();
+                     return Task.FromResult(Unit.Default);
+                 });
+
+             return Disposable.Empty;
+         }).SubscribeOn(Scheduler).Finally(() => _lockTillComplete.Release());
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="LiveDisplay" /> instance.
+    /// </summary>
+    /// <param name="renderable">The renderable.</param>
+    /// <param name="addProperties">The add properties.</param>
+    /// <returns>
+    /// A <see cref="LiveDisplay" /> instance.
+    /// </returns>
+    public static IObservable<LiveDisplayContext> Live(IRenderable renderable, Func<LiveDisplay, LiveDisplay>? addProperties = null)
+    {
+        _lockTillComplete.Wait();
+        return Observable.Create<LiveDisplayContext>(async observer =>
+        {
+            await AnsiConsole
+                .Live(renderable)
+                .AddLiveDisplayProperties(addProperties)
+                .StartAsync(async ctx =>
+                {
+                    observer.OnNext(ctx);
+                    while (!ctx.IsFinished)
                     {
-                        lock (_lock)
-                        {
-                            _tasks.Clear();
-                        }
-                    })
-                };
-        });
+                        await Task.Yield();
+                    }
+
+                    ctx.Dispose();
+                    observer.OnCompleted();
+                    return Task.FromResult(Unit.Default);
+                });
+
+            return Disposable.Create(() => _lockTillComplete.Release());
+        }).SubscribeOn(Scheduler).Finally(() => _lockTillComplete.Release());
+    }
 
     /// <summary>
     /// Adds the elements of the given collection to the end of this list. If
@@ -109,38 +143,7 @@ public static class AnsiConsoleRx
             }
 
             return (ctx, _tasks.ToArray());
-        });
-
-    /// <summary>
-    /// Creates a new <see cref="LiveDisplay" /> instance.
-    /// </summary>
-    /// <param name="renderable">The renderable.</param>
-    /// <param name="addProperties">The add properties.</param>
-    /// <returns>
-    /// A <see cref="LiveDisplay" /> instance.
-    /// </returns>
-    public static IObservable<LiveDisplayContext> Live(IRenderable renderable, Func<LiveDisplay, LiveDisplay>? addProperties = null) =>
-        Observable.Create<LiveDisplayContext>(observer =>
-        {
-            var complete = false;
-            return new CompositeDisposable
-                {
-                    Scheduler.Schedule(async () =>
-                        await AnsiConsole.Live(renderable)
-                            .AddLiveDisplayProperties(addProperties)
-                            .StartAsync(async ctx =>
-                        {
-                            observer.OnNext(ctx);
-                            while (!complete)
-                            {
-                                await Task.Yield();
-                            }
-
-                            observer.OnCompleted();
-                        })),
-                    Disposable.Create(() => complete = true)
-                };
-        });
+        }).SubscribeOn(Scheduler);
 
     /// <summary>
     /// Updates the specified delay.
@@ -165,6 +168,36 @@ public static class AnsiConsoleRx
         ctx.Refresh();
         Thread.Sleep(delay);
         return ctx;
+    }
+
+    /// <summary>
+    /// Determines whether this instance is finished.
+    /// </summary>
+    /// <param name="ctx">The Live Display Context.</param>
+    /// <exception cref="System.ArgumentNullException">ctx.</exception>
+    public static void IsFinished(this LiveDisplayContext ctx)
+    {
+        if (ctx is null)
+        {
+            throw new ArgumentNullException(nameof(ctx));
+        }
+
+        ctx.IsFinished = true;
+    }
+
+    /// <summary>
+    /// Determines whether this instance is finished.
+    /// </summary>
+    /// <param name="ctx">The Live Display Context.</param>
+    /// <exception cref="System.ArgumentNullException">ctx.</exception>
+    public static void IsFinished(this StatusContext ctx)
+    {
+        if (ctx is null)
+        {
+            throw new ArgumentNullException(nameof(ctx));
+        }
+
+        ctx.IsFinished = true;
     }
 
     private static LiveDisplay AddLiveDisplayProperties(this LiveDisplay liveDisplay, Func<LiveDisplay, LiveDisplay>? addProperties)
