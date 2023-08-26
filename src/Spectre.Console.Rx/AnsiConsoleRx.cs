@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Spectre.Console.Rendering;
 
 namespace Spectre.Console.Rx;
 
@@ -22,7 +20,7 @@ public static class AnsiConsoleRx
     /// <value>
     /// The scheduler.
     /// </value>
-    public static IScheduler Scheduler { get; } = new SpectreConsoleScheduler();
+    public static ISpectreConsoleScheduler Scheduler => SpectreConsoleScheduler.Instance;
 
     /// <summary>
     /// Creates a new <see cref="Progress" /> instance.
@@ -32,30 +30,31 @@ public static class AnsiConsoleRx
     /// A <see cref="Progress" /> instance.
     /// </returns>
     public static IObservable<ProgressContext> Progress(Func<Progress, Progress>? addProperties = null) =>
-        Observable.Create<ProgressContext>(observer =>
-            new CompositeDisposable
-                {
-                    Scheduler.Schedule(async () => await AnsiConsole
-                            .Progress()
-                            .AddProgressProperties(addProperties)
-                            .StartAsync(async ctx =>
-                            {
-                                observer.OnNext(ctx);
-                                while (!ctx.IsFinished)
-                                {
-                                    await Task.Yield();
-                                }
-
-                                observer.OnCompleted();
-                            })),
-                    Disposable.Create(() =>
+        Observable.Create<ProgressContext>(async observer =>
+        {
+               await AnsiConsole
+                    .Progress()
+                    .AddProgressProperties(addProperties)
+                    .StartAsync(async ctx =>
                     {
-                        lock (_lock)
+                        SynchronizationContext.SetSynchronizationContext(Scheduler.SynchronizationContext);
+                        observer.OnNext(ctx);
+                        while (!ctx.IsFinished)
                         {
-                            _tasks.Clear();
+                            await Task.Yield();
                         }
-                    })
+
+                        observer.OnCompleted();
+                    });
+
+               return Disposable.Create(() =>
+                {
+                    lock (_lock)
+                    {
+                        _tasks.Clear();
+                    }
                 });
+           }).SubscribeOn(Scheduler);
 
     /// <summary>
     /// Statuses the specified status.
@@ -64,33 +63,25 @@ public static class AnsiConsoleRx
     /// <param name="addProperties">The add properties.</param>
     /// <returns>A StatusContext.</returns>
     public static IObservable<StatusContext> Status(string status, Func<Status, Status>? addProperties = null) =>
-        Observable.Create<StatusContext>(observer =>
+        Observable.Create<StatusContext>(async observer =>
         {
             var complete = false;
-            return new CompositeDisposable
+            await AnsiConsole
+                .Status()
+                .AddStatusProperties(addProperties)
+                .StartAsync(status, async ctx =>
                 {
-                    Scheduler.Schedule(async () => await AnsiConsole
-                            .Status()
-                            .AddStatusProperties(addProperties)
-                            .StartAsync(status, async ctx =>
-                            {
-                                observer.OnNext(ctx);
-                                while (!complete)
-                                {
-                                    await Task.Yield();
-                                }
-
-                                observer.OnCompleted();
-                            })),
-                    Disposable.Create(() =>
+                    observer.OnNext(ctx);
+                    while (!complete)
                     {
-                        lock (_lock)
-                        {
-                            _tasks.Clear();
-                        }
-                    })
-                };
-        });
+                        await Task.Yield();
+                    }
+
+                    observer.OnCompleted();
+                });
+
+            return Disposable.Create(() => complete = true);
+        }).SubscribeOn(Scheduler);
 
     /// <summary>
     /// Adds the elements of the given collection to the end of this list. If
@@ -109,7 +100,7 @@ public static class AnsiConsoleRx
             }
 
             return (ctx, _tasks.ToArray());
-        });
+        }).SubscribeOn(Scheduler);
 
     /// <summary>
     /// Creates a new <see cref="LiveDisplay" /> instance.
@@ -120,27 +111,25 @@ public static class AnsiConsoleRx
     /// A <see cref="LiveDisplay" /> instance.
     /// </returns>
     public static IObservable<LiveDisplayContext> Live(IRenderable renderable, Func<LiveDisplay, LiveDisplay>? addProperties = null) =>
-        Observable.Create<LiveDisplayContext>(observer =>
+        Observable.Create<LiveDisplayContext>(async observer =>
         {
             var complete = false;
-            return new CompositeDisposable
+            await AnsiConsole
+                .Live(renderable)
+                .AddLiveDisplayProperties(addProperties)
+                .StartAsync(async ctx =>
                 {
-                    Scheduler.Schedule(async () =>
-                        await AnsiConsole.Live(renderable)
-                            .AddLiveDisplayProperties(addProperties)
-                            .StartAsync(async ctx =>
-                        {
-                            observer.OnNext(ctx);
-                            while (!complete)
-                            {
-                                await Task.Yield();
-                            }
+                    observer.OnNext(ctx);
+                    while (!complete)
+                    {
+                        await Task.Yield();
+                    }
 
-                            observer.OnCompleted();
-                        })),
-                    Disposable.Create(() => complete = true)
-                };
-        });
+                    observer.OnCompleted();
+                });
+
+            return Disposable.Create(() => complete = true);
+        }).SubscribeOn(Scheduler);
 
     /// <summary>
     /// Updates the specified delay.
