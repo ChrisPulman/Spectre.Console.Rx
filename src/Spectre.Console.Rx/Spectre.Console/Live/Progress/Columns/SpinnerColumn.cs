@@ -30,7 +30,7 @@ public sealed class SpinnerColumn(Spinner spinner) : ProgressColumn
     }
 
     /// <summary>
-    /// Gets or sets the <see cref="Console.Spinner"/>.
+    /// Gets or sets the <see cref="Rx.Spinner"/>.
     /// </summary>
     public Spinner Spinner
     {

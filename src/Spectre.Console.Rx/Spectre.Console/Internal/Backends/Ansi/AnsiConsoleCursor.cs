@@ -5,11 +5,9 @@ using static Spectre.Console.Rx.AnsiSequences;
 
 namespace Spectre.Console.Rx;
 
-internal sealed class AnsiConsoleCursor : IAnsiConsoleCursor
+internal sealed class AnsiConsoleCursor(AnsiConsoleBackend backend) : IAnsiConsoleCursor
 {
-    private readonly AnsiConsoleBackend _backend;
-
-    public AnsiConsoleCursor(AnsiConsoleBackend backend) => _backend = backend ?? throw new ArgumentNullException(nameof(backend));
+    private readonly AnsiConsoleBackend _backend = backend ?? throw new ArgumentNullException(nameof(backend));
 
     public void Show(bool show)
     {

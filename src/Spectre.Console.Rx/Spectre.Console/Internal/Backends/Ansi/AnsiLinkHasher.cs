@@ -27,12 +27,10 @@ internal sealed class AnsiLinkHasher
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetLinkHashCode(string link)
-    {
+    private static int GetLinkHashCode(string link) =>
 #if NETSTANDARD2_0
-        return link.GetHashCode();
+        link.GetHashCode();
 #else
-        return link.GetHashCode(StringComparison.Ordinal);
+        link.GetHashCode(StringComparison.Ordinal);
 #endif
-    }
 }

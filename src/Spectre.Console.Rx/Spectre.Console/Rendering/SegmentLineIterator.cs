@@ -21,7 +21,7 @@ public sealed class SegmentLineIterator : IEnumerator<Segment>
     {
         if (lines is null)
         {
-            throw new System.ArgumentNullException(nameof(lines));
+            throw new ArgumentNullException(nameof(lines));
         }
 
         _currentLine = 0;

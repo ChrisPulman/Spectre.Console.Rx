@@ -15,7 +15,7 @@ public sealed class Capabilities : IReadOnlyCapabilities
     /// <see cref="Capabilities" /> class.
     /// </summary>
     /// <param name="out">The out.</param>
-    /// <exception cref="System.ArgumentNullException">out.</exception>
+    /// <exception cref="ArgumentNullException">out.</exception>
     internal Capabilities(IAnsiConsoleOutput @out) => _out = @out ?? throw new ArgumentNullException(nameof(@out));
 
     /// <summary>

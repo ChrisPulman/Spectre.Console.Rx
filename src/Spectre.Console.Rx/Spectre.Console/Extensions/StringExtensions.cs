@@ -202,21 +202,17 @@ public static class StringExtensions
         return string.Concat(Enumerable.Repeat(text, count));
     }
 
-    internal static string ReplaceExact(this string text, string oldValue, string? newValue)
-    {
+    internal static string ReplaceExact(this string text, string oldValue, string? newValue) =>
 #if NETSTANDARD2_0
-        return text.Replace(oldValue, newValue);
+        text.Replace(oldValue, newValue);
 #else
-        return text.Replace(oldValue, newValue, StringComparison.Ordinal);
+        text.Replace(oldValue, newValue, StringComparison.Ordinal);
 #endif
-    }
 
-    internal static bool ContainsExact(this string text, string value)
-    {
+    internal static bool ContainsExact(this string text, string value) =>
 #if NETSTANDARD2_0
-        return text.Contains(value);
+        text.Contains(value);
 #else
-        return text.Contains(value, StringComparison.Ordinal);
+        text.Contains(value, StringComparison.Ordinal);
 #endif
-    }
 }

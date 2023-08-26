@@ -13,9 +13,9 @@ public static class ColorExtensions
     /// </summary>
     /// <param name="color">The color.</param>
     /// <returns>A color.</returns>
-    public static Rx.Color GetInvertedColor(this Rx.Color color) =>
+    public static Color GetInvertedColor(this Color color) =>
         GetLuminance(color) < 140 ? Rx.Color.White : Rx.Color.Black;
 
-    private static float GetLuminance(this Rx.Color color) =>
+    private static float GetLuminance(this Color color) =>
         (float)((0.2126 * color.R) + (0.7152 * color.G) + (0.0722 * color.B));
 }

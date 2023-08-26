@@ -5,7 +5,7 @@ namespace Spectre.Console.Rx;
 
 internal sealed class LegacyConsoleBackend(IAnsiConsole console) : IAnsiConsoleBackend
 {
-    private readonly IAnsiConsole _console = console ?? throw new System.ArgumentNullException(nameof(console));
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
     private Style _lastStyle = Style.Plain;
 
     public IAnsiConsoleCursor Cursor { get; } = new LegacyConsoleCursor();

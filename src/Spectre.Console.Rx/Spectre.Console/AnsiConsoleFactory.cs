@@ -69,7 +69,7 @@ public sealed class AnsiConsoleFactory
             settings.ExclusivityMode ?? new DefaultExclusivityMode());
     }
 
-    private static (bool Ansi, bool Legacy) DetectAnsi(AnsiConsoleSettings settings, System.IO.TextWriter buffer)
+    private static (bool Ansi, bool Legacy) DetectAnsi(AnsiConsoleSettings settings, TextWriter buffer)
     {
         var supportsAnsi = settings.Ansi == AnsiSupport.Yes;
         var legacyConsole = false;

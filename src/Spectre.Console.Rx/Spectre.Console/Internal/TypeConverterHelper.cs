@@ -8,12 +8,7 @@ internal static class TypeConverterHelper
     public static string ConvertToString<T>(T input)
     {
         var result = GetTypeConverter<T>().ConvertToInvariantString(input);
-        if (result == null)
-        {
-            throw new InvalidOperationException("Could not convert input to a string");
-        }
-
-        return result;
+        return result ?? throw new InvalidOperationException("Could not convert input to a string");
     }
 
     public static bool TryConvertFromString<T>(string input, [MaybeNull] out T? result)
@@ -36,10 +31,10 @@ internal static class TypeConverterHelper
         {
             if (info == null)
             {
-                return TryConvertFromString<T>(input, out result);
+                return TryConvertFromString(input, out result);
             }
 
-            result = (T?)GetTypeConverter<T>().ConvertFromString(null!, info, input);
+            result = (T?)GetTypeConverter<T>().ConvertFromString(null, info, input);
 
             return true;
         }

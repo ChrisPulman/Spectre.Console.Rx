@@ -75,7 +75,7 @@ internal static class ProfileEnricher
         }
 
         return Environment.GetEnvironmentVariables()
-            .Cast<System.Collections.DictionaryEntry>()
+            .Cast<DictionaryEntry>()
             .Aggregate(
                 new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 (dictionary, entry) =>

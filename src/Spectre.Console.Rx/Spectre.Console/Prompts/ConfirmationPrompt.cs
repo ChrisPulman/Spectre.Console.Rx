@@ -6,15 +6,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// A prompt that is answered with a yes or no.
 /// </summary>
-public sealed class ConfirmationPrompt : IPrompt<bool>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ConfirmationPrompt"/> class.
+/// </remarks>
+/// <param name="prompt">The prompt markup text.</param>
+public sealed class ConfirmationPrompt(string prompt) : IPrompt<bool>
 {
-    private readonly string _prompt;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ConfirmationPrompt"/> class.
-    /// </summary>
-    /// <param name="prompt">The prompt markup text.</param>
-    public ConfirmationPrompt(string prompt) => _prompt = prompt ?? throw new System.ArgumentNullException(nameof(prompt));
+    private readonly string _prompt = prompt ?? throw new ArgumentNullException(nameof(prompt));
 
     /// <summary>
     /// Gets or sets the character that represents "yes".

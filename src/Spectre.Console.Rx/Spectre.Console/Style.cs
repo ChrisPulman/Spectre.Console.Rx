@@ -140,14 +140,12 @@ public sealed class Style(Color? foreground = null, Color? background = null, De
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-        int? GetLinkHashCode()
-        {
+        int? GetLinkHashCode() =>
 #if NETSTANDARD2_0
-            return Link?.GetHashCode();
+            Link?.GetHashCode();
 #else
-            return Link?.GetHashCode(StringComparison.Ordinal);
+            Link?.GetHashCode(StringComparison.Ordinal);
 #endif
-        }
 
         unchecked
         {

@@ -157,7 +157,7 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
 
                     continue;
                 }
-                else if (!TypeConverterHelper.TryConvertFromStringWithCulture<T>(input, Culture, out result) || result == null)
+                else if (!TypeConverterHelper.TryConvertFromStringWithCulture(input, Culture, out result) || result == null)
                 {
                     console.MarkupLine(ValidationErrorMessage);
                     WritePrompt(console);

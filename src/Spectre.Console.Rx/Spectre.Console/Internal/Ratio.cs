@@ -10,10 +10,7 @@ internal static class Ratio
 {
     public static List<int> Resolve(int total, IEnumerable<IRatioResolvable> edges)
     {
-        static (int Div, float Mod) DivMod(float x, float y)
-        {
-            return ((int)(x / y), x % y);
-        }
+        static (int Div, float Mod) DivMod(float x, float y) => ((int)(x / y), x % y);
 
         static int? GetEdgeWidth(IRatioResolvable edge)
         {

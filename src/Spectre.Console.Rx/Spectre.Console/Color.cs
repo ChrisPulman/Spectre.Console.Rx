@@ -178,8 +178,9 @@ public partial struct Color(byte red, byte green, byte blue) : IEquatable<Color>
             B.ToString("X2", CultureInfo.InvariantCulture));
 
     /// <inheritdoc/>
-    public override int GetHashCode()
+    public override readonly int GetHashCode()
     {
+#if NETSTANDARD2_0
         unchecked
         {
             var hash = (int)2166136261;
@@ -188,10 +189,13 @@ public partial struct Color(byte red, byte green, byte blue) : IEquatable<Color>
             hash = (hash * 16777619) ^ B.GetHashCode();
             return hash;
         }
+#else
+        return HashCode.Combine(R, G, B);
+#endif
     }
 
     /// <inheritdoc/>
-    public override bool Equals(object? obj) => obj is Color color && Equals(color);
+    public override readonly bool Equals(object? obj) => obj is Color color && Equals(color);
 
     /// <inheritdoc/>
     public readonly bool Equals(Color other) => (IsDefault && other.IsDefault) ||
@@ -221,7 +225,7 @@ public partial struct Color(byte red, byte green, byte blue) : IEquatable<Color>
     }
 
     /// <inheritdoc/>
-    public override string ToString()
+    public override readonly string ToString()
     {
         if (IsDefault)
         {

@@ -5,7 +5,7 @@ namespace Spectre.Console.Rx;
 
 internal sealed class ListWithCallback<T>(Action callback) : IList<T>, IReadOnlyList<T>
 {
-    private readonly List<T> _list = new List<T>();
+    private readonly List<T> _list = new();
     private readonly Action _callback = callback ?? throw new ArgumentNullException(nameof(callback));
 
     public int Count => _list.Count;

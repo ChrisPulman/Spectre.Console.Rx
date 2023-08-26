@@ -128,7 +128,7 @@ public sealed class ProgressTask : IProgress<double>
     /// Starts the task.
     /// </summary>
     /// <returns>A ProgressTask.</returns>
-    /// <exception cref="System.InvalidOperationException">Stopped tasks cannot be restarted.</exception>
+    /// <exception cref="InvalidOperationException">Stopped tasks cannot be restarted.</exception>
     public ProgressTask StartTask()
     {
         lock (_lock)

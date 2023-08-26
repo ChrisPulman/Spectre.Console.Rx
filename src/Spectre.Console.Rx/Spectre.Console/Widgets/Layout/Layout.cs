@@ -8,9 +8,7 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
 {
-    private LayoutSplitter _splitter;
     private Layout[] _children;
-    private IRenderable _renderable;
     private int _ratio;
     private int _minimumSize;
     private int? _size;
@@ -40,9 +38,9 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
     /// <param name="renderable">The renderable.</param>
     public Layout(string? name = null, IRenderable? renderable = null)
     {
-        _splitter = LayoutSplitter.Null;
+        Splitter = LayoutSplitter.Null;
         _children = Array.Empty<Layout>();
-        _renderable = renderable ?? new LayoutPlaceholder(this);
+        Renderable = renderable ?? new LayoutPlaceholder(this);
         _ratio = 1;
         _size = null;
 
@@ -127,12 +125,12 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
     /// <summary>
     /// Gets the splitter used for this layout.
     /// </summary>
-    internal LayoutSplitter Splitter => _splitter;
+    internal LayoutSplitter Splitter { get; private set; }
 
     /// <summary>
     /// Gets the <see cref="IRenderable"/> associated with this layout.
     /// </summary>
-    internal IRenderable Renderable => _renderable;
+    internal IRenderable Renderable { get; private set; }
 
     /// <summary>
     /// Gets a child layout by it's name.
@@ -202,7 +200,7 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
     /// /// <returns>The same instance so that multiple calls can be chained.</returns>
     public Layout Update(IRenderable renderable)
     {
-        _renderable = renderable ?? new LayoutPlaceholder(this);
+        Renderable = renderable ?? new LayoutPlaceholder(this);
         return this;
     }
 
@@ -213,7 +211,7 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
         var map = MakeRenderMap(options, maxWidth);
 
         var layoutLines = new List<SegmentLine>();
-        layoutLines.AddRange(Enumerable.Range(0, height).Select(x => new SegmentLine()));
+        layoutLines.AddRange(Enumerable.Range(0, height).Select(_ => new SegmentLine()));
 
         foreach (var (region, lines) in map.Values.Select(x => (x.Region, x.Render)))
         {
@@ -253,7 +251,7 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
             throw new InvalidOperationException("Cannot split the same layout twice");
         }
 
-        _splitter = splitter ?? throw new ArgumentNullException(nameof(splitter));
+        Splitter = splitter ?? throw new ArgumentNullException(nameof(splitter));
         _children = layouts ?? throw new ArgumentNullException(nameof(layouts));
     }
 

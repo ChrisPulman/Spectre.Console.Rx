@@ -20,7 +20,7 @@ public static class AlignableExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Alignment = alignment;
@@ -38,7 +38,7 @@ public static class AlignableExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Alignment = Justify.Left;
@@ -56,7 +56,7 @@ public static class AlignableExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Alignment = Justify.Center;
@@ -74,7 +74,7 @@ public static class AlignableExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Alignment = Justify.Right;

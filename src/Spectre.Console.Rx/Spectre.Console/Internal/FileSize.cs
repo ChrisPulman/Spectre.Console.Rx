@@ -3,7 +3,7 @@
 
 namespace Spectre.Console.Rx;
 
-internal struct FileSize
+internal readonly struct FileSize
 {
     public FileSize(double bytes)
     {
@@ -23,7 +23,7 @@ internal struct FileSize
 
     public string Suffix => GetSuffix();
 
-    public string Format(CultureInfo? culture = null)
+    public readonly string Format(CultureInfo? culture = null)
     {
         var @base = GetBase(Unit);
         if (@base == 0)

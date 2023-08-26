@@ -1,6 +1,7 @@
 // Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using Wcwidth;
 
 namespace Spectre.Console.Rx.Rendering;
@@ -300,7 +301,11 @@ public class Segment
             }
             else
             {
+#if NETSTANDARD2_0
                 result.Add(new Segment(segment.Text.Substring(0, maxWidth - 1) + "…", segment.Style));
+#else
+                result.Add(new Segment(string.Concat(segment.Text.AsSpan(0, maxWidth - 1), "…"), segment.Style));
+#endif
             }
         }
 

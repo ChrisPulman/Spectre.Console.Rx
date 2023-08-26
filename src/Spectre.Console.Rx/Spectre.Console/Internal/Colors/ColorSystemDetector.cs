@@ -75,7 +75,7 @@ internal static class ColorSystemDetector
         build = version.Build;
         return true;
 #else
-        var regex = new System.Text.RegularExpressions.Regex("Microsoft Windows (?'major'[0-9]*).(?'minor'[0-9]*).(?'build'[0-9]*)\\s*$");
+        var regex = new Regex("Microsoft Windows (?'major'[0-9]*).(?'minor'[0-9]*).(?'build'[0-9]*)\\s*$");
         var match = regex.Match(RuntimeInformation.OSDescription);
         if (match.Success && int.TryParse(match.Groups["major"].Value, out major))
         {

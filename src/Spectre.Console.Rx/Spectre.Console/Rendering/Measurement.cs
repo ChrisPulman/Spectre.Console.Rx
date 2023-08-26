@@ -11,7 +11,7 @@ namespace Spectre.Console.Rx.Rendering;
 /// </remarks>
 /// <param name="min">The minimum width.</param>
 /// <param name="max">The maximum width.</param>
-public struct Measurement(int min, int max) : IEquatable<Measurement>
+public readonly struct Measurement(int min, int max) : IEquatable<Measurement>
 {
     /// <summary>
     /// Gets the minimum width.

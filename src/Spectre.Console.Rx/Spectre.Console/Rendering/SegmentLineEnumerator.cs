@@ -18,7 +18,7 @@ public sealed class SegmentLineEnumerator : IEnumerable<Segment>
     {
         if (lines is null)
         {
-            throw new System.ArgumentNullException(nameof(lines));
+            throw new ArgumentNullException(nameof(lines));
         }
 
         _lines = new List<SegmentLine>(lines);

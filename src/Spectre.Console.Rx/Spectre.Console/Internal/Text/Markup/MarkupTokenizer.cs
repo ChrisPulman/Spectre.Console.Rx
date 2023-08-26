@@ -5,7 +5,7 @@ namespace Spectre.Console.Rx;
 
 internal sealed class MarkupTokenizer(string text) : IDisposable
 {
-    private readonly StringBuffer _reader = new StringBuffer(text ?? throw new ArgumentNullException(nameof(text)));
+    private readonly StringBuffer _reader = new(text ?? throw new ArgumentNullException(nameof(text)));
 
     public MarkupToken? Current { get; private set; }
 

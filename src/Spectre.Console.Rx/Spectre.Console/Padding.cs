@@ -13,7 +13,7 @@ namespace Spectre.Console.Rx;
 /// <param name="top">The top padding.</param>
 /// <param name="right">The right padding.</param>
 /// <param name="bottom">The bottom padding.</param>
-public struct Padding(int left, int top, int right, int bottom) : IEquatable<Padding>
+public readonly struct Padding(int left, int top, int right, int bottom) : IEquatable<Padding>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Padding"/> struct.

@@ -20,7 +20,7 @@ public static class HasJustificationExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Justification = alignment;
@@ -38,7 +38,7 @@ public static class HasJustificationExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Justification = Rx.Justify.Left;
@@ -56,7 +56,7 @@ public static class HasJustificationExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Justification = Rx.Justify.Center;
@@ -74,7 +74,7 @@ public static class HasJustificationExtensions
     {
         if (obj is null)
         {
-            throw new System.ArgumentNullException(nameof(obj));
+            throw new ArgumentNullException(nameof(obj));
         }
 
         obj.Justification = Rx.Justify.Right;

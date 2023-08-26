@@ -50,6 +50,7 @@ public static class ContextExtensions
     /// <returns>
     /// A <see cref="Task" /> representing the asynchronous operation.
     /// </returns>
+    [SuppressMessage("Roslynator", "RCS1175:Unused 'this' parameter.", Justification = "Extension Method")]
     public static Task Schedule(this IContext context, Action<SpectreConsoleScheduler> action)
     {
         var consoleScheduler = new SpectreConsoleScheduler();

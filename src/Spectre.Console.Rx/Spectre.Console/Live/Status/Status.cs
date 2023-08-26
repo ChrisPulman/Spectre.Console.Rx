@@ -6,15 +6,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a status display.
 /// </summary>
-public sealed class Status
+/// <remarks>
+/// Initializes a new instance of the <see cref="Status"/> class.
+/// </remarks>
+/// <param name="console">The console.</param>
+public sealed class Status(IAnsiConsole console)
 {
-    private readonly IAnsiConsole _console;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Status"/> class.
-    /// </summary>
-    /// <param name="console">The console.</param>
-    public Status(IAnsiConsole console) => _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
 
     /// <summary>
     /// Gets or sets the spinner.

@@ -55,10 +55,10 @@ public sealed class ColorBox(int height) : Renderable
                 var (r1, g1, b1) = ColorFromHSL(h, l, 1.0f);
                 var (r2, g2, b2) = ColorFromHSL(h, l + (0.7f / 10), 1.0f);
 
-                var background = new Rx.Color((byte)(r1 * 255), (byte)(g1 * 255), (byte)(b1 * 255));
-                var foreground = new Rx.Color((byte)(r2 * 255), (byte)(g2 * 255), (byte)(b2 * 255));
+                var background = new Color((byte)(r1 * 255), (byte)(g1 * 255), (byte)(b1 * 255));
+                var foreground = new Color((byte)(r2 * 255), (byte)(g2 * 255), (byte)(b2 * 255));
 
-                yield return new Segment("▄", new Rx.Style(foreground, background));
+                yield return new Segment("▄", new Style(foreground, background));
             }
 
             yield return Segment.LineBreak;
