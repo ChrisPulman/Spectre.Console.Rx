@@ -9,6 +9,8 @@ internal readonly struct SegmentShape(int width, int height)
 
     public int Height { get; } = height;
 
+    [SuppressMessage("Roslynator", "RCS1163:Unused parameter.", Justification = "Deliberate")]
+    [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Deliberate")]
     public static SegmentShape Calculate(RenderOptions options, List<SegmentLine> lines)
     {
         if (lines is null)
@@ -22,10 +24,12 @@ internal readonly struct SegmentShape(int width, int height)
         return new SegmentShape(width, height);
     }
 
-    public SegmentShape Inflate(SegmentShape other) => new(
+    public SegmentShape Inflate(in SegmentShape other) => new(
             Math.Max(Width, other.Width),
             Math.Max(Height, other.Height));
 
+    [SuppressMessage("Roslynator", "RCS1163:Unused parameter.", Justification = "Deliberate")]
+    [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Deliberate")]
     public void Apply(RenderOptions options, ref List<SegmentLine> lines)
     {
         foreach (var line in lines)

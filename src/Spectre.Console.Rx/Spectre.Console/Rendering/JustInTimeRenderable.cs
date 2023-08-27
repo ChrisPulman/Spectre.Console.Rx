@@ -13,10 +13,10 @@ public abstract class JustInTimeRenderable : Renderable
     private IRenderable? _rendered;
 
     /// <inheritdoc/>
-    protected sealed override Measurement Measure(RenderOptions context, int maxWidth) => GetInner().Measure(context, maxWidth);
+    protected sealed override Measurement Measure(RenderOptions options, int maxWidth) => GetInner().Measure(options, maxWidth);
 
     /// <inheritdoc/>
-    protected sealed override IEnumerable<Segment> Render(RenderOptions context, int width) => GetInner().Render(context, width);
+    protected sealed override IEnumerable<Segment> Render(RenderOptions options, int maxWidth) => GetInner().Render(options, maxWidth);
 
     /// <summary>
     /// Builds the inner renderable.

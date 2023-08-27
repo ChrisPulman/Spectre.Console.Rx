@@ -189,6 +189,11 @@ internal static class ExceptionFormatter
         return builder.ToString();
     }
 
+#if NET6_0_OR_GREATER
+    [SuppressMessage("Roslynator", "RCS1130:Bitwise operation on enum without Flags attribute.", Justification = "External lib")]
+#else
+    [SuppressMessage("Roslynator", "RCS1163:Unused parameter.", Justification = "Used for Net 6+")]
+#endif
     private static bool ShowInStackTrace(StackFrame frame)
     {
         // NET 6 has an attribute of StackTraceHiddenAttribute that we can use to clean up the stack trace
@@ -219,7 +224,9 @@ internal static class ExceptionFormatter
         }
 #endif
 
+#pragma warning disable IDE0022 // Use expression body for method
         return true;
+#pragma warning restore IDE0022 // Use expression body for method
     }
 
     private static IEnumerable<StackFrame> FilterStackFrames(this IEnumerable<StackFrame?>? frames)

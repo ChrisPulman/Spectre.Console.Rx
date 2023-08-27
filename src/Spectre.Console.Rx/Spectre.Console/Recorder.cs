@@ -30,11 +30,7 @@ public class Recorder(IAnsiConsole console) : IAnsiConsole
     /// <inheritdoc/>
     [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "Only used for scoping")]
     [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "Only used for scoping")]
-    public void Dispose()
-    {
-        // Only used for scoping.
-        _console.Dispose();
-    }
+    public void Dispose() => _console.Dispose(); // Only used for scoping.
 
     /// <inheritdoc/>
     public void Clear(bool home) => _console.Clear(home);

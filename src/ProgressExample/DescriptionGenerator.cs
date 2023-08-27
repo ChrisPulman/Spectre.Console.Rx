@@ -30,8 +30,7 @@ public static class DescriptionGenerator
     /// <returns>A bool.</returns>
     public static bool TryGenerate(out string name)
     {
-        var iterations = 0;
-        while (iterations < 25)
+        for (var iterations = 0; iterations < 25; iterations++)
         {
             name = Generate();
             if (!_used.Contains(name))
@@ -39,8 +38,6 @@ public static class DescriptionGenerator
                 _used.Add(name);
                 return true;
             }
-
-            iterations++;
         }
 
         name = Generate();
@@ -51,9 +48,8 @@ public static class DescriptionGenerator
     /// Generates this instance.
     /// </summary>
     /// <returns>A string.</returns>
-    public static string Generate()
-    {
-        return _verbs[_random.Next(0, _verbs.Length)]
-            + " " + _nouns[_random.Next(0, _nouns.Length)];
-    }
+    public static string Generate() =>
+        _verbs[_random.Next(0, _verbs.Length)]
+        + " "
+        + _nouns[_random.Next(0, _nouns.Length)];
 }

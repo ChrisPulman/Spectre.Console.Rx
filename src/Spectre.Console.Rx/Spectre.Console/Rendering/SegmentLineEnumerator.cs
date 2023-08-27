@@ -21,7 +21,7 @@ public sealed class SegmentLineEnumerator : IEnumerable<Segment>
             throw new ArgumentNullException(nameof(lines));
         }
 
-        _lines = new List<SegmentLine>(lines);
+        _lines = new(lines);
     }
 
     /// <inheritdoc/>

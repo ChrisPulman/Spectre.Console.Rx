@@ -60,7 +60,7 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
     /// <param name="left">The first <see cref="Padding"/> instance to compare.</param>
     /// <param name="right">The second <see cref="Padding"/> instance to compare.</param>
     /// <returns><c>true</c> if the two instances are equal, otherwise <c>false</c>.</returns>
-    public static bool operator ==(Padding left, Padding right) => left.Equals(right);
+    public static bool operator ==(in Padding left, in Padding right) => left.Equals(right);
 
     /// <summary>
     /// Checks if two <see cref="Padding"/> instances are not equal.
@@ -68,7 +68,7 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
     /// <param name="left">The first <see cref="Padding"/> instance to compare.</param>
     /// <param name="right">The second <see cref="Padding"/> instance to compare.</param>
     /// <returns><c>true</c> if the two instances are not equal, otherwise <c>false</c>.</returns>
-    public static bool operator !=(Padding left, Padding right) => !(left == right);
+    public static bool operator !=(in Padding left, in Padding right) => !(left == right);
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is Padding padding && Equals(padding);
@@ -76,6 +76,7 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
     /// <inheritdoc/>
     public override int GetHashCode()
     {
+#if NETSTANDARD2_0
         unchecked
         {
             var hash = (int)2166136261;
@@ -85,6 +86,11 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
             hash = (hash * 16777619) ^ Bottom.GetHashCode();
             return hash;
         }
+#else
+#pragma warning disable IDE0022 // Use expression body for method
+        return HashCode.Combine(Left, Top, Right, Bottom);
+#pragma warning restore IDE0022 // Use expression body for method
+#endif
     }
 
     /// <inheritdoc/>

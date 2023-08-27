@@ -190,7 +190,9 @@ public partial struct Color(byte red, byte green, byte blue) : IEquatable<Color>
             return hash;
         }
 #else
+#pragma warning disable IDE0022 // Use expression body for method
         return HashCode.Combine(R, G, B);
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 

@@ -29,7 +29,7 @@ public readonly struct Measurement(int min, int max) : IEquatable<Measurement>
     /// <param name="left">The first measurement instance to compare.</param>
     /// <param name="right">The second measurement instance to compare.</param>
     /// <returns><c>true</c> if the two measurements are equal, otherwise <c>false</c>.</returns>
-    public static bool operator ==(Measurement left, Measurement right) => left.Equals(right);
+    public static bool operator ==(in Measurement left, in Measurement right) => left.Equals(right);
 
     /// <summary>
     /// Checks if two <see cref="Measurement"/> instances are not equal.
@@ -37,7 +37,7 @@ public readonly struct Measurement(int min, int max) : IEquatable<Measurement>
     /// <param name="left">The first measurement instance to compare.</param>
     /// <param name="right">The second measurement instance to compare.</param>
     /// <returns><c>true</c> if the two measurements are not equal, otherwise <c>false</c>.</returns>
-    public static bool operator !=(Measurement left, Measurement right) => !(left == right);
+    public static bool operator !=(in Measurement left, in Measurement right) => !(left == right);
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is Measurement measurement && Equals(measurement);
@@ -45,6 +45,7 @@ public readonly struct Measurement(int min, int max) : IEquatable<Measurement>
     /// <inheritdoc/>
     public override int GetHashCode()
     {
+#if NETSTANDARD2_0
         unchecked
         {
             var hash = (int)2166136261;
@@ -52,6 +53,11 @@ public readonly struct Measurement(int min, int max) : IEquatable<Measurement>
             hash = (hash * 16777619) ^ Max.GetHashCode();
             return hash;
         }
+#else
+#pragma warning disable IDE0022 // Use expression body for method
+        return HashCode.Combine(Min, Max);
+#pragma warning restore IDE0022 // Use expression body for method
+#endif
     }
 
     /// <inheritdoc/>

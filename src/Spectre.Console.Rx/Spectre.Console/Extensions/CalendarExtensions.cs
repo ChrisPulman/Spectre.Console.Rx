@@ -14,6 +14,9 @@ public static class CalendarExtensions
     /// <param name="calendar">The calendar to add the calendar event to.</param>
     /// <param name="date">The calendar event date.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
+#if NET6_0_OR_GREATER
+    [SuppressMessage("Roslynator", "RCS1231:Make parameter ref read-only.", Justification = "Netstandard does not support")]
+#endif
     public static Calendar AddCalendarEvent(this Calendar calendar, DateTime date) => AddCalendarEvent(calendar, string.Empty, date.Year, date.Month, date.Day);
 
     /// <summary>
@@ -23,6 +26,9 @@ public static class CalendarExtensions
     /// <param name="description">The calendar event description.</param>
     /// <param name="date">The calendar event date.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
+#if NET6_0_OR_GREATER
+    [SuppressMessage("Roslynator", "RCS1231:Make parameter ref read-only.", Justification = "Netstandard does not support")]
+#endif
     public static Calendar AddCalendarEvent(this Calendar calendar, string description, DateTime date) => AddCalendarEvent(calendar, description, date.Year, date.Month, date.Day);
 
     /// <summary>

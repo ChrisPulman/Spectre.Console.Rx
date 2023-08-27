@@ -102,53 +102,58 @@ public sealed class Canvas : Renderable
             throw new InvalidOperationException("Pixel width must be greater than zero.");
         }
 
-        var pixels = _pixels;
-        var pixel = new string(' ', PixelWidth);
-        var width = Width;
-        var height = Height;
+        return RenderValidation();
 
-        // Got a max width?
-        if (MaxWidth != null)
+        IEnumerable<Segment> RenderValidation()
         {
-            height = (int)(height * ((float)MaxWidth.Value) / Width);
-            width = MaxWidth.Value;
-        }
+            var pixels = _pixels;
+            var pixel = new string(' ', PixelWidth);
+            var width = Width;
+            var height = Height;
 
-        // Exceed the max width when we take pixel width into account?
-        if (width * PixelWidth > maxWidth)
-        {
-            height = (int)(height * (maxWidth / (float)(width * PixelWidth)));
-            width = maxWidth / PixelWidth;
-
-            // If it's not possible to scale the canvas sufficiently, it's too small to render.
-            if (height == 0)
+            // Got a max width?
+            if (MaxWidth != null)
             {
-                yield break;
+                height = (int)(height * ((float)MaxWidth.Value) / Width);
+                width = MaxWidth.Value;
             }
-        }
 
-        // Need to rescale the pixel buffer?
-        if (Scale && (width != Width || height != Height))
-        {
-            pixels = ScaleDown(width, height);
-        }
-
-        for (var y = 0; y < height; y++)
-        {
-            for (var x = 0; x < width; x++)
+            // Exceed the max width when we take pixel width into account?
+            if (width * PixelWidth > maxWidth)
             {
-                var color = pixels[x, y];
-                if (color != null)
+                height = (int)(height * (maxWidth / (float)(width * PixelWidth)));
+                width = maxWidth / PixelWidth;
+
+                // If it's not possible to scale the canvas sufficiently, it's too small to render.
+                if (height == 0)
                 {
-                    yield return new Segment(pixel, new Style(background: color));
-                }
-                else
-                {
-                    yield return new Segment(pixel);
+                    yield break;
                 }
             }
 
-            yield return Segment.LineBreak;
+            // Need to rescale the pixel buffer?
+            if (Scale && (width != Width || height != Height))
+            {
+                pixels = ScaleDown(width, height);
+            }
+
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    var color = pixels[x, y];
+                    if (color != null)
+                    {
+                        yield return new Segment(pixel, new Style(background: color));
+                    }
+                    else
+                    {
+                        yield return new Segment(pixel);
+                    }
+                }
+
+                yield return Segment.LineBreak;
+            }
         }
     }
 
