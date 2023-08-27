@@ -215,13 +215,13 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
 
         foreach (var (region, lines) in map.Values.Select(x => (x.Region, x.Render)))
         {
-            foreach (var line in layoutLines
+            foreach (var (index, line1) in layoutLines
                 .Skip(region.Y)
                 .Take(region.Y + region.Height)
                 .Enumerate().Select(x => (Index: x.Index + region.Y, Line: x.Item))
                 .Zip(lines, (first, second) => (first.Index, Line: second)))
             {
-                layoutLines[line.Index].AddRange(line.Line);
+                layoutLines[index].AddRange(line1);
             }
         }
 

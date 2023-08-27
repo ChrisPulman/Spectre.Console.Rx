@@ -52,6 +52,7 @@ internal sealed class SpectreConsoleMessageQueue<T> : IDisposable
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The received message.</returns>
     /// <exception cref="OperationCanceledException">The operation was cancelled.</exception>
+    [SuppressMessage("Roslynator", "RCS1231:Make parameter ref read-only.", Justification = "Netstandard does not support")]
     public T Receive(CancellationToken cancellationToken)
     {
         _sync.Wait(cancellationToken);

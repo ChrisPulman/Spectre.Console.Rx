@@ -13,7 +13,6 @@ namespace Spectre.Console.Rx;
 public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = null) : IPrompt<List<T>>, IListPromptStrategy<T>
     where T : notnull
 {
-
     /// <summary>
     /// Gets or sets the title.
     /// </summary>
@@ -224,22 +223,22 @@ public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = nul
             grid.AddEmptyRow();
         }
 
-        foreach (var item in items)
+        foreach (var (index, node) in items)
         {
-            var current = item.Index == cursorIndex;
+            var current = index == cursorIndex;
             var style = current ? highlightStyle : Style.Plain;
 
-            var indent = new string(' ', item.Node.Depth * 2);
-            var prompt = item.Index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
+            var indent = new string(' ', node.Depth * 2);
+            var prompt = index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
 
-            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(item.Node.Data) ?? item.Node.Data.ToString() ?? "?";
+            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(node.Data) ?? node.Data.ToString() ?? "?";
             if (current)
             {
                 text = text.RemoveMarkup().EscapeMarkup();
             }
 
-            var checkbox = item.Node.IsSelected
-                ? (item.Node.IsGroup && Mode == SelectionMode.Leaf
+            var checkbox = node.IsSelected
+                ? (node.IsGroup && Mode == SelectionMode.Leaf
                     ? ListPromptConstants.GroupSelectedCheckbox : ListPromptConstants.SelectedCheckbox)
                 : ListPromptConstants.Checkbox;
 

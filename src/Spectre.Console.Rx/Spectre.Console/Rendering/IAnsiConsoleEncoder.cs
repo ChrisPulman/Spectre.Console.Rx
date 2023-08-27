@@ -13,7 +13,7 @@ public interface IAnsiConsoleEncoder
     /// Encodes the specified <see cref="IRenderable"/> enumerator.
     /// </summary>
     /// <param name="console">The console to use when encoding.</param>
-    /// <param name="renderable">The renderable objects to encode.</param>
+    /// <param name="renderables">The renderable objects to encode.</param>
     /// <returns>A string representing the encoded result.</returns>
-    string Encode(IAnsiConsole console, IEnumerable<IRenderable> renderable);
+    string Encode(IAnsiConsole console, IEnumerable<IRenderable> renderables);
 }

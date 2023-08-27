@@ -164,7 +164,7 @@ public class Segment
 
                 line.Add(first);
                 lines.Add(line);
-                line = new SegmentLine();
+                line = new();
 
                 if (second != null)
                 {
@@ -183,7 +183,7 @@ public class Segment
                     if (line.Length != 0 || segment.IsLineBreak)
                     {
                         lines.Add(line);
-                        line = new SegmentLine();
+                        line = new();
                     }
 
                     continue;
@@ -197,7 +197,7 @@ public class Segment
                     {
                         if (parts[0].Length > 0)
                         {
-                            line.Add(new Segment(parts[0], segment.Style));
+                            line.Add(new(parts[0], segment.Style));
                         }
                     }
 
@@ -206,7 +206,7 @@ public class Segment
                         if (line.Length > 0)
                         {
                             lines.Add(line);
-                            line = new SegmentLine();
+                            line = new();
                         }
 
                         text = string.Concat(parts.Skip(1).Take(parts.Length - 1));
@@ -242,7 +242,7 @@ public class Segment
                 var missing = height - lines.Count;
                 for (var i = 0; i < missing; i++)
                 {
-                    lines.Add(new SegmentLine());
+                    lines.Add(new());
                 }
             }
         }
@@ -279,32 +279,32 @@ public class Segment
             var splitted = SplitSegment(segment.Text, maxWidth);
             foreach (var str in splitted)
             {
-                result.Add(new Segment(str, segment.Style));
+                result.Add(new(str, segment.Style));
             }
         }
         else if (overflow == Overflow.Crop)
         {
             if (Math.Max(0, maxWidth - 1) == 0)
             {
-                result.Add(new Segment(string.Empty, segment.Style));
+                result.Add(new(string.Empty, segment.Style));
             }
             else
             {
-                result.Add(new Segment(segment.Text.Substring(0, maxWidth), segment.Style));
+                result.Add(new(segment.Text.Substring(0, maxWidth), segment.Style));
             }
         }
         else if (overflow == Overflow.Ellipsis)
         {
             if (Math.Max(0, maxWidth - 1) == 0)
             {
-                result.Add(new Segment("…", segment.Style));
+                result.Add(new("…", segment.Style));
             }
             else
             {
 #if NETSTANDARD2_0
-                result.Add(new Segment(segment.Text.Substring(0, maxWidth - 1) + "…", segment.Style));
+                result.Add(new(segment.Text.Substring(0, maxWidth - 1) + "…", segment.Style));
 #else
-                result.Add(new Segment(string.Concat(segment.Text.AsSpan(0, maxWidth - 1), "…"), segment.Style));
+                result.Add(new(string.Concat(segment.Text.AsSpan(0, maxWidth - 1), "…"), segment.Style));
 #endif
             }
         }
@@ -387,7 +387,7 @@ public class Segment
             return null;
         }
 
-        return new Segment(builder.ToString(), segment.Style);
+        return new(builder.ToString(), segment.Style);
     }
 
     /// <summary>
@@ -444,8 +444,8 @@ public class Segment
         }
 
         return (
-            new Segment(Text.Substring(0, index), Style),
-            new Segment(Text.Substring(index, Text.Length - index), Style));
+            new(Text.Substring(0, index), Style),
+            new(Text.Substring(index, Text.Length - index), Style));
     }
 
     /// <summary>
@@ -468,7 +468,7 @@ public class Segment
         {
             if (segmentBuilder == null)
             {
-                segmentBuilder = new SegmentBuilder(segment);
+                segmentBuilder = new(segment);
                 continue;
             }
 
@@ -517,7 +517,7 @@ public class Segment
         }
 
         var result = new List<Segment>(segments);
-        result.Add(new Segment("…", result.Last().Style));
+        result.Add(new("…", result.Last().Style));
         return result;
     }
 
@@ -562,7 +562,7 @@ public class Segment
             {
                 while (cell.Count != cellHeight)
                 {
-                    cell.Add(new SegmentLine());
+                    cell.Add(new());
                 }
             }
         }
@@ -578,7 +578,7 @@ public class Segment
             if (width < expectedWidth)
             {
                 var diff = expectedWidth - width;
-                line.Add(new Segment(new string(' ', diff)));
+                line.Add(new(new string(' ', diff)));
             }
         }
 

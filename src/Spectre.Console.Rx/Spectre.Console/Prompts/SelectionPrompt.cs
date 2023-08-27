@@ -150,17 +150,17 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
             grid.AddEmptyRow();
         }
 
-        foreach (var item in items)
+        foreach (var (index, node) in items)
         {
-            var current = item.Index == cursorIndex;
-            var prompt = item.Index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
-            var style = item.Node.IsGroup && Mode == SelectionMode.Leaf
+            var current = index == cursorIndex;
+            var prompt = index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
+            var style = node.IsGroup && Mode == SelectionMode.Leaf
                 ? disabledStyle
                 : current ? highlightStyle : Style.Plain;
 
-            var indent = new string(' ', item.Node.Depth * 2);
+            var indent = new string(' ', node.Depth * 2);
 
-            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(item.Node.Data) ?? item.Node.Data.ToString() ?? "?";
+            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(node.Data) ?? node.Data.ToString() ?? "?";
             if (current)
             {
                 text = text.RemoveMarkup().EscapeMarkup();

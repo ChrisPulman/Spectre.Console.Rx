@@ -26,7 +26,7 @@ public sealed class SegmentLineIterator : IEnumerator<Segment>
 
         _currentLine = 0;
         _currentIndex = -1;
-        _lines = new List<SegmentLine>(lines);
+        _lines = new(lines);
 
         Current = Segment.Empty;
     }

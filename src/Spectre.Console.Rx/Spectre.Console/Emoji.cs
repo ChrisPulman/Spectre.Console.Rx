@@ -49,6 +49,7 @@ public static partial class Emoji
     /// </summary>
     /// <param name="value">A string with emojis codes, e.g. "Hello :smiley:!".</param>
     /// <returns>A string with emoji codes replaced with actual emoji.</returns>
+    [SuppressMessage("Roslynator", "RCS1231:Make parameter ref read-only.", Justification = "Netstandard does not suppport")]
     public static string Replace(ReadOnlySpan<char> value)
     {
         var output = new StringBuilder();
@@ -110,7 +111,7 @@ public static partial class Emoji
         return false;
     }
 
-    private static int IndexOf(this ReadOnlySpan<char> span, char value, int startIndex)
+    private static int IndexOf(this in ReadOnlySpan<char> span, char value, int startIndex)
     {
         var indexInSlice = span.Slice(startIndex).IndexOf(value);
 

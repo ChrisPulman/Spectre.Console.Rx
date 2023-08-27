@@ -9,18 +9,17 @@ internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
 {
     private readonly object _lock = new();
     private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
-    private IRenderable? _renderable;
     private SegmentShape? _shape;
 
     public LiveRenderable(IAnsiConsole console, IRenderable renderable)
-        : this(console) => _renderable = renderable ?? throw new ArgumentNullException(nameof(renderable));
+        : this(console) => Target = renderable ?? throw new ArgumentNullException(nameof(renderable));
 
-    public IRenderable? Target => _renderable;
+    public IRenderable? Target { get; private set; }
 
     public bool DidOverflow { get; private set; }
 
     [MemberNotNullWhen(true, nameof(Target))]
-    public bool HasRenderable => _renderable != null;
+    public bool HasRenderable => Target != null;
 
     public VerticalOverflow Overflow { get; set; } = VerticalOverflow.Ellipsis;
 
@@ -30,7 +29,7 @@ internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
     {
         lock (_lock)
         {
-            _renderable = renderable;
+            Target = renderable;
         }
     }
 
@@ -68,9 +67,9 @@ internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
         {
             DidOverflow = false;
 
-            if (_renderable != null)
+            if (Target != null)
             {
-                var segments = _renderable.Render(options, maxWidth);
+                var segments = Target.Render(options, maxWidth);
                 var lines = Segment.SplitLines(segments);
 
                 var shape = SegmentShape.Calculate(options, lines);

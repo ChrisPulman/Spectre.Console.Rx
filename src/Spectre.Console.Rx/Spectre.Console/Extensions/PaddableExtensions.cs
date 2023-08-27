@@ -111,7 +111,7 @@ public static class PaddableExtensions
     /// <param name="obj">The paddable object instance.</param>
     /// <param name="padding">The padding to apply.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static T Padding<T>(this T obj, Padding padding)
+    public static T Padding<T>(this T obj, in Padding padding)
         where T : class, IPaddable
     {
         if (obj is null)

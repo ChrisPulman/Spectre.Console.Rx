@@ -42,6 +42,7 @@ internal class SpectreConsoleSynchronizationContext : SynchronizationContext, ID
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <exception cref="OperationCanceledException">The operation was canceled.</exception>
+    [SuppressMessage("Roslynator", "RCS1231:Make parameter ref read-only.", Justification = "Netstandard does not support")]
     public void Start(CancellationToken cancellationToken)
     {
         Message msg;
