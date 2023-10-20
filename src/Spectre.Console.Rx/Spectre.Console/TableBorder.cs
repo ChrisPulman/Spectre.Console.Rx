@@ -19,6 +19,11 @@ public abstract partial class TableBorder
     public virtual TableBorder? SafeBorder { get; }
 
     /// <summary>
+    /// Gets a value indicating whether the border supports row separators or not.
+    /// </summary>
+    public virtual bool SupportsRowSeparator { get; } = true;
+
+    /// <summary>
     /// Gets the string representation of a specified table border part.
     /// </summary>
     /// <param name="part">The part to get the character representation for.</param>

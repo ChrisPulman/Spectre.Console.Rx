@@ -36,6 +36,10 @@ public sealed class RoundedTableBorder : TableBorder
         TableBorderPart.FooterBottom => "─",
         TableBorderPart.FooterBottomSeparator => "┴",
         TableBorderPart.FooterBottomRight => "╯",
+        TableBorderPart.RowLeft => "├",
+        TableBorderPart.RowCenter => "─",
+        TableBorderPart.RowSeparator => "┼",
+        TableBorderPart.RowRight => "┤",
         _ => throw new InvalidOperationException("Unknown border part."),
     };
 }

@@ -23,6 +23,11 @@ public sealed class BreakdownChart : Renderable, IHasCulture, IExpandable
     public List<IBreakdownChartItem> Data { get; }
 
     /// <summary>
+    /// Gets or sets the Color in which the values will be shown.
+    /// </summary>
+    public Color ValueColor { get; set; } = Color.Grey;
+
+    /// <summary>
     /// Gets or sets the width of the breakdown chart.
     /// </summary>
     public int? Width { get; set; }
@@ -97,6 +102,7 @@ public sealed class BreakdownChart : Renderable, IHasCulture, IExpandable
                 Culture = Culture,
                 ShowTagValues = ShowTagValues,
                 ValueFormatter = ValueFormatter,
+                ValueColor = ValueColor,
             });
         }
 

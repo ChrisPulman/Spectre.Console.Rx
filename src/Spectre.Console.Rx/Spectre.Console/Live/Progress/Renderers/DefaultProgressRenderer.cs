@@ -3,7 +3,7 @@
 
 namespace Spectre.Console.Rx;
 
-internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<ProgressColumn> columns, TimeSpan refreshRate, bool hideCompleted) : ProgressRenderer
+internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<ProgressColumn> columns, TimeSpan refreshRate, bool hideCompleted, Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> renderHook) : ProgressRenderer
 {
     private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
     private readonly List<ProgressColumn> _columns = columns ?? throw new ArgumentNullException(nameof(columns));
@@ -81,13 +81,20 @@ internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<Progres
             }
 
             // Add rows
-            foreach (var task in context.GetTasks().Where(tsk => !(hideCompleted && tsk.IsFinished)))
+            var tasks = context.GetTasks();
+
+            var layout = new Grid();
+            layout.AddColumn();
+
+            foreach (var task in tasks.Where(tsk => !(hideCompleted && tsk.IsFinished)))
             {
                 var columns = _columns.Select(column => column.Render(renderContext, task, delta));
                 grid.AddRow(columns.ToArray());
             }
 
-            _live.SetRenderable(new Padder(grid, new Padding(0, 1)));
+            layout.AddRow(grid);
+
+            _live.SetRenderable(new Padder(renderHook(layout, tasks), new Padding(0, 1)));
         }
     }
 

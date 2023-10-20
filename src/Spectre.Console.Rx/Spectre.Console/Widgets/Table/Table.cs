@@ -32,6 +32,11 @@ public sealed class Table : Renderable, IHasTableBorder, IExpandable, IAlignable
     /// <inheritdoc/>
     public TableBorder Border { get; set; } = TableBorder.Square;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether or not row separators should be shown.
+    /// </summary>
+    public bool ShowRowSeparators { get; set; }
+
     /// <inheritdoc/>
     public Style? BorderStyle { get; set; }
 

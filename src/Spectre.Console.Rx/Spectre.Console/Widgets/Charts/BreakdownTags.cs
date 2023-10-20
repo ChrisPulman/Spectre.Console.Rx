@@ -9,6 +9,8 @@ internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
 
     public int? Width { get; set; }
 
+    public Color ValueColor { get; set; } = Color.Grey;
+
     public CultureInfo? Culture { get; set; }
 
     public bool ShowTagValues { get; set; } = true;
@@ -55,7 +57,12 @@ internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
 
         if (ShowTagValues)
         {
-            return string.Format(culture, "{0} [grey]{1}[/]", item.Label.EscapeMarkup(), formatter(item.Value, culture));
+            return string.Format(
+                culture,
+                "{0} [{1}]{2}[/]",
+                item.Label.EscapeMarkup(),
+                ValueColor.ToMarkup(),
+                formatter(item.Value, culture));
         }
 
         return item.Label.EscapeMarkup();

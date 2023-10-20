@@ -32,6 +32,8 @@ internal sealed class TableRendererContext : TableAccessor
 
     public bool ShowBorder { get; }
 
+    public bool ShowRowSeparators { get; }
+
     public bool HasRows { get; }
 
     public bool HasFooters { get; }
