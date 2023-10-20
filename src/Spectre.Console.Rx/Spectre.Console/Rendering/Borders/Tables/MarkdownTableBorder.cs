@@ -8,6 +8,9 @@ namespace Spectre.Console.Rx.Rendering;
 /// </summary>
 public sealed class MarkdownTableBorder : TableBorder
 {
+    /// <inheritdoc />
+    public override bool SupportsRowSeparator => false;
+
     /// <inheritdoc/>
     public override string GetPart(TableBorderPart part) => part switch
     {
@@ -33,6 +36,10 @@ public sealed class MarkdownTableBorder : TableBorder
         TableBorderPart.FooterBottom => " ",
         TableBorderPart.FooterBottomSeparator => " ",
         TableBorderPart.FooterBottomRight => " ",
+        TableBorderPart.RowLeft => " ",
+        TableBorderPart.RowCenter => " ",
+        TableBorderPart.RowSeparator => " ",
+        TableBorderPart.RowRight => " ",
         _ => throw new InvalidOperationException("Unknown border part."),
     };
 
@@ -58,7 +65,7 @@ public sealed class MarkdownTableBorder : TableBorder
         {
             var padding = columns[columnIndex].Padding;
 
-            if (padding != null && padding.Value.Left > 0)
+            if (padding?.Left > 0)
             {
                 // Left padding
                 builder.Append(" ".Repeat(padding.Value.Left));
@@ -91,7 +98,7 @@ public sealed class MarkdownTableBorder : TableBorder
             }
 
             // Right padding
-            if (padding != null && padding.Value.Right > 0)
+            if (padding?.Right > 0)
             {
                 builder.Append(" ".Repeat(padding.Value.Right));
             }

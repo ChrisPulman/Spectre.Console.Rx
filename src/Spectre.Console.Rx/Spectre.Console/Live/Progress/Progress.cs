@@ -28,6 +28,11 @@ public sealed class Progress
     }
 
     /// <summary>
+    /// Gets or sets a optional custom render function.
+    /// </summary>
+    public Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> RenderHook { get; set; } = (renderable, _) => renderable;
+
+    /// <summary>
     /// Gets or sets a value indicating whether or not task list should auto refresh.
     /// Defaults to <c>true</c>.
     /// </summary>
@@ -162,7 +167,7 @@ public sealed class Progress
         if (interactive)
         {
             var columns = new List<ProgressColumn>(Columns);
-            return new DefaultProgressRenderer(_console, columns, RefreshRate, HideCompleted);
+            return new DefaultProgressRenderer(_console, columns, RefreshRate, HideCompleted, RenderHook);
         }
 
         return FallbackRenderer ?? new FallbackProgressRenderer();

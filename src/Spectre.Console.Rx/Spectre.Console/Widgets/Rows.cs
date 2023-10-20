@@ -38,8 +38,8 @@ public sealed class Rows(IEnumerable<IRenderable> children) : Renderable, IExpan
         if (measurements.Length > 0)
         {
             return new Measurement(
-                measurements.Min(c => c.Min),
-                measurements.Min(c => c.Max));
+                measurements.Max(c => c.Min),
+                measurements.Max(c => c.Max));
         }
 
         return new Measurement(0, 0);
@@ -57,12 +57,9 @@ public sealed class Rows(IEnumerable<IRenderable> children) : Renderable, IExpan
             {
                 result.Add(segment);
 
-                if (last)
+                if (last && !segment.IsLineBreak && child is not ControlCode)
                 {
-                    if (!segment.IsLineBreak)
-                    {
-                        result.Add(Segment.LineBreak);
-                    }
+                    result.Add(Segment.LineBreak);
                 }
             }
         }
