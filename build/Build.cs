@@ -1,5 +1,4 @@
 using Nuke.Common;
-using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
@@ -11,19 +10,19 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Nuke.Common.Tools.PowerShell;
 using CP.BuildTools;
 
-[GitHubActions(
-    "BuildOnly",
-    GitHubActionsImage.WindowsLatest,
-    OnPushBranchesIgnore = new[] { "main" },
-    FetchDepth = 0,
-    InvokedTargets = new[] { nameof(Compile) })]
-[GitHubActions(
-    "BuildDeploy",
-    GitHubActionsImage.WindowsLatest,
-    OnPushBranches = new[] { "main" },
-    FetchDepth = 0,
-    ImportSecrets = new[] { nameof(NuGetApiKey) },
-    InvokedTargets = new[] { nameof(Compile), nameof(Deploy) })]
+////[GitHubActions(
+////    "BuildOnly",
+////    GitHubActionsImage.WindowsLatest,
+////    OnPushBranchesIgnore = new[] { "main" },
+////    FetchDepth = 0,
+////    InvokedTargets = new[] { nameof(Compile) })]
+////[GitHubActions(
+////    "BuildDeploy",
+////    GitHubActionsImage.WindowsLatest,
+////    OnPushBranches = new[] { "main" },
+////    FetchDepth = 0,
+////    ImportSecrets = new[] { nameof(NuGetApiKey) },
+////    InvokedTargets = new[] { nameof(Compile), nameof(Deploy) })]
 partial class Build : NukeBuild
 {
     public static int Main() => Execute<Build>(x => x.Compile);
@@ -50,7 +49,7 @@ partial class Build : NukeBuild
             }
 
             PackagesDirectory.CreateOrCleanDirectory();
-            await this.InstallDotNetSdk("3.1.x", "5.x.x", "6.x.x", "7.x.x");
+            await this.InstallDotNetSdk("6.x.x", "7.x.x", "8.x.x");
         });
 
     Target Restore => _ => _

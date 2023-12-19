@@ -36,10 +36,10 @@ public sealed class AnsiConsoleOutput(TextWriter writer) : IAnsiConsoleOutput
     }
 
     /// <inheritdoc/>
-    public int Width => ConsoleHelper.GetSafeWidth(Constants.DefaultTerminalWidth);
+    public int Width => ConsoleHelper.GetSafeWidth();
 
     /// <inheritdoc/>
-    public int Height => ConsoleHelper.GetSafeHeight(Constants.DefaultTerminalWidth);
+    public int Height => ConsoleHelper.GetSafeHeight();
 
     /// <inheritdoc/>
     public void SetEncoding(Encoding encoding)
