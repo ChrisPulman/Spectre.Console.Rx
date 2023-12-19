@@ -5,8 +5,8 @@ namespace Spectre.Console.Rx.Enrichment;
 
 internal static class ProfileEnricher
 {
-    private static readonly List<IProfileEnricher> _defaultEnrichers = new()
-    {
+    private static readonly List<IProfileEnricher> _defaultEnrichers =
+    [
             new AppVeyorEnricher(),
             new BambooEnricher(),
             new BitbucketEnricher(),
@@ -20,7 +20,7 @@ internal static class ProfileEnricher
             new TeamCityEnricher(),
             new TfsEnricher(),
             new TravisEnricher(),
-    };
+    ];
 
     public static void Enrich(
         Profile profile,
@@ -67,7 +67,7 @@ internal static class ProfileEnricher
         return enrichers;
     }
 
-    private static IDictionary<string, string> GetEnvironmentVariables(IDictionary<string, string>? variables)
+    private static Dictionary<string, string> GetEnvironmentVariables(IDictionary<string, string>? variables)
     {
         if (variables != null)
         {

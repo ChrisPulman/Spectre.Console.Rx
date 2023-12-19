@@ -40,6 +40,23 @@ public static class ConfirmationPromptExtensions
     public static ConfirmationPrompt HideChoices(this ConfirmationPrompt obj) => ShowChoices(obj, false);
 
     /// <summary>
+    /// Sets the style in which the list of choices is displayed.
+    /// </summary>
+    /// <param name="obj">The confirmation prompt.</param>
+    /// <param name="style">The style to use for displaying the choices or <see langword="null"/> to use the default style (blue).</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ConfirmationPrompt ChoicesStyle(this ConfirmationPrompt obj, Style? style)
+    {
+        if (obj is null)
+        {
+            throw new ArgumentNullException(nameof(obj));
+        }
+
+        obj.ChoicesStyle = style;
+        return obj;
+    }
+
+    /// <summary>
     /// Show or hide the default value.
     /// </summary>
     /// <param name="obj">The prompt.</param>
@@ -69,6 +86,23 @@ public static class ConfirmationPromptExtensions
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static ConfirmationPrompt HideDefaultValue(this ConfirmationPrompt obj) => ShowDefaultValue(obj, false);
+
+    /// <summary>
+    /// Sets the style in which the default value is displayed.
+    /// </summary>
+    /// <param name="obj">The confirmation prompt.</param>
+    /// <param name="style">The default value style or <see langword="null"/> to use the default style (green).</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ConfirmationPrompt DefaultValueStyle(this ConfirmationPrompt obj, Style? style)
+    {
+        if (obj is null)
+        {
+            throw new ArgumentNullException(nameof(obj));
+        }
+
+        obj.DefaultValueStyle = style;
+        return obj;
+    }
 
     /// <summary>
     /// Sets the "invalid choice" message for the prompt.
