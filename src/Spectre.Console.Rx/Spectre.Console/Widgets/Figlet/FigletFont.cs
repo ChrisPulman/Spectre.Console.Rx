@@ -8,7 +8,7 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class FigletFont
 {
-    private const string StandardFont = "Spectre.Console/Widgets/Figlet/Fonts/Standard.flf";
+    private const string StandardFont = "Spectre.Console.Rx/Spectre.Console/Widgets/Figlet/Fonts/Standard.flf";
 
     private static readonly Lazy<FigletFont> _standard;
     private readonly Dictionary<int, FigletCharacter> _characters;
