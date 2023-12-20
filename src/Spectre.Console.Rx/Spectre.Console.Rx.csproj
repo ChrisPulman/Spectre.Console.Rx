@@ -12,6 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Spectre.Console\Widgets\Figlet\Fonts\Standard.flf" />
+    <EmbeddedResource Include="Spectre.Console\Widgets\Figlet\Fonts\Standard.flf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Reactive" Version="6.0.0" />
     <PackageReference Include="Wcwidth.Sources" Version="2.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -19,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="system.memory" Version="4.5.5"/>
+    <PackageReference Include="system.memory" Version="4.5.5" />
     <PackageReference Include="TunnelVisionLabs.ReferenceAssemblyAnnotator" Version="1.0.0-alpha.160" PrivateAssets="all" />
     <PackageDownload Include="Microsoft.NETCore.App.Ref" Version="[$(AnnotatedReferenceAssemblyVersion)]" />
     <PackageReference Include="Nullable" Version="1.3.1">

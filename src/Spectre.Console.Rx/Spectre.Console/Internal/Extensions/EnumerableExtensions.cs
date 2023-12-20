@@ -89,16 +89,21 @@ internal static class EnumerableExtensions
             throw new ArgumentNullException(nameof(source));
         }
 
-        var first = true;
-        var last = !source.MoveNext();
-        T current;
+        return DoEnumeration();
 
-        for (var index = 0; !last; index++)
+        IEnumerable<(int Index, bool First, bool Last, T Item)> DoEnumeration()
         {
-            current = source.Current;
-            last = !source.MoveNext();
-            yield return (index, first, last, current);
-            first = false;
+            var first = true;
+            var last = !source.MoveNext();
+            T current;
+
+            for (var index = 0; !last; index++)
+            {
+                current = source.Current;
+                last = !source.MoveNext();
+                yield return (index, first, last, current);
+                first = false;
+            }
         }
     }
 
