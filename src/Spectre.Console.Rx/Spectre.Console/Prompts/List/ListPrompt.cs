@@ -86,10 +86,10 @@ internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T>
             skip = Math.Max(0, state.Index - middleOfList);
             take = Math.Min(pageSize, state.ItemCount - skip);
 
-            if (state.ItemCount - state.Index < middleOfList)
+            if (take < pageSize)
             {
-                // Pointer should be below the end of the list
-                var diff = middleOfList - (state.ItemCount - state.Index);
+                // Pointer should be below the middle of the (visual) list
+                var diff = pageSize - take;
                 skip -= diff;
                 take += diff;
                 cursorIndex = middleOfList + diff;
