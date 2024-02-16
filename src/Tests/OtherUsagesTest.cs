@@ -6,7 +6,6 @@ namespace Tests;
 /// <summary>
 /// OtherUsagesTest.
 /// </summary>
-[UsesVerify]
 public class OtherUsagesTest
 {
     /// <summary>

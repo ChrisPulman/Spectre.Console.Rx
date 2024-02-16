@@ -6,7 +6,6 @@ namespace Tests;
 /// <summary>
 /// BasicUsagesTest.
 /// </summary>
-[UsesVerify]
 public class BasicUsagesTest
 {
     private static readonly List<Student> _students = StudentsGenerator.GenerateStudents();
