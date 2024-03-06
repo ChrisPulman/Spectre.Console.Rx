@@ -31,12 +31,11 @@ internal static class EnumerableExtensions
     }
 
     public static int IndexOf<T>(this IEnumerable<T> source, T item)
-        where T : class
     {
         var index = 0;
         foreach (var candidate in source)
         {
-            if (candidate == item)
+            if (Equals(candidate, item))
             {
                 return index;
             }
@@ -89,9 +88,9 @@ internal static class EnumerableExtensions
             throw new ArgumentNullException(nameof(source));
         }
 
-        return DoEnumeration();
+        return EnumerateValues();
 
-        IEnumerable<(int Index, bool First, bool Last, T Item)> DoEnumeration()
+        IEnumerable<(int Index, bool First, bool Last, T Item)> EnumerateValues()
         {
             var first = true;
             var last = !source.MoveNext();

@@ -7,12 +7,21 @@ namespace Spectre.Console.Rx;
 /// Represents a multi selection list prompt.
 /// </summary>
 /// <typeparam name="T">The prompt result type.</typeparam>
-/// <remarks>
-/// Initializes a new instance of the <see cref="MultiSelectionPrompt{T}"/> class.
-/// </remarks>
-public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = null) : IPrompt<List<T>>, IListPromptStrategy<T>
+public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrategy<T>
     where T : notnull
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MultiSelectionPrompt{T}"/> class.
+    /// </summary>
+    /// <param name="comparer">
+    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
+    /// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
+    /// </param>
+    public MultiSelectionPrompt(IEqualityComparer<T>? comparer = null)
+    {
+        Tree = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
+    }
+
     /// <summary>
     /// Gets or sets the title.
     /// </summary>
@@ -63,7 +72,7 @@ public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = nul
     /// </summary>
     public SelectionMode Mode { get; set; } = SelectionMode.Leaf;
 
-    internal ListPromptTree<T> Tree { get; } = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
+    internal ListPromptTree<T> Tree { get; }
 
     /// <summary>
     /// Adds a choice.
@@ -85,7 +94,7 @@ public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = nul
     {
         // Create the list prompt
         var prompt = new ListPrompt<T>(console, this);
-        var result = await prompt.Show(Tree, cancellationToken, PageSize, WrapAround).ConfigureAwait(false);
+        var result = await prompt.Show(Tree, Mode, false, false, PageSize, WrapAround, cancellationToken).ConfigureAwait(false);
 
         if (Mode == SelectionMode.Leaf)
         {
@@ -108,7 +117,12 @@ public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = nul
     /// <returns>The parent items, or an empty list, if the given item has no parents.</returns>
     public IEnumerable<T> GetParents(T item)
     {
-        var promptItem = Tree.Find(item) ?? throw new ArgumentOutOfRangeException(nameof(item), "Item not found in tree.");
+        var promptItem = Tree.Find(item);
+        if (promptItem == null)
+        {
+            throw new ArgumentOutOfRangeException(nameof(item), "Item not found in tree.");
+        }
+
         var parents = new List<ListPromptItem<T>>();
         while (promptItem.Parent != null)
         {
@@ -205,7 +219,7 @@ public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = nul
     }
 
     /// <inheritdoc/>
-    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex, IEnumerable<(int Index, ListPromptItem<T> Node)> items)
+    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex, IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText)
     {
         var list = new List<IRenderable>();
         var highlightStyle = HighlightStyle ?? Color.Blue;
@@ -223,22 +237,22 @@ public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = nul
             grid.AddEmptyRow();
         }
 
-        foreach (var (index, node) in items)
+        foreach (var item in items)
         {
-            var current = index == cursorIndex;
+            var current = item.Index == cursorIndex;
             var style = current ? highlightStyle : Style.Plain;
 
-            var indent = new string(' ', node.Depth * 2);
-            var prompt = index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
+            var indent = new string(' ', item.Node.Depth * 2);
+            var prompt = item.Index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
 
-            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(node.Data) ?? node.Data.ToString() ?? "?";
+            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(item.Node.Data) ?? item.Node.Data.ToString() ?? "?";
             if (current)
             {
                 text = text.RemoveMarkup().EscapeMarkup();
             }
 
-            var checkbox = node.IsSelected
-                ? (node.IsGroup && Mode == SelectionMode.Leaf
+            var checkbox = item.Node.IsSelected
+                ? (item.Node.IsGroup && Mode == SelectionMode.Leaf
                     ? ListPromptConstants.GroupSelectedCheckbox : ListPromptConstants.SelectedCheckbox)
                 : ListPromptConstants.Checkbox;
 

@@ -3,17 +3,26 @@
 
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T> strategy)
+internal sealed class ListPrompt<T>
     where T : notnull
 {
-    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
-    private readonly IListPromptStrategy<T> _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
+    private readonly IAnsiConsole _console;
+    private readonly IListPromptStrategy<T> _strategy;
+
+    public ListPrompt(IAnsiConsole console, IListPromptStrategy<T> strategy)
+    {
+        _console = console ?? throw new ArgumentNullException(nameof(console));
+        _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
+    }
 
     public async Task<ListPromptState<T>> Show(
         ListPromptTree<T> tree,
-        CancellationToken cancellationToken,
-        int requestedPageSize = 15,
-        bool wrapAround = false)
+        SelectionMode selectionMode,
+        bool skipUnselectableItems,
+        bool searchEnabled,
+        int requestedPageSize,
+        bool wrapAround,
+        CancellationToken cancellationToken = default)
     {
         if (tree is null)
         {
@@ -35,7 +44,7 @@ internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T>
         }
 
         var nodes = tree.Traverse().ToList();
-        var state = new ListPromptState<T>(nodes, _strategy.CalculatePageSize(_console, nodes.Count, requestedPageSize), wrapAround);
+        var state = new ListPromptState<T>(nodes, _strategy.CalculatePageSize(_console, nodes.Count, requestedPageSize), wrapAround, selectionMode, skipUnselectableItems, searchEnabled);
         var hook = new ListPromptRenderHook<T>(_console, () => BuildRenderable(state));
 
         using (new RenderHookScope(_console, hook))
@@ -45,6 +54,7 @@ internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T>
 
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var rawKey = await _console.Input.ReadKeyAsync(true, cancellationToken).ConfigureAwait(false);
                 if (rawKey == null)
                 {
@@ -58,7 +68,7 @@ internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T>
                     break;
                 }
 
-                if (state.Update(key.Key) || result == ListPromptInputResult.Refresh)
+                if (state.Update(key) || result == ListPromptInputResult.Refresh)
                 {
                     hook.Refresh();
                 }
@@ -107,6 +117,8 @@ internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T>
             scrollable,
             cursorIndex,
             state.Items.Skip(skip).Take(take)
-                .Select((node, index) => (index, node)));
+                .Select((node, index) => (index, node)),
+            state.SkipUnselectableItems,
+            state.SearchText);
     }
 }
