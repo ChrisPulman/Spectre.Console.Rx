@@ -4,9 +4,11 @@
 namespace Spectre.Console.Rx;
 
 /// <summary>
-/// Represents a single list prompt.
+/// SelectionPrompt.
 /// </summary>
-/// <typeparam name="T">The prompt result type.</typeparam>
+/// <typeparam name="T">The type.</typeparam>
+/// <seealso cref="Spectre.Console.Rx.IPrompt&lt;T&gt;" />
+/// <seealso cref="Spectre.Console.Rx.IListPromptStrategy&lt;T&gt;" />
 public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     where T : notnull
 {
@@ -45,6 +47,16 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     public Style? DisabledStyle { get; set; }
 
     /// <summary>
+    /// Gets or sets the style of highlighted search matches.
+    /// </summary>
+    public Style? SearchHighlightStyle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text that will be displayed when no search text has been entered.
+    /// </summary>
+    public string? SearchPlaceholderText { get; set; }
+
+    /// <summary>
     /// Gets or sets the converter to get the display string for a choice. By default
     /// the corresponding <see cref="TypeConverter"/> is used.
     /// </summary>
@@ -60,6 +72,11 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     /// Defaults to <see cref="SelectionMode.Leaf"/>.
     /// </summary>
     public SelectionMode Mode { get; set; } = SelectionMode.Leaf;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not search is enabled.
+    /// </summary>
+    public bool SearchEnabled { get; set; }
 
     /// <summary>
     /// Adds a choice.
@@ -81,7 +98,7 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     {
         // Create the list prompt
         var prompt = new ListPrompt<T>(console, this);
-        var result = await prompt.Show(_tree, cancellationToken, PageSize, WrapAround).ConfigureAwait(false);
+        var result = await prompt.Show(_tree, Mode, true, SearchEnabled, PageSize, WrapAround, cancellationToken).ConfigureAwait(false);
 
         // Return the selected item
         return result.Items[result.Index].Data;
@@ -115,11 +132,20 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
             extra += 2;
         }
 
-        // Scrolling?
-        if (totalItemCount > requestedPageSize)
+        var scrollable = totalItemCount > requestedPageSize;
+        if (SearchEnabled || scrollable)
         {
-            // The scrolling instructions takes up two rows
-            extra += 2;
+            extra++;
+        }
+
+        if (SearchEnabled)
+        {
+            extra++;
+        }
+
+        if (scrollable)
+        {
+            extra++;
         }
 
         if (requestedPageSize > console.Profile.Height - extra)
@@ -131,11 +157,12 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     }
 
     /// <inheritdoc/>
-    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex, IEnumerable<(int Index, ListPromptItem<T> Node)> items)
+    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex, IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText)
     {
         var list = new List<IRenderable>();
         var disabledStyle = DisabledStyle ?? Color.Grey;
         var highlightStyle = HighlightStyle ?? Color.Blue;
+        var searchHighlightStyle = SearchHighlightStyle ?? new Style(foreground: Color.Default, background: Color.Yellow, Decoration.Bold);
 
         if (Title != null)
         {
@@ -150,20 +177,25 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
             grid.AddEmptyRow();
         }
 
-        foreach (var (index, node) in items)
+        foreach (var item in items)
         {
-            var current = index == cursorIndex;
-            var prompt = index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
-            var style = node.IsGroup && Mode == SelectionMode.Leaf
+            var current = item.Index == cursorIndex;
+            var prompt = item.Index == cursorIndex ? ListPromptConstants.Arrow : new string(' ', ListPromptConstants.Arrow.Length);
+            var style = item.Node.IsGroup && Mode == SelectionMode.Leaf
                 ? disabledStyle
                 : current ? highlightStyle : Style.Plain;
 
-            var indent = new string(' ', node.Depth * 2);
+            var indent = new string(' ', item.Node.Depth * 2);
 
-            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(node.Data) ?? node.Data.ToString() ?? "?";
+            var text = (Converter ?? TypeConverterHelper.ConvertToString)?.Invoke(item.Node.Data) ?? item.Node.Data.ToString() ?? "?";
             if (current)
             {
                 text = text.RemoveMarkup().EscapeMarkup();
+            }
+
+            if (searchText.Length > 0 && !(item.Node.IsGroup && Mode == SelectionMode.Leaf))
+            {
+                text = text.Highlight(searchText, searchHighlightStyle);
             }
 
             grid.AddRow(new Markup(indent + prompt + " " + text, style));
@@ -171,10 +203,21 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
 
         list.Add(grid);
 
+        if (SearchEnabled || scrollable)
+        {
+            // Add padding
+            list.Add(Text.Empty);
+        }
+
+        if (SearchEnabled)
+        {
+            list.Add(new Markup(
+                searchText.Length > 0 ? searchText.EscapeMarkup() : SearchPlaceholderText ?? ListPromptConstants.SearchPlaceholderMarkup));
+        }
+
         if (scrollable)
         {
             // (Move up and down to reveal more choices)
-            list.Add(Text.Empty);
             list.Add(new Markup(MoreChoicesText ?? ListPromptConstants.MoreChoicesMarkup));
         }
 
