@@ -35,7 +35,7 @@ internal static class Ratio
                 .ToList();
 
             // Get the remaining space
-            var remaining = total - sizes.Select(size => size ?? 0).Sum();
+            var remaining = total - sizes.Sum(size => size ?? 0);
             if (remaining <= 0)
             {
                 // No more room for flexible edges.

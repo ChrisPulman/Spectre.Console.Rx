@@ -31,7 +31,7 @@ internal sealed class TableMeasurer(Table table, RenderOptions options) : TableA
         var hideBorder = !_border.Visible;
         var separators = hideBorder ? 0 : Columns.Count - 1;
         var edges = hideBorder ? 0 : EdgeCount;
-        var padding = Columns.Select(x => x.Padding?.GetWidth() ?? 0).Sum();
+        var padding = Columns.Sum(x => x.Padding?.GetWidth() ?? 0);
 
         if (!_padRightCell)
         {
