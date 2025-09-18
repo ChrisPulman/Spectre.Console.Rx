@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="6.0.1" />
+    <PackageReference Include="System.Reactive" Version="6.0.2" />
     <PackageReference Include="Wcwidth.Sources" Version="2.0.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
