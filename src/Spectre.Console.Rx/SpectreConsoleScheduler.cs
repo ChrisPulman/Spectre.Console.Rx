@@ -3,6 +3,7 @@
 
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
+using System.Runtime.ExceptionServices;
 
 namespace Spectre.Console.Rx;
 
@@ -14,6 +15,7 @@ namespace Spectre.Console.Rx;
 public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
 {
     private static readonly SpectreConsoleSynchronizationContext _synchronizationContext = new();
+    private readonly Thread _thread;
     private bool _disposedValue;
 
     /// <summary>
@@ -21,14 +23,18 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
     /// </summary>
     public SpectreConsoleScheduler()
     {
-        var thread = new Thread(() =>
+        _thread = new Thread(() =>
         {
             SynchronizationContext.SetSynchronizationContext(_synchronizationContext);
-            _synchronizationContext.Post(() => ThreadId = Environment.CurrentManagedThreadId);
+            ThreadId = Environment.CurrentManagedThreadId;
             Start();
-        });
+        })
+        {
+            IsBackground = true,
+            Name = "SpectreConsoleScheduler"
+        };
 
-        thread.Start();
+        _thread.Start();
     }
 
     /// <summary>
@@ -108,13 +114,9 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
             throw new ArgumentNullException(nameof(action));
         }
 
-        var lockTillComplete = new SemaphoreSlim(1);
         var d = new SingleAssignmentDisposable();
 
-        // Ensure we only process a Single Action at a time.
-        lockTillComplete.Wait();
-
-        // If we're already on the right thread, just run the action.
+        // If we're already on the scheduler thread, just run the action.
         if (Environment.CurrentManagedThreadId == ThreadId)
         {
             if (!d.IsDisposed)
@@ -122,24 +124,39 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
                 d.Disposable = action(this, state);
             }
 
-            lockTillComplete.Release();
             return d;
         }
 
-        // If we're not on the right thread, post the action to the thread.
-        _synchronizationContext?.PostWithStartComplete(() =>
-        {
-            if (!d.IsDisposed)
-            {
-                d.Disposable = action(this, state);
-            }
+        // Execute on the scheduler thread and wait until completion to preserve current semantics.
+        var finished = new ManualResetEventSlim(false);
+        ExceptionDispatchInfo? edi = null;
 
-            lockTillComplete.Release();
+        _synchronizationContext.Post(() =>
+        {
+            try
+            {
+                if (!d.IsDisposed)
+                {
+                    d.Disposable = action(this, state);
+                }
+            }
+            catch (Exception ex)
+            {
+                edi = ExceptionDispatchInfo.Capture(ex);
+            }
+            finally
+            {
+                finished.Set();
+            }
         });
 
-        // Wait for the thread to finish.
-        lockTillComplete.Wait();
-        lockTillComplete.Dispose();
+        // Wait for the scheduled work to finish on the scheduler thread.
+        finished.Wait();
+        finished.Dispose();
+
+        // Re-throw any exception that occurred on the scheduler thread to the caller.
+        edi?.Throw();
+
         return d;
     }
 
@@ -191,6 +208,19 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
             {
                 Stop();
                 _synchronizationContext.Dispose();
+
+                // Ensure the scheduler thread exits cleanly if it's still running.
+                if (_thread.IsAlive)
+                {
+                    try
+                    {
+                        _thread.Join(TimeSpan.FromSeconds(5));
+                    }
+                    catch
+                    {
+                        // Swallow any join exceptions; we're disposing.
+                    }
+                }
             }
 
             _disposedValue = true;
