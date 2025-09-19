@@ -35,7 +35,7 @@ public sealed class MainViewModel : ReactiveObject, IRoutableViewModel
         Exit = ReactiveCommand.Create(() =>
         {
             // Exit app by clearing the router and not pushing any more screens.
-            // Consumers can observe this command to stop rendering.
+            HostScreen.Router.NavigationStack.Clear();
         });
 
         Back = ReactiveCommand.Create(() => HostScreen.Router.NavigateBack.Execute().Subscribe());

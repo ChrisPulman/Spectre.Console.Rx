@@ -9,26 +9,19 @@ using Spectre.Console.Rx;
 var app = new AppViewModel();
 app.NavigateToLogin();
 
-// Very small console host for ReactiveUI Router: render current VM with its view
-while (true)
+await app.SubscribeAsync(async current =>
 {
-    var current = app.Router.GetCurrentViewModel();
-    if (current is LoginViewModel lvm)
+    switch (current)
     {
-        AnsiConsole.Clear();
-        var view = new LoginView { ViewModel = lvm };
-        await view.RenderAsync();
-        continue;
+        case LoginViewModel lvm:
+            await app.RenderViewAsync<LoginView, LoginViewModel>(lvm);
+            break;
+        case MainViewModel mvm:
+            await app.RenderViewAsync<MainView, MainViewModel>(mvm);
+            break;
+        default:
+            // Exit app when no more screens
+            Environment.Exit(0);
+            break;
     }
-    else if (current is MainViewModel mvm)
-    {
-        AnsiConsole.Clear();
-        var view = new MainView { ViewModel = mvm };
-        await view.RenderAsync();
-        break; // exit after main view exits
-    }
-    else if (current is null)
-    {
-        break;
-    }
-}
+});
