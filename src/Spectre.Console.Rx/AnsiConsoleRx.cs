@@ -13,7 +13,7 @@ namespace Spectre.Console.Rx;
 public static class AnsiConsoleRx
 {
     private static readonly object _lock = new();
-    private static readonly List<ProgressTask> _tasks = new();
+    private static readonly List<ProgressTask> _tasks = [];
     private static readonly SemaphoreSlim _lockTillComplete = new(1, 1);
 
     /// <summary>
@@ -31,36 +31,36 @@ public static class AnsiConsoleRx
     /// <returns>
     /// A <see cref="Progress" /> instance.
     /// </returns>
-    public static IObservable<ProgressContext> Progress(Func<Progress, Progress>? addProperties = null)
-    {
-        _lockTillComplete.Wait();
-        return Observable.Create<ProgressContext>(async observer =>
-         {
-             await AnsiConsole
-                  .Progress()
-                  .AddProgressProperties(addProperties)
-                  .StartAsync(async ctx =>
-                  {
-                      observer.OnNext(ctx);
-                      while (!ctx.IsFinished)
-                      {
-                          await Task.Yield();
-                      }
+    public static IObservable<ProgressContext> Progress(Func<Progress, Progress>? addProperties = null) => Observable.Using(
+            resourceFactory: () => new SemaphoreSlimReleaser(_lockTillComplete),
+            observableFactory: _ => Observable.Create<ProgressContext>(async observer =>
+            {
+                await AnsiConsole
+                    .Progress()
+                    .AddProgressProperties(addProperties)
+                    .StartAsync(async ctx =>
+                    {
+                        observer.OnNext(ctx);
+                        while (!ctx.IsFinished)
+                        {
+                            // Yield to avoid busy spinning.
+                            await Task.Delay(1).ConfigureAwait(false);
+                        }
 
-                      ctx.Dispose();
-                      observer.OnCompleted();
-                      return Task.FromResult(Unit.Default);
-                  });
+                        ctx.Dispose();
+                        observer.OnCompleted();
+                        return Task.FromResult(Unit.Default);
+                    });
 
-             return Disposable.Create(() =>
-              {
-                  lock (_lock)
-                  {
-                      _tasks.Clear();
-                  }
-              });
-         }).SubscribeOn(Scheduler).Finally(() => _lockTillComplete.Release());
-    }
+                return Disposable.Create(() =>
+                {
+                    lock (_lock)
+                    {
+                        _tasks.Clear();
+                    }
+                });
+            }))
+            .SubscribeOn(Scheduler);
 
     /// <summary>
     /// Statuses the specified status.
@@ -68,30 +68,30 @@ public static class AnsiConsoleRx
     /// <param name="status">The status.</param>
     /// <param name="addProperties">The add properties.</param>
     /// <returns>A StatusContext.</returns>
-    public static IObservable<StatusContext> Status(string status, Func<Status, Status>? addProperties = null)
-    {
-        _lockTillComplete.Wait();
-        return Observable.Create<StatusContext>(async observer =>
-         {
-             await AnsiConsole
-                 .Status()
-                 .AddStatusProperties(addProperties)
-                 .StartAsync(status, async ctx =>
-                 {
-                     observer.OnNext(ctx);
-                     while (!ctx.IsFinished)
-                     {
-                         await Task.Yield();
-                     }
+    public static IObservable<StatusContext> Status(string status, Func<Status, Status>? addProperties = null) => Observable.Using(
+            resourceFactory: () => new SemaphoreSlimReleaser(_lockTillComplete),
+            observableFactory: _ => Observable.Create<StatusContext>(async observer =>
+            {
+                await AnsiConsole
+                    .Status()
+                    .AddStatusProperties(addProperties)
+                    .StartAsync(status, async ctx =>
+                    {
+                        observer.OnNext(ctx);
+                        while (!ctx.IsFinished)
+                        {
+                            // Yield to avoid busy spinning.
+                            await Task.Delay(1).ConfigureAwait(false);
+                        }
 
-                     ctx.Dispose();
-                     observer.OnCompleted();
-                     return Task.FromResult(Unit.Default);
-                 });
+                        ctx.Dispose();
+                        observer.OnCompleted();
+                        return Task.FromResult(Unit.Default);
+                    });
 
-             return Disposable.Empty;
-         }).SubscribeOn(Scheduler).Finally(() => _lockTillComplete.Release());
-    }
+                return Disposable.Empty;
+            }))
+            .SubscribeOn(Scheduler);
 
     /// <summary>
     /// Creates a new <see cref="LiveDisplay" /> instance.
@@ -101,30 +101,30 @@ public static class AnsiConsoleRx
     /// <returns>
     /// A <see cref="LiveDisplay" /> instance.
     /// </returns>
-    public static IObservable<LiveDisplayContext> Live(IRenderable renderable, Func<LiveDisplay, LiveDisplay>? addProperties = null)
-    {
-        _lockTillComplete.Wait();
-        return Observable.Create<LiveDisplayContext>(async observer =>
-        {
-            await AnsiConsole
-                .Live(renderable)
-                .AddLiveDisplayProperties(addProperties)
-                .StartAsync(async ctx =>
-                {
-                    observer.OnNext(ctx);
-                    while (!ctx.IsFinished)
+    public static IObservable<LiveDisplayContext> Live(IRenderable renderable, Func<LiveDisplay, LiveDisplay>? addProperties = null) => Observable.Using(
+            resourceFactory: () => new SemaphoreSlimReleaser(_lockTillComplete),
+            observableFactory: _ => Observable.Create<LiveDisplayContext>(async observer =>
+            {
+                await AnsiConsole
+                    .Live(renderable)
+                    .AddLiveDisplayProperties(addProperties)
+                    .StartAsync(async ctx =>
                     {
-                        await Task.Yield();
-                    }
+                        observer.OnNext(ctx);
+                        while (!ctx.IsFinished)
+                        {
+                            // Yield to avoid busy spinning.
+                            await Task.Delay(1).ConfigureAwait(false);
+                        }
 
-                    ctx.Dispose();
-                    observer.OnCompleted();
-                    return Task.FromResult(Unit.Default);
-                });
+                        ctx.Dispose();
+                        observer.OnCompleted();
+                        return Task.FromResult(Unit.Default);
+                    });
 
-            return Disposable.Create(() => _lockTillComplete.Release());
-        }).SubscribeOn(Scheduler).Finally(() => _lockTillComplete.Release());
-    }
+                return Disposable.Empty;
+            }))
+            .SubscribeOn(Scheduler);
 
     /// <summary>
     /// Adds the elements of the given collection to the end of this list. If
@@ -228,5 +228,28 @@ public static class AnsiConsoleRx
         }
 
         return addProperties(status);
+    }
+
+    private sealed class SemaphoreSlimReleaser : IDisposable
+    {
+        private readonly SemaphoreSlim _semaphore;
+        private bool _disposed;
+
+        public SemaphoreSlimReleaser(SemaphoreSlim semaphore)
+        {
+            _semaphore = semaphore;
+            _semaphore.Wait();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            _semaphore.Release();
+        }
     }
 }

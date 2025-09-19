@@ -1,221 +1,202 @@
 ![Alt](https://repobeats.axiom.co/api/embed/a6232388fa6d7a8d647834b31d9d87a88d046ef9.svg "Repobeats analytics image")
 
 # Spectre.Console.Rx
-A reactive version of Spectre.Console Live, Progress, and Status
+Reactive extensions for Spectre.Console. Compose terminal animations with Rx and keep all UI mutations on a single, deterministic scheduler.
 
-visit https://spectreconsole.net/ for more information on Spectre.Console
-visit https://github.com/spectreconsole/spectre.console for the original source code of Spectre.Console
+- Reactive wrappers for Spectre.Console `Status`, `Progress`, and `Live`
+- Single-threaded UI scheduler to keep the console thread-safe
+- Fluent, chainable context APIs
+- Works on .NET Standard 2.0, .NET 8, and .NET 9
 
-## Usage
+Visit https://spectreconsole.net for Spectre.Console docs and https://github.com/spectreconsole/spectre.console for the original source.
 
-An example of using Spectre.Console.Rx to animate some status, a table and a progress bar.
+## Packages
 
+- Spectre.Console.Rx
+- Spectre.Console.Rx.Json (optional JSON helpers)
+
+Install:
+
+```bash
+# Core
+dotnet add package Spectre.Console.Rx
+
+# Optional JSON helpers
+dotnet add package Spectre.Console.Rx.Json
+```
+
+## Target frameworks
+- .NET Standard 2.0
+- .NET 8
+- .NET 9
+
+## Core concept
+The console is not thread-safe. Spectre.Console.Rx enforces a single UI thread via `AnsiConsoleRx.Scheduler` so all reactive pipelines render on the same thread. Drive animations by pushing work to that scheduler and mark contexts finished when done.
+
+Key points:
+- Always switch to the UI scheduler: `.ObserveOn(AnsiConsoleRx.Scheduler)`
+- Only one console context (Status/Progress/Live) should run at a time
+- Call `IsFinished()` on the context to end rendering/animation loops
+
+## Quick start
+
+### Status
 ```csharp
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using ProgressDemo;
 using Spectre.Console.Rx;
 
-// NOTE: This code executes synchronously, only one instance of the console context can be executing at a time.
-//       This is because the console context is not thread safe.
-//       Remember to call IsFinished() on the console context when you're done with it.
-var table = new Table().LeftAligned();
+AnsiConsoleRx
+    .Status("[yellow]Initializing[/]", s => s.AutoRefresh(true))
+    .ObserveOn(AnsiConsoleRx.Scheduler)
+    .Subscribe(ctx => ctx.Schedule(async scheduler =>
+    {
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(800));
+        ctx.Status("[blue]Warming up[/]");
+        ctx.Spinner(Spinner.Known.Dots);
+
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(800));
+        ctx.Status("[green]Ready[/]");
+
+        ctx.IsFinished();
+    }));
+```
+
+### Live (animate a renderable)
+```csharp
+using System.Reactive.Linq;
+using Spectre.Console.Rx;
+
+var table = new Table().AddColumn("Col").AddRow("Row 1");
 
 AnsiConsoleRx
-    .Status(
-        "[yellow]Initializing warp drive[/]",
-        p => p.AutoRefresh(true).Spinner(Spinner.Known.Default))
+    .Live(table, ld => ld.AutoClear(false))
     .ObserveOn(AnsiConsoleRx.Scheduler)
-    .Subscribe(
-        ctx => ctx.Schedule(async scheduler =>
-        {
-            // Initialize
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            WriteLogMessage("Starting gravimetric field displacement manifold");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
-            WriteLogMessage("Warming up deuterium chamber");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
-            WriteLogMessage("Generating antideuterium");
-
-            // Warp nacelles
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.BouncingBar);
-            ctx.Status("[bold blue]Unfolding warp nacelles[/]");
-            WriteLogMessage("Unfolding left warp nacelle");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
-            WriteLogMessage("Left warp nacelle [green]online[/]");
-            WriteLogMessage("Unfolding right warp nacelle");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
-            WriteLogMessage("Right warp nacelle [green]online[/]");
-
-            // Warp bubble
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.Star2);
-            ctx.Status("[bold blue]Generating warp bubble[/]");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.Star);
-            ctx.Status("[bold blue]Stabilizing warp bubble[/]");
-
-            // Safety
-            ctx.Spinner(Spinner.Known.Monkey);
-            ctx.Status("[bold blue]Performing safety checks[/]");
-            WriteLogMessage("Enabling interior dampening");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
-            WriteLogMessage("Interior dampening [green]enabled[/]");
-
-            // Warp!
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.Moon);
-            WriteLogMessage("Preparing for warp");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
-            for (var warp = 1; warp < 10; warp++)
-            {
-                ctx.Status($"[bold blue]Warp {warp}[/]");
-                await scheduler.Sleep(TimeSpan.FromMilliseconds(500));
-            }
-
-            // Done
-            WriteLogMessage("[bold green]Crusing at Warp 9[/]");
-
-            // Finish animation and allow next animation to start
-            ctx.IsFinished();
-        }));
-
-// Animate
-AnsiConsoleRx.Live(table, ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
-    .ObserveOn(AnsiConsoleRx.Scheduler)
-    .Subscribe(
-    ctx =>
-
-        // Columns
-        ctx.Update(230, () => table.AddColumn("Release date"))
-        .Update(230, () => table.AddColumn("Title"))
-        .Update(230, () => table.AddColumn("Budget"))
-        .Update(230, () => table.AddColumn("Opening Weekend"))
-        .Update(230, () => table.AddColumn("Box office"))
-
-        // Rows
-        .Update(70, () => table.AddRow("May 25, 1977", "[yellow]Star Wars[/] [grey]Ep.[/] [u]IV[/]", "$11,000,000", "$1,554,475", "$775,398,007"))
-        .Update(70, () => table.AddRow("May 21, 1980", "[yellow]Star Wars[/] [grey]Ep.[/] [u]V[/]", "$18,000,000", "$4,910,483", "$547,969,004"))
-        .Update(70, () => table.AddRow("May 25, 1983", "[yellow]Star Wars[/] [grey]Ep.[/] [u]VI[/]", "$32,500,000", "$23,019,618", "$475,106,177"))
-        .Update(70, () => table.AddRow("May 19, 1999", "[yellow]Star Wars[/] [grey]Ep.[/] [u]I[/]", "$115,000,000", "$64,810,870", "$1,027,044,677"))
-        .Update(70, () => table.AddRow("May 16, 2002", "[yellow]Star Wars[/] [grey]Ep.[/] [u]II[/]", "$115,000,000", "$80,027,814", "$649,436,358"))
-        .Update(70, () => table.AddRow("May 19, 2005", "[yellow]Star Wars[/] [grey]Ep.[/] [u]III[/]", "$113,000,000", "$108,435,841", "$850,035,635"))
-        .Update(70, () => table.AddRow("Dec 18, 2015", "[yellow]Star Wars[/] [grey]Ep.[/] [u]VII[/]", "$245,000,000", "$247,966,675", "$2,068,223,624"))
-        .Update(70, () => table.AddRow("Dec 15, 2017", "[yellow]Star Wars[/] [grey]Ep.[/] [u]VIII[/]", "$317,000,000", "$220,009,584", "$1,333,539,889"))
-        .Update(70, () => table.AddRow("Dec 20, 2019", "[yellow]Star Wars[/] [grey]Ep.[/] [u]IX[/]", "$245,000,000", "$177,383,864", "$1,074,114,248"))
-
-        // Column footer
-        .Update(230, () => table.Columns[2].Footer("$1,633,000,000"))
-        .Update(230, () => table.Columns[3].Footer("$928,119,224"))
-        .Update(400, () => table.Columns[4].Footer("$10,318,030,576"))
-
-        // Column alignment
-        .Update(230, () => table.Columns[2].RightAligned())
-        .Update(230, () => table.Columns[3].RightAligned())
-        .Update(400, () => table.Columns[4].RightAligned())
-
-        // Column titles
-        .Update(70, () => table.Columns[0].Header("[bold]Release date[/]"))
-        .Update(70, () => table.Columns[1].Header("[bold]Title[/]"))
-        .Update(70, () => table.Columns[2].Header("[red bold]Budget[/]"))
-        .Update(70, () => table.Columns[3].Header("[green bold]Opening Weekend[/]"))
-        .Update(400, () => table.Columns[4].Header("[blue bold]Box office[/]"))
-
-        // Footers
-        .Update(70, () => table.Columns[2].Footer("[red bold]$1,633,000,000[/]"))
-        .Update(70, () => table.Columns[3].Footer("[green bold]$928,119,224[/]"))
-        .Update(400, () => table.Columns[4].Footer("[blue bold]$10,318,030,576[/]"))
-
-        // Title
-        .Update(500, () => table.Title("Star Wars Movies"))
-        .Update(400, () => table.Title("[[ [yellow]Star Wars Movies[/] ]]"))
-
-        // Borders
-        .Update(230, () => table.BorderColor(Color.Yellow))
-        .Update(230, () => table.MinimalBorder())
-        .Update(230, () => table.SimpleBorder())
-        .Update(230, () => table.SimpleHeavyBorder())
-
-        // Caption
-        .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]"))
-
-        // Finish animation and allow next animation to start
-        .IsFinished());
-
-AnsiConsole.MarkupLine("[yellow]Initializing warp drive[/]...");
-
-// Show progress
-AnsiConsoleRx.Progress(p =>
-    p.AutoClear(false)
-    .Columns(new ProgressColumn[]
+    .Subscribe(ctx =>
     {
-                    new TaskDescriptionColumn(),    // Task description
-                    new ProgressBarColumn(),        // Progress bar
-                    new PercentageColumn(),         // Percentage
-                    new RemainingTimeColumn(),      // Remaining time
-                    new SpinnerColumn(),            // Spinner
-    }))
+        // Chain updates in-place (blocking) for simple demos
+        ctx
+            .Update(250, () => table.AddRow("Row 2"))
+            .Update(250, () => table.AddRow("Row 3"))
+            .Update(250, () => table.AddRow("Done"));
+
+        ctx.IsFinished();
+    });
+```
+
+### Progress
+```csharp
+using System.Reactive.Linq;
+using Spectre.Console.Rx;
+
+AnsiConsoleRx
+    .Progress(p => p.AutoClear(false)
+        .Columns(new ProgressColumn[]
+        {
+            new TaskDescriptionColumn(),
+            new ProgressBarColumn(),
+            new PercentageColumn(),
+            new RemainingTimeColumn(),
+            new SpinnerColumn(),
+        }))
     .ObserveOn(AnsiConsoleRx.Scheduler)
     .Subscribe(async ctx =>
     {
-        var random = new Random(DateTime.Now.Millisecond);
+        var t1 = ctx.AddTask("Downloading").IsIndeterminate(false);
+        var t2 = ctx.AddTask("Processing");
 
-        // Create some tasks
-        var tasks = CreateTasks(ctx, random);
-        var warpTask = ctx.AddTask("Going to warp", autoStart: false).IsIndeterminate();
-
-        await ctx.Schedule(
-            TimeSpan.FromMilliseconds(100),
-            () => ctx.IsFinished,
-            () =>
-            {
-                // Increment progress
-                foreach (var (task, increment) in tasks)
-                {
-                    task.Increment(random.NextDouble() * increment);
-                }
-
-                // Write some random things to the terminal
-                if (random.NextDouble() < 0.1)
-                {
-                    GenerateLogMessage();
-                }
-            });
-
-        // Now start the "warp" task
-        warpTask.StartTask().IsIndeterminate(false);
-        await ctx.Schedule(
-            TimeSpan.FromMilliseconds(100),
-            () => warpTask.Increment(12 * random.NextDouble()));
-
-        // Done
-        await ctx.Schedule(_ => WriteLogMessage("[green]Done![/]"));
-
-        // Progress is finished and will automatically exit
-    });
-
-WriteLogMessage("[red]Press ctrl+c to exit[/]");
-
-static List<(ProgressTask Task, int Delay)> CreateTasks(ProgressContext context, Random random)
-{
-    var tasks = new List<(ProgressTask, int)>();
-    while (tasks.Count < 5)
-    {
-        if (DescriptionGenerator.TryGenerate(out var name))
+        await ctx.Schedule(TimeSpan.FromMilliseconds(100), () =>
         {
-            tasks.Add((context.AddTask(name), random.Next(2, 10)));
-        }
-    }
+            t1.Increment(2);
+            if (t1.Value >= 100) t2.Increment(4);
+        });
 
-    return tasks;
-}
-
-static void GenerateLogMessage() => AnsiConsole.MarkupLine(
-        "[grey]LOG:[/] " +
-        DescriptionGenerator.Generate() +
-        "[grey]...[/]");
-
-static void WriteLogMessage(string message) => AnsiConsole.MarkupLine($"[grey]LOG:[/] {message}[grey]...[/]");
-
+        // Progress completes automatically when all started tasks are finished
+    });
 ```
+
+## Threading model and scheduling
+- `AnsiConsoleRx.Scheduler` is a single-threaded scheduler. It hosts a `SynchronizationContext` and processes posted work sequentially.
+- Use `.ObserveOn(AnsiConsoleRx.Scheduler)` in your observable pipelines before mutating UI.
+- Use context scheduling helpers to perform timed loops without blocking your app thread.
+
+### Context scheduling helpers
+All helpers run on the Spectre scheduler and update the UI safely.
+
+- `Task Schedule(this IContext context, TimeSpan delay, Func<bool> isComplete, Action action)`
+  - Executes `action` repeatedly every `delay` until `isComplete()` returns true. Calls `context.Refresh()` after each iteration.
+
+- `Task Schedule(this IContext context, Action<SpectreConsoleScheduler> action)`
+  - Executes an action on the scheduler. Useful to sequence async sleeps and UI updates.
+
+- `Task<T> Schedule<T>(this IContext context, Func<SpectreConsoleScheduler, Task<T>> action)`
+  - Executes an async function on the scheduler and returns its result.
+
+- `Task Schedule(this IContext context, TimeSpan delay, Action action)` (ProgressContext only)
+  - Repeats `action` every `delay` until all started progress tasks report finished.
+
+The `SpectreConsoleScheduler` provides `Sleep(TimeSpan)` for non-blocking waits and follows `IScheduler` from Rx.
+
+## API reference (most used)
+
+### AnsiConsoleRx
+- `ISpectreConsoleScheduler Scheduler` — the UI scheduler instance
+- `IObservable<StatusContext> Status(string status, Func<Status, Status>? configure = null)`
+- `IObservable<ProgressContext> Progress(Func<Progress, Progress>? configure = null)`
+- `IObservable<LiveDisplayContext> Live(IRenderable renderable, Func<LiveDisplay, LiveDisplay>? configure = null)`
+- `IObservable<(ProgressContext context, ProgressTask[] tasks)> AddTasks(this IObservable<ProgressContext>, Func<ProgressContext, ProgressTask[]> factory)`
+- `LiveDisplayContext Update(this LiveDisplayContext ctx, int delayMs, Action action)` — simple chained updates (demo-friendly)
+- `void IsFinished(this LiveDisplayContext ctx)` / `void IsFinished(this StatusContext ctx)` — signal completion
+
+### StatusContext
+- Properties: `string Status`, `Spinner Spinner`, `Style? SpinnerStyle`, `bool IsFinished`
+- Methods: `void Refresh()`
+- Extensions: `Status(string)`, `Spinner(Spinner)`, `SpinnerStyle(Style?)`, `IsFinished()`
+
+### ProgressContext
+- Properties: `bool IsFinished`
+- Methods: `ProgressTask AddTask(...)`, `void Refresh()`, `Task Schedule(TimeSpan delay, Action action)`
+
+### LiveDisplayContext
+- Properties: `bool IsFinished`
+- Methods: `void UpdateTarget(IRenderable? target)`, `void Refresh()`
+- Extensions: `Update(int delayMs, Action)`, `IsFinished()`
+
+## JSON helpers (optional)
+`Spectre.Console.Rx.Json` adds helpers to pretty print JSON with Spectre.Console widgets.
+
+```csharp
+using Spectre.Console.Rx.Json;
+
+var panel = new Panel(new JsonText(jsonString))
+    .Header("Data")
+    .SquareBorder()
+    .BorderColor(Color.LightSkyBlue1);
+
+AnsiConsole.Write(panel);
+```
+
+## Best practices
+- Only one Status/Progress/Live should be active at a time (the console is single-threaded)
+- Always `.ObserveOn(AnsiConsoleRx.Scheduler)` before mutating UI
+- End animations with `IsFinished()` so observables complete
+- Prefer scheduler `Sleep` over `Thread.Sleep` to keep the pump responsive
+- Keep heavy work off the UI scheduler; compute elsewhere, then push results to UI via `ObserveOn`
+
+## Troubleshooting
+- Nothing renders / pipeline hangs
+  - Ensure `.ObserveOn(AnsiConsoleRx.Scheduler)` is applied before `Subscribe` that updates UI
+  - Make sure you call `IsFinished()` on the context when done
+- Flicker or interleaved output
+  - Avoid running multiple contexts concurrently; sequence them
+- Exceptions swallowed
+  - Wrap your subscription in `Subscribe(onNext, onError, onCompleted)` and log `onError`
+
+## Examples
+See example projects under `src`:
+- `LiveExample`, `LiveTableExample`
+- `StatusExample`
+- `ProgressExample`
+- `CombinedExample`
+
+## License
+MIT License. See the LICENSE file for details.
