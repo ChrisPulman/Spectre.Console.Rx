@@ -31,19 +31,21 @@ public sealed class MainView : ReactiveConsoleView<MainViewModel>
         IDisposable? clockSub = null;
 
         // Start key loop on background thread to request exit
-        var keyTask = Task.Run(() =>
-        {
-            while (!exitCts.IsCancellationRequested)
+        var keyTask = Task.Run(
+            () =>
             {
-                var key = System.Console.ReadKey(true);
-                if (key.Key == ConsoleKey.Escape)
+                while (!exitCts.IsCancellationRequested)
                 {
-                    ViewModel.Exit.Execute().Subscribe();
-                    exitCts.Cancel();
-                    break;
+                    var key = System.Console.ReadKey(true);
+                    if (key.Key == ConsoleKey.Escape)
+                    {
+                        ViewModel.Exit.Execute().Subscribe();
+                        exitCts.Cancel();
+                        break;
+                    }
                 }
-            }
-        });
+            },
+            ct);
 
         await RenderAsync(
             table,

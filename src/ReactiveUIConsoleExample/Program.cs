@@ -14,10 +14,10 @@ await app.SubscribeAsync(async current =>
     switch (current)
     {
         case LoginViewModel lvm:
-            await app.RenderViewAsync<LoginView, LoginViewModel>(lvm);
+            await AppViewModel.RenderViewAsync<LoginView, LoginViewModel>(lvm);
             break;
         case MainViewModel mvm:
-            await app.RenderViewAsync<MainView, MainViewModel>(mvm);
+            await AppViewModel.RenderViewAsync<MainView, MainViewModel>(mvm);
             break;
         default:
             // Exit app when no more screens
