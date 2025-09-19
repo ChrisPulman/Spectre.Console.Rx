@@ -12,44 +12,41 @@ namespace ReactiveUIConsoleExample.Views;
 /// <summary>
 /// MainView.
 /// </summary>
-public sealed class MainView : IViewFor<MainViewModel>
+public sealed class MainView : ReactiveConsoleView<MainViewModel>
 {
     /// <summary>
-    /// Gets or sets the ViewModel corresponding to this specific View. This should be
-    /// a DependencyProperty if you're using XAML.
+    /// Render the main view reactively.
     /// </summary>
-    object? IViewFor.ViewModel { get => ViewModel; set => ViewModel = (MainViewModel?)value; }
-
-    /// <summary>
-    /// Gets or sets the ViewModel corresponding to this specific View. This should be
-    /// a DependencyProperty if you're using XAML.
-    /// </summary>
-    public MainViewModel? ViewModel { get; set; }
-
-    /// <summary>
-    /// Renders the asynchronous.
-    /// </summary>
-    /// <param name="ct">The ct.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task<int> RenderAsync(CancellationToken ct = default)
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task that completes when the view finishes rendering.</returns>
+    public override async Task RenderAsync(CancellationToken ct = default)
     {
         if (ViewModel is null)
         {
-            return 0;
+            return;
         }
 
-        // Build reactive table UI
         var table = new Table().Expand().BorderColor(Color.Grey78);
-
-        var completion = new TaskCompletionSource<int>();
         using var exitCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-
         IDisposable? clockSub = null;
 
-        AnsiConsoleRx
-            .Live(table, ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
-            .ObserveOn(AnsiConsoleRx.Scheduler)
-            .Subscribe(
+        // Start key loop on background thread to request exit
+        var keyTask = Task.Run(() =>
+        {
+            while (!exitCts.IsCancellationRequested)
+            {
+                var key = System.Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Escape)
+                {
+                    ViewModel.Exit.Execute().Subscribe();
+                    exitCts.Cancel();
+                    break;
+                }
+            }
+        });
+
+        await RenderAsync(
+            table,
             ctx =>
             {
                 // Initial build (animated)
@@ -76,21 +73,17 @@ public sealed class MainView : IViewFor<MainViewModel>
                     ctx.IsFinished();
                 });
             },
-            ex => completion.TrySetException(ex),
-            () => completion.TrySetResult(0));
+            configure: ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top),
+            ct: exitCts.Token);
 
-        // Key loop for exit
-        while (!exitCts.IsCancellationRequested)
+        // Ensure key loop completes
+        try
         {
-            var key = System.Console.ReadKey(true);
-            if (key.Key == ConsoleKey.Escape)
-            {
-                ViewModel.Exit.Execute().Subscribe();
-                exitCts.Cancel();
-                break;
-            }
+            await keyTask.ConfigureAwait(false);
         }
-
-        return await completion.Task.ConfigureAwait(false);
+        catch
+        {
+            // ignored
+        }
     }
 }
