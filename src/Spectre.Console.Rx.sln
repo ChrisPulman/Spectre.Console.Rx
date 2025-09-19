@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spectre.Console.Rx.Testing"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkSuite1", "BenchmarkSuite1\BenchmarkSuite1.csproj", "{A20861A9-411E-6150-BF5C-69E8196E5D22}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveUIConsoleExample", "ReactiveUIConsoleExample\ReactiveUIConsoleExample.csproj", "{5A3559F6-CAAF-415A-910D-23A9679059DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{A20861A9-411E-6150-BF5C-69E8196E5D22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A20861A9-411E-6150-BF5C-69E8196E5D22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A20861A9-411E-6150-BF5C-69E8196E5D22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A3559F6-CAAF-415A-910D-23A9679059DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A3559F6-CAAF-415A-910D-23A9679059DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A3559F6-CAAF-415A-910D-23A9679059DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A3559F6-CAAF-415A-910D-23A9679059DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,6 +107,7 @@ Global
 		{57204D65-A88B-4065-B690-F9CC6334EDEE} = {E17E245C-D501-46B4-A804-A68241982088}
 		{4DF93391-F7EA-4E36-8992-113387F4614A} = {E17E245C-D501-46B4-A804-A68241982088}
 		{A20861A9-411E-6150-BF5C-69E8196E5D22} = {E17E245C-D501-46B4-A804-A68241982088}
+		{5A3559F6-CAAF-415A-910D-23A9679059DF} = {E17E245C-D501-46B4-A804-A68241982088}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2FADF055-54C6-4DE5-98D0-D6F352AB1EFA}
