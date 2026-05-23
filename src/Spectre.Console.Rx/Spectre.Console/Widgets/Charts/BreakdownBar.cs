@@ -1,15 +1,10 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class BreakdownBar : Renderable
+internal sealed class BreakdownBar(List<IBreakdownChartItem> data) : Renderable
 {
-    private readonly List<IBreakdownChartItem> _data;
+    private readonly List<IBreakdownChartItem> _data = data ?? throw new ArgumentNullException(nameof(data));
 
     public int? Width { get; set; }
-
-    public BreakdownBar(List<IBreakdownChartItem> data)
-    {
-        _data = data ?? throw new ArgumentNullException(nameof(data));
-    }
 
     protected override Measurement Measure(RenderOptions options, int maxWidth)
     {

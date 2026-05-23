@@ -3,18 +3,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Utility used for working with markup text.
 /// </summary>
-public sealed class AnsiMarkup
+/// <remarks>
+/// Initializes a new instance of the <see cref="AnsiMarkup"/> class.
+/// </remarks>
+/// <param name="writer">The ANSI writer to use for writing.</param>
+public sealed class AnsiMarkup(AnsiWriter writer)
 {
-    private readonly AnsiWriter _writer;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AnsiMarkup"/> class.
-    /// </summary>
-    /// <param name="writer">The ANSI writer to use for writing.</param>
-    public AnsiMarkup(AnsiWriter writer)
-    {
-        _writer = writer ?? throw new ArgumentNullException(nameof(writer));
-    }
+    private readonly AnsiWriter _writer = writer ?? throw new ArgumentNullException(nameof(writer));
 
     /// <summary>
     /// Outputs the specified markup.
@@ -159,44 +154,34 @@ public sealed class AnsiMarkup
     /// <param name="query">The search text to highlight.</param>
     /// <param name="style">The highlight style.</param>
     /// <returns>Highlighted markup text, using the specified style.</returns>
-    public static string Highlight(string markup, string query, Style style)
-    {
-        return AnsiMarkupHighlighter.Highlight(markup, query, style);
-    }
+    public static string Highlight(string markup, string query, Style style) => AnsiMarkupHighlighter.Highlight(markup, query, style);
 }
 
 /// <summary>
 /// Represents a markup segment.
 /// </summary>
-public sealed class AnsiMarkupSegment
+/// <remarks>
+/// Initializes a new instance of the <see cref="AnsiMarkupSegment"/> class.
+/// </remarks>
+/// <param name="text">The text.</param>
+/// <param name="style">The style.</param>
+/// <param name="link">The link.</param>
+public sealed class AnsiMarkupSegment(string text, Style style, Link? link)
 {
     /// <summary>
     /// Gets the segment text.
     /// </summary>
-    public string Text { get; internal set; }
+    public string Text { get; internal set; } = text;
 
     /// <summary>
     /// Gets the segment style.
     /// </summary>
-    public Style Style { get; }
+    public Style Style { get; } = style;
 
     /// <summary>
     /// Gets the segment link.
     /// </summary>
-    public Link? Link { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AnsiMarkupSegment"/> class.
-    /// </summary>
-    /// <param name="text">The text.</param>
-    /// <param name="style">The style.</param>
-    /// <param name="link">The link.</param>
-    public AnsiMarkupSegment(string text, Style style, Link? link)
-    {
-        Text = text;
-        Style = style;
-        Link = link;
-    }
+    public Link? Link { get; } = link;
 
     /// <inheritdoc />
     public override string ToString()
@@ -215,35 +200,20 @@ file enum MarkupTokenKind
     Close,
 }
 
-file sealed class MarkupToken
+file sealed class MarkupToken(MarkupTokenKind kind, string value, int position)
 {
-    public MarkupTokenKind Kind { get; }
-    public string Value { get; }
-    public int Position { get; set; }
-
-    public MarkupToken(MarkupTokenKind kind, string value, int position)
-    {
-        Kind = kind;
-        Value = value ?? throw new ArgumentNullException(nameof(value));
-        Position = position;
-    }
+    public MarkupTokenKind Kind { get; } = kind;
+    public string Value { get; } = value ?? throw new ArgumentNullException(nameof(value));
+    public int Position { get; set; } = position;
 }
 
-file sealed class MarkupTokenizer : IDisposable
+file sealed class MarkupTokenizer(string text) : IDisposable
 {
-    private readonly StringBuffer _reader;
+    private readonly StringBuffer _reader = new StringBuffer(text);
 
     public MarkupToken Current { get => field!; private set; }
 
-    public MarkupTokenizer(string text)
-    {
-        _reader = new StringBuffer(text);
-    }
-
-    public void Dispose()
-    {
-        _reader.Dispose();
-    }
+    public void Dispose() => _reader.Dispose();
 
     public bool MoveNext()
     {

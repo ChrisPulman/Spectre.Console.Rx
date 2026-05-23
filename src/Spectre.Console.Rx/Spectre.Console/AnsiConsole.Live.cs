@@ -10,8 +10,5 @@ public static partial class AnsiConsole
     /// </summary>
     /// <param name="target">The target renderable to update.</param>
     /// <returns>A <see cref="LiveDisplay"/> instance.</returns>
-    public static LiveDisplay Live(IRenderable target)
-    {
-        return Console.Live(target);
-    }
+    public static LiveDisplay Live(IRenderable target) => Console.Live(target);
 }

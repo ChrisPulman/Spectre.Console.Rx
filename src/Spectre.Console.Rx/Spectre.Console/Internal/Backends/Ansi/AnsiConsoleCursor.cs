@@ -1,13 +1,8 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class AnsiConsoleCursor : IAnsiConsoleCursor
+internal sealed class AnsiConsoleCursor(AnsiConsoleBackend backend) : IAnsiConsoleCursor
 {
-    private readonly AnsiConsoleBackend _backend;
-
-    public AnsiConsoleCursor(AnsiConsoleBackend backend)
-    {
-        _backend = backend ?? throw new ArgumentNullException(nameof(backend));
-    }
+    private readonly AnsiConsoleBackend _backend = backend ?? throw new ArgumentNullException(nameof(backend));
 
     public void Show(bool show)
     {
@@ -45,8 +40,5 @@ internal sealed class AnsiConsoleCursor : IAnsiConsoleCursor
         }
     }
 
-    public void SetPosition(int column, int line)
-    {
-        _backend.Write(w => w.CursorPosition(line, column));
-    }
+    public void SetPosition(int column, int line) => _backend.Write(w => w.CursorPosition(line, column));
 }

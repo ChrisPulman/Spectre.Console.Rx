@@ -271,20 +271,14 @@ public static class BreakdownChartExtensions
     /// </summary>
     /// <param name="chart">The breakdown chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BreakdownChart ShowTags(this BreakdownChart chart)
-    {
-        return ShowTags(chart, true);
-    }
+    public static BreakdownChart ShowTags(this BreakdownChart chart) => ShowTags(chart, true);
 
     /// <summary>
     /// Tags will be not be shown.
     /// </summary>
     /// <param name="chart">The breakdown chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BreakdownChart HideTags(this BreakdownChart chart)
-    {
-        return ShowTags(chart, false);
-    }
+    public static BreakdownChart HideTags(this BreakdownChart chart) => ShowTags(chart, false);
 
     /// <summary>
     /// Sets whether or not tags will be shown.
@@ -305,20 +299,14 @@ public static class BreakdownChartExtensions
     /// </summary>
     /// <param name="chart">The breakdown chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BreakdownChart ShowTagValues(this BreakdownChart chart)
-    {
-        return ShowTagValues(chart, true);
-    }
+    public static BreakdownChart ShowTagValues(this BreakdownChart chart) => ShowTagValues(chart, true);
 
     /// <summary>
     /// Tag values will be not be shown.
     /// </summary>
     /// <param name="chart">The breakdown chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BreakdownChart HideTagValues(this BreakdownChart chart)
-    {
-        return ShowTagValues(chart, false);
-    }
+    public static BreakdownChart HideTagValues(this BreakdownChart chart) => ShowTagValues(chart, false);
 
     /// <summary>
     /// Sets whether or not tag values will be shown.
@@ -339,20 +327,14 @@ public static class BreakdownChartExtensions
     /// </summary>
     /// <param name="chart">The breakdown chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BreakdownChart Compact(this BreakdownChart chart)
-    {
-        return Compact(chart, true);
-    }
+    public static BreakdownChart Compact(this BreakdownChart chart) => Compact(chart, true);
 
     /// <summary>
     /// Chart and tags is rendered in full size mode.
     /// </summary>
     /// <param name="chart">The breakdown chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BreakdownChart FullSize(this BreakdownChart chart)
-    {
-        return Compact(chart, false);
-    }
+    public static BreakdownChart FullSize(this BreakdownChart chart) => Compact(chart, false);
 
     /// <summary>
     /// Sets whether or not the chart and tags should be rendered in compact mode.

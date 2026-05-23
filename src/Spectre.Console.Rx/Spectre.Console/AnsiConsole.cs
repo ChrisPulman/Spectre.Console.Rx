@@ -59,16 +59,10 @@ public static partial class AnsiConsole
     /// </summary>
     /// <param name="settings">The settings to use.</param>
     /// <returns>An <see cref="IAnsiConsole"/> instance.</returns>
-    public static IAnsiConsole Create(AnsiConsoleSettings settings)
-    {
-        return AnsiConsoleFactory.Create(settings);
-    }
+    public static IAnsiConsole Create(AnsiConsoleSettings settings) => AnsiConsoleFactory.Create(settings);
 
     /// <summary>
     /// Clears the console.
     /// </summary>
-    public static void Clear()
-    {
-        Console.Clear();
-    }
+    public static void Clear() => Console.Clear();
 }

@@ -214,10 +214,7 @@ public static class TextPathExtensions
     /// <param name="obj">The path.</param>
     /// <param name="color">The separator color.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPath SeparatorColor(this TextPath obj, Color color)
-    {
-        return SeparatorStyle(obj, new Style(foreground: color));
-    }
+    public static TextPath SeparatorColor(this TextPath obj, Color color) => SeparatorStyle(obj, new Style(foreground: color));
 
     /// <summary>
     /// Sets the root style.
@@ -239,10 +236,7 @@ public static class TextPathExtensions
     /// <param name="obj">The path.</param>
     /// <param name="color">The root color.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPath RootColor(this TextPath obj, Color color)
-    {
-        return RootStyle(obj, new Style(foreground: color));
-    }
+    public static TextPath RootColor(this TextPath obj, Color color) => RootStyle(obj, new Style(foreground: color));
 
     /// <summary>
     /// Sets the stem style.
@@ -264,10 +258,7 @@ public static class TextPathExtensions
     /// <param name="obj">The path.</param>
     /// <param name="color">The stem color.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPath StemColor(this TextPath obj, Color color)
-    {
-        return StemStyle(obj, new Style(foreground: color));
-    }
+    public static TextPath StemColor(this TextPath obj, Color color) => StemStyle(obj, new Style(foreground: color));
 
     /// <summary>
     /// Sets the leaf style.
@@ -289,8 +280,5 @@ public static class TextPathExtensions
     /// <param name="obj">The path.</param>
     /// <param name="color">The leaf color.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPath LeafColor(this TextPath obj, Color color)
-    {
-        return LeafStyle(obj, new Style(foreground: color));
-    }
+    public static TextPath LeafColor(this TextPath obj, Color color) => LeafStyle(obj, new Style(foreground: color));
 }

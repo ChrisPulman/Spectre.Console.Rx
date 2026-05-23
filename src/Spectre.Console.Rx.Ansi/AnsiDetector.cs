@@ -25,14 +25,11 @@ internal static class AnsiDetector
         new("alacritty") // Alacritty
     ];
 
-    public static (bool Ansi, bool Legacy) Detect(TextWriter buffer, AnsiSupport ansi)
-    {
-        return Detect(
+    public static (bool Ansi, bool Legacy) Detect(TextWriter buffer, AnsiSupport ansi) => Detect(
             buffer,
             ansi,
             System.Console.IsOutputRedirected,
             System.Console.IsErrorRedirected);
-    }
 
     internal static (bool Ansi, bool Legacy) Detect(
         TextWriter buffer,

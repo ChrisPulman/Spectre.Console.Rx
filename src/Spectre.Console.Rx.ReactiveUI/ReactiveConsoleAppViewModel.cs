@@ -10,16 +10,14 @@ namespace Spectre.Console.Rx.ReactiveUI;
 /// <summary>
 /// Base application view model for Spectre.Console.Rx ReactiveUI applications.
 /// </summary>
-public class ReactiveConsoleAppViewModel : ReactiveObject, IScreen
+/// <remarks>
+/// Initializes a new instance of the <see cref="ReactiveConsoleAppViewModel"/> class.
+/// </remarks>
+/// <param name="router">The routing state to use. When omitted, a new routing state is created.</param>
+public class ReactiveConsoleAppViewModel(RoutingState? router = null) : ReactiveObject, IScreen
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ReactiveConsoleAppViewModel"/> class.
-    /// </summary>
-    /// <param name="router">The routing state to use. When omitted, a new routing state is created.</param>
-    public ReactiveConsoleAppViewModel(RoutingState? router = null) => Router = router ?? new RoutingState();
-
     /// <inheritdoc />
-    public RoutingState Router { get; }
+    public RoutingState Router { get; } = router ?? new RoutingState();
 
     /// <summary>
     /// Renders a route with the specified reactive console view.

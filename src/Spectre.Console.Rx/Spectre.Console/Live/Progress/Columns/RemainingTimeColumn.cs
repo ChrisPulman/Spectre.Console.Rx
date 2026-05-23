@@ -32,10 +32,7 @@ public sealed class RemainingTimeColumn : ProgressColumn
     }
 
     /// <inheritdoc/>
-    public override int? GetColumnWidth(RenderOptions options)
-    {
-        return 8;
-    }
+    public override int? GetColumnWidth(RenderOptions options) => 8;
 }
 
 /// <summary>

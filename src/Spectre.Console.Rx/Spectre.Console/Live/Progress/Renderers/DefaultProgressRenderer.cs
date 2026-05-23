@@ -1,38 +1,20 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class DefaultProgressRenderer : ProgressRenderer
+internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<ProgressColumn> columns, TimeSpan refreshRate, bool hideCompleted, bool excludeVerticalPadding, Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> renderHook) : ProgressRenderer
 {
-    private readonly IAnsiConsole _console;
-    private readonly List<ProgressColumn> _columns;
-    private readonly LiveRenderable _live;
-    private readonly object _lock;
-    private readonly Stopwatch _stopwatch;
-    private readonly bool _hideCompleted;
-    private readonly bool _excludeVerticalPadding;
-    private readonly Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> _renderHook;
-    private TimeSpan _lastUpdate;
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly List<ProgressColumn> _columns = columns ?? throw new ArgumentNullException(nameof(columns));
+    private readonly LiveRenderable _live = new LiveRenderable(console);
+    private readonly object _lock = new();
+    private readonly Stopwatch _stopwatch = new Stopwatch();
+    private readonly bool _hideCompleted = hideCompleted;
+    private readonly bool _excludeVerticalPadding = excludeVerticalPadding;
+    private readonly Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> _renderHook = renderHook;
+    private TimeSpan _lastUpdate = TimeSpan.Zero;
 
-    public override TimeSpan RefreshRate { get; }
+    public override TimeSpan RefreshRate { get; } = refreshRate;
 
-    public DefaultProgressRenderer(IAnsiConsole console, List<ProgressColumn> columns, TimeSpan refreshRate, bool hideCompleted, bool excludeVerticalPadding, Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> renderHook)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _columns = columns ?? throw new ArgumentNullException(nameof(columns));
-        _live = new LiveRenderable(console);
-        _lock = new();
-        _stopwatch = new Stopwatch();
-        _lastUpdate = TimeSpan.Zero;
-        _hideCompleted = hideCompleted;
-        _excludeVerticalPadding = excludeVerticalPadding;
-        _renderHook = renderHook;
-
-        RefreshRate = refreshRate;
-    }
-
-    public override void Started()
-    {
-        _console.Cursor.Hide();
-    }
+    public override void Started() => _console.Cursor.Hide();
 
     public override void Completed(bool clear)
     {

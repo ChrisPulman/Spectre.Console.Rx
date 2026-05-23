@@ -1,24 +1,17 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class FallbackProgressRenderer : ProgressRenderer
+internal sealed class FallbackProgressRenderer(TimeProvider timeProvider) : ProgressRenderer
 {
     private const double FirstMilestone = 25;
     private static readonly double?[] _milestones = [FirstMilestone, 50, 75, 95, 96, 97, 98, 99, 100];
 
-    private readonly Dictionary<int, double> _taskMilestones;
-    private readonly object _lock;
-    private readonly TimeProvider _timeProvider;
+    private readonly Dictionary<int, double> _taskMilestones = new Dictionary<int, double>();
+    private readonly object _lock = new object();
+    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private IRenderable? _renderable;
     private DateTime _lastUpdate;
 
     public override TimeSpan RefreshRate => TimeSpan.FromSeconds(1);
-
-    public FallbackProgressRenderer(TimeProvider timeProvider)
-    {
-        _taskMilestones = new Dictionary<int, double>();
-        _lock = new object();
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-    }
 
     public override void Update(ProgressContext context)
     {
@@ -99,10 +92,7 @@ internal sealed class FallbackProgressRenderer : ProgressRenderer
         return false;
     }
 
-    private static double? GetNextMilestone(double percentage)
-    {
-        return Array.Find(_milestones, p => p > percentage);
-    }
+    private static double? GetNextMilestone(double percentage) => Array.Find(_milestones, p => p > percentage);
 
     private static IRenderable? BuildTaskGrid(List<(string Name, double Percentage)> updates)
     {

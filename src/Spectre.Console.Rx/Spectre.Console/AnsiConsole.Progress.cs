@@ -9,17 +9,11 @@ public static partial class AnsiConsole
     /// Creates a new <see cref="Progress"/> instance.
     /// </summary>
     /// <returns>A <see cref="Progress"/> instance.</returns>
-    public static Progress Progress()
-    {
-        return Console.Progress();
-    }
+    public static Progress Progress() => Console.Progress();
 
     /// <summary>
     /// Creates a new <see cref="Status"/> instance.
     /// </summary>
     /// <returns>A <see cref="Status"/> instance.</returns>
-    public static Status Status()
-    {
-        return Console.Status();
-    }
+    public static Status Status() => Console.Status();
 }

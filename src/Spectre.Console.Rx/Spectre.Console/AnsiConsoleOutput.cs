@@ -3,10 +3,14 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents console output.
 /// </summary>
-public sealed class AnsiConsoleOutput : IAnsiConsoleOutput
+/// <remarks>
+/// Initializes a new instance of the <see cref="AnsiConsoleOutput"/> class.
+/// </remarks>
+/// <param name="writer">The output writer.</param>
+public sealed class AnsiConsoleOutput(TextWriter writer) : IAnsiConsoleOutput
 {
     /// <inheritdoc/>
-    public TextWriter Writer { get; }
+    public TextWriter Writer { get; } = writer ?? throw new ArgumentNullException(nameof(writer));
 
     /// <inheritdoc/>
     public bool IsTerminal
@@ -32,15 +36,6 @@ public sealed class AnsiConsoleOutput : IAnsiConsoleOutput
 
     /// <inheritdoc/>
     public int Height => ConsoleHelper.GetSafeHeight();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AnsiConsoleOutput"/> class.
-    /// </summary>
-    /// <param name="writer">The output writer.</param>
-    public AnsiConsoleOutput(TextWriter writer)
-    {
-        Writer = writer ?? throw new ArgumentNullException(nameof(writer));
-    }
 
     /// <inheritdoc/>
     public void SetEncoding(Encoding encoding)

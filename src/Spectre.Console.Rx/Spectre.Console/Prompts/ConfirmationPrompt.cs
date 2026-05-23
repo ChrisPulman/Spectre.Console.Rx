@@ -3,9 +3,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// A prompt that is answered with a yes or no.
 /// </summary>
-public sealed class ConfirmationPrompt : IPrompt<bool>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ConfirmationPrompt"/> class.
+/// </remarks>
+/// <param name="prompt">The prompt markup text.</param>
+public sealed class ConfirmationPrompt(string prompt) : IPrompt<bool>
 {
-    private readonly string _prompt;
+    private readonly string _prompt = prompt ?? throw new System.ArgumentNullException(nameof(prompt));
 
     /// <summary>
     /// Gets or sets the character that represents "yes".
@@ -66,20 +70,8 @@ public sealed class ConfirmationPrompt : IPrompt<bool>
     /// </remarks>
     public StringComparer Comparer { get; set; } = StringComparer.CurrentCultureIgnoreCase;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ConfirmationPrompt"/> class.
-    /// </summary>
-    /// <param name="prompt">The prompt markup text.</param>
-    public ConfirmationPrompt(string prompt)
-    {
-        _prompt = prompt ?? throw new System.ArgumentNullException(nameof(prompt));
-    }
-
     /// <inheritdoc/>
-    public bool Show(IAnsiConsole console)
-    {
-        return ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
-    }
+    public bool Show(IAnsiConsole console) => ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
 
     /// <inheritdoc/>
     public async Task<bool> ShowAsync(IAnsiConsole console, CancellationToken cancellationToken)
@@ -147,20 +139,14 @@ public static class ConfirmationPromptExtensions
     /// </summary>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static ConfirmationPrompt ShowChoices(this ConfirmationPrompt obj)
-    {
-        return ShowChoices(obj, true);
-    }
+    public static ConfirmationPrompt ShowChoices(this ConfirmationPrompt obj) => ShowChoices(obj, true);
 
     /// <summary>
     /// Hides choices.
     /// </summary>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static ConfirmationPrompt HideChoices(this ConfirmationPrompt obj)
-    {
-        return ShowChoices(obj, false);
-    }
+    public static ConfirmationPrompt HideChoices(this ConfirmationPrompt obj) => ShowChoices(obj, false);
 
     /// <summary>
     /// Sets the style in which the list of choices is displayed.
@@ -195,20 +181,14 @@ public static class ConfirmationPromptExtensions
     /// </summary>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static ConfirmationPrompt ShowDefaultValue(this ConfirmationPrompt obj)
-    {
-        return ShowDefaultValue(obj, true);
-    }
+    public static ConfirmationPrompt ShowDefaultValue(this ConfirmationPrompt obj) => ShowDefaultValue(obj, true);
 
     /// <summary>
     /// Hides the default value.
     /// </summary>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static ConfirmationPrompt HideDefaultValue(this ConfirmationPrompt obj)
-    {
-        return ShowDefaultValue(obj, false);
-    }
+    public static ConfirmationPrompt HideDefaultValue(this ConfirmationPrompt obj) => ShowDefaultValue(obj, false);
 
     /// <summary>
     /// Sets the style in which the default value is displayed.

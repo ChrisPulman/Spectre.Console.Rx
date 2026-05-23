@@ -22,8 +22,5 @@ public sealed class RenderHookScope : IDisposable
     }
 
     /// <inheritdoc/>
-    public void Dispose()
-    {
-        _console.Pipeline.Detach(_hook);
-    }
+    public void Dispose() => _console.Pipeline.Detach(_hook);
 }

@@ -72,20 +72,14 @@ public class ExceptionInfoResolver
     /// </summary>
     /// <param name="frame">The <see cref="StackFrame"/> to get the file name for.</param>
     /// <returns>The file name.</returns>
-    public virtual string? GetFileName(StackFrame frame)
-    {
-        return frame.GetFileName();
-    }
+    public virtual string? GetFileName(StackFrame frame) => frame.GetFileName();
 
     /// <summary>
     /// Gets the line number of a <see cref="StackFrame"/>.
     /// </summary>
     /// <param name="frame">The <see cref="StackFrame"/> to get the line number for.</param>
     /// <returns>The line number.</returns>
-    public virtual int GetFileLineNumber(StackFrame frame)
-    {
-        return frame.GetFileLineNumber();
-    }
+    public virtual int GetFileLineNumber(StackFrame frame) => frame.GetFileLineNumber();
 
     private static string GetParameterPrefix(ParameterInfo parameter)
     {

@@ -242,15 +242,9 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
         }
     }
 
-    private IEnumerable<Layout> GetChildren(bool visibleOnly = false)
-    {
-        return visibleOnly ? _children.Where(c => c.IsVisible) : _children;
-    }
+    private IEnumerable<Layout> GetChildren(bool visibleOnly = false) => visibleOnly ? _children.Where(c => c.IsVisible) : _children;
 
-    private bool HasChildren(bool visibleOnly = false)
-    {
-        return visibleOnly ? _children.Any(c => c.IsVisible) : _children.Any();
-    }
+    private bool HasChildren(bool visibleOnly = false) => visibleOnly ? _children.Any(c => c.IsVisible) : _children.Any();
 
     private void Split(LayoutSplitter splitter, Layout[] layouts)
     {

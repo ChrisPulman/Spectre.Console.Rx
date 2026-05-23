@@ -1,13 +1,7 @@
 namespace Spectre.Console.Rx;
 
-internal readonly struct ProgressSample
+internal readonly struct ProgressSample(DateTime timestamp, double value)
 {
-    public double Value { get; }
-    public DateTime Timestamp { get; }
-
-    public ProgressSample(DateTime timestamp, double value)
-    {
-        Timestamp = timestamp;
-        Value = value;
-    }
+    public double Value { get; } = value;
+    public DateTime Timestamp { get; } = timestamp;
 }

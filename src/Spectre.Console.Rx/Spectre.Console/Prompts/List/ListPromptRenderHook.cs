@@ -1,30 +1,17 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPromptRenderHook<T> : IRenderHook
+internal sealed class ListPromptRenderHook<T>(
+    IAnsiConsole console,
+    Func<IRenderable> builder) : IRenderHook
     where T : notnull
 {
-    private readonly IAnsiConsole _console;
-    private readonly Func<IRenderable> _builder;
-    private readonly LiveRenderable _live;
-    private readonly object _lock;
-    private bool _dirty;
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly Func<IRenderable> _builder = builder ?? throw new ArgumentNullException(nameof(builder));
+    private readonly LiveRenderable _live = new LiveRenderable(console);
+    private readonly object _lock = new();
+    private bool _dirty = true;
 
-    public ListPromptRenderHook(
-        IAnsiConsole console,
-        Func<IRenderable> builder)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _builder = builder ?? throw new ArgumentNullException(nameof(builder));
-
-        _live = new LiveRenderable(console);
-        _lock = new();
-        _dirty = true;
-    }
-
-    public void Clear()
-    {
-        _console.Write(_live.RestoreCursor());
-    }
+    public void Clear() => _console.Write(_live.RestoreCursor());
 
     public void Refresh()
     {

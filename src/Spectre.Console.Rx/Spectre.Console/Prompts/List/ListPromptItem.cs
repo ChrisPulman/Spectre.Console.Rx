@@ -1,23 +1,15 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPromptItem<T> : IMultiSelectionItem<T>
+internal sealed class ListPromptItem<T>(T data, ListPromptItem<T>? parent = null) : IMultiSelectionItem<T>
     where T : notnull
 {
-    public T Data { get; }
-    public ListPromptItem<T>? Parent { get; }
-    public List<ListPromptItem<T>> Children { get; }
-    public int Depth { get; }
+    public T Data { get; } = data;
+    public ListPromptItem<T>? Parent { get; } = parent;
+    public List<ListPromptItem<T>> Children { get; } = [];
+    public int Depth { get; } = CalculateDepth(parent);
     public bool IsSelected { get; set; }
 
     public bool IsGroup => Children.Count > 0;
-
-    public ListPromptItem(T data, ListPromptItem<T>? parent = null)
-    {
-        Data = data;
-        Parent = parent;
-        Children = [];
-        Depth = CalculateDepth(parent);
-    }
 
     public IMultiSelectionItem<T> Select()
     {

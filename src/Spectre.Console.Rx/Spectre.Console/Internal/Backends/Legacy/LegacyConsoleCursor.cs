@@ -2,10 +2,7 @@ namespace Spectre.Console.Rx;
 
 internal sealed class LegacyConsoleCursor : IAnsiConsoleCursor
 {
-    public void Show(bool show)
-    {
-        TryConsoleOperation(() => System.Console.CursorVisible = show);
-    }
+    public void Show(bool show) => TryConsoleOperation(() => System.Console.CursorVisible = show);
 
     public void Move(CursorDirection direction, int steps)
     {
@@ -34,14 +31,11 @@ internal sealed class LegacyConsoleCursor : IAnsiConsoleCursor
         });
     }
 
-    public void SetPosition(int x, int y)
-    {
-        TryConsoleOperation(() =>
-        {
-            System.Console.CursorLeft = x;
-            System.Console.CursorTop = y;
-        });
-    }
+    public void SetPosition(int x, int y) => TryConsoleOperation(() =>
+                                                  {
+                                                      System.Console.CursorLeft = x;
+                                                      System.Console.CursorTop = y;
+                                                  });
 
     private static void TryConsoleOperation(Action action)
     {

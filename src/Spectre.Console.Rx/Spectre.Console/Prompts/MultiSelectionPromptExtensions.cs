@@ -252,10 +252,7 @@ public static class MultiSelectionPromptExtensions
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static MultiSelectionPrompt<T> NotRequired<T>(this MultiSelectionPrompt<T> obj)
-        where T : notnull
-    {
-        return Required(obj, false);
-    }
+        where T : notnull => Required(obj, false);
 
     /// <summary>
     /// Requires a choice to be selected.
@@ -264,10 +261,7 @@ public static class MultiSelectionPromptExtensions
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static MultiSelectionPrompt<T> Required<T>(this MultiSelectionPrompt<T> obj)
-        where T : notnull
-    {
-        return Required(obj, true);
-    }
+        where T : notnull => Required(obj, true);
 
     /// <summary>
     /// Sets a value indicating whether or not at least one choice must be selected.

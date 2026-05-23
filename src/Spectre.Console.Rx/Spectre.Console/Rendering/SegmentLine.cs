@@ -30,10 +30,7 @@ public sealed class SegmentLine : List<Segment>
     /// Gets the number of cells the segment line occupies.
     /// </summary>
     /// <returns>The cell width of the segment line.</returns>
-    public int CellCount()
-    {
-        return Segment.CellCount(this);
-    }
+    public int CellCount() => Segment.CellCount(this);
 
     /// <summary>
     /// Preprends a segment to the line.

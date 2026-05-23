@@ -3,13 +3,17 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// A column showing a spinner.
 /// </summary>
-public sealed class SpinnerColumn : ProgressColumn
+/// <remarks>
+/// Initializes a new instance of the <see cref="SpinnerColumn"/> class.
+/// </remarks>
+/// <param name="spinner">The spinner to use.</param>
+public sealed class SpinnerColumn(Spinner spinner) : ProgressColumn
 {
     private const string ACCUMULATED = "SPINNER_ACCUMULATED";
     private const string INDEX = "SPINNER_INDEX";
 
-    private readonly object _lock;
-    private Spinner _spinner;
+    private readonly object _lock = new object();
+    private Spinner _spinner = spinner ?? throw new ArgumentNullException(nameof(spinner));
     private int? _maxWidth;
     private string? _completed;
     private string? _pending;
@@ -84,16 +88,6 @@ public sealed class SpinnerColumn : ProgressColumn
     {
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SpinnerColumn"/> class.
-    /// </summary>
-    /// <param name="spinner">The spinner to use.</param>
-    public SpinnerColumn(Spinner spinner)
-    {
-        _spinner = spinner ?? throw new ArgumentNullException(nameof(spinner));
-        _lock = new object();
-    }
-
     /// <inheritdoc/>
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
@@ -123,10 +117,7 @@ public sealed class SpinnerColumn : ProgressColumn
     }
 
     /// <inheritdoc/>
-    public override int? GetColumnWidth(RenderOptions options)
-    {
-        return GetMaxWidth(options);
-    }
+    public override int? GetColumnWidth(RenderOptions options) => GetMaxWidth(options);
 
     private int GetMaxWidth(RenderOptions options)
     {

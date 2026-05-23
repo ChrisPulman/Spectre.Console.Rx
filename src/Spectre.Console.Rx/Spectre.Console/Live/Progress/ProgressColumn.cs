@@ -24,8 +24,5 @@ public abstract class ProgressColumn
     /// </summary>
     /// <param name="options">The render options.</param>
     /// <returns>The width of the column, or <c>null</c> to calculate.</returns>
-    public virtual int? GetColumnWidth(RenderOptions options)
-    {
-        return null;
-    }
+    public virtual int? GetColumnWidth(RenderOptions options) => null;
 }

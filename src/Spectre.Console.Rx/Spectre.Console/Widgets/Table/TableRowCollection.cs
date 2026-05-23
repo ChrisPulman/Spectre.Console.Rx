@@ -166,10 +166,7 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
     }
 
     /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     private TableRow CreateRow(IEnumerable<IRenderable> columns)
     {

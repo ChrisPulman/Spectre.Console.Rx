@@ -1,19 +1,11 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class LiveDisplayRenderer : IRenderHook
+internal sealed class LiveDisplayRenderer(IAnsiConsole console, LiveDisplayContext context) : IRenderHook
 {
-    private readonly IAnsiConsole _console;
-    private readonly LiveDisplayContext _context;
-    public LiveDisplayRenderer(IAnsiConsole console, LiveDisplayContext context)
-    {
-        _console = console;
-        _context = context;
-    }
+    private readonly IAnsiConsole _console = console;
+    private readonly LiveDisplayContext _context = context;
 
-    public void Started()
-    {
-        _console.Cursor.Hide();
-    }
+    public void Started() => _console.Cursor.Hide();
 
     public void Completed(bool autoclear)
     {

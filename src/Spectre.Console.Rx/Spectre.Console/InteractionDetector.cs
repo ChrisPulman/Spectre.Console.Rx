@@ -2,14 +2,11 @@ namespace Spectre.Console.Rx;
 
 internal static class InteractionDetector
 {
-    public static bool IsInteractive(InteractionSupport interaction)
-    {
-        return IsInteractive(
+    public static bool IsInteractive(InteractionSupport interaction) => IsInteractive(
             interaction,
             System.Console.IsInputRedirected,
             System.Console.IsOutputRedirected,
             System.Console.IsErrorRedirected);
-    }
 
     internal static bool IsInteractive(
         InteractionSupport interaction,

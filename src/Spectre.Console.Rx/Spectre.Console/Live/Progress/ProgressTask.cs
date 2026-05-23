@@ -181,10 +181,7 @@ public sealed class ProgressTask : IProgress<double>
     /// Increments the task's value.
     /// </summary>
     /// <param name="value">The value to increment with.</param>
-    public void Increment(double value)
-    {
-        Update(increment: value);
-    }
+    public void Increment(double value) => Update(increment: value);
 
     /// <summary>
     /// Gets or sets the maximum age of samples kept for calculating speed and estimated time remaining.
@@ -362,10 +359,7 @@ public sealed class ProgressTask : IProgress<double>
     }
 
     /// <inheritdoc />
-    void IProgress<double>.Report(double value)
-    {
-        Update(increment: value - Value);
-    }
+    void IProgress<double>.Report(double value) => Update(increment: value - Value);
 }
 
 /// <summary>

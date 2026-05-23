@@ -4,7 +4,14 @@ namespace Spectre.Console.Rx;
 /// Represents a multi selection list prompt.
 /// </summary>
 /// <typeparam name="T">The prompt result type.</typeparam>
-public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrategy<T>
+/// <remarks>
+/// Initializes a new instance of the <see cref="MultiSelectionPrompt{T}"/> class.
+/// </remarks>
+/// <param name="comparer">
+/// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
+/// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
+/// </param>
+public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = null) : IPrompt<List<T>>, IListPromptStrategy<T>
     where T : notnull
 {
     /// <summary>
@@ -57,7 +64,7 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     /// </summary>
     public SelectionMode Mode { get; set; } = SelectionMode.Leaf;
 
-    internal ListPromptTree<T> Tree { get; }
+    internal ListPromptTree<T> Tree { get; } = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
 
     /// <summary>
     /// Gets or sets the choice to show as selected when the prompt is first displayed.
@@ -69,18 +76,6 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     /// Gets or sets a Func that will be triggered if Cancel is triggered by the 'ESC' key.
     /// </summary>
     public Func<List<T>>? CancelResult { get; set; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MultiSelectionPrompt{T}"/> class.
-    /// </summary>
-    /// <param name="comparer">
-    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
-    /// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
-    /// </param>
-    public MultiSelectionPrompt(IEqualityComparer<T>? comparer = null)
-    {
-        Tree = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
-    }
 
     /// <summary>
     /// Adds a choice.
@@ -95,10 +90,7 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     }
 
     /// <inheritdoc/>
-    public List<T> Show(IAnsiConsole console)
-    {
-        return ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
-    }
+    public List<T> Show(IAnsiConsole console) => ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
 
     /// <inheritdoc/>
     public async Task<List<T>> ShowAsync(IAnsiConsole console, CancellationToken cancellationToken)
@@ -157,10 +149,7 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     /// </summary>
     /// <param name="item">The item for which to find the parent.</param>
     /// <returns>The parent item, or <c>null</c> if the given item has no parent.</returns>
-    public T? GetParent(T item)
-    {
-        return GetParents(item).LastOrDefault();
-    }
+    public T? GetParent(T item) => GetParents(item).LastOrDefault();
 
     /// <inheritdoc/>
     ListPromptInputResult IListPromptStrategy<T>.HandleInput(ConsoleKeyInfo key, ListPromptState<T> state)

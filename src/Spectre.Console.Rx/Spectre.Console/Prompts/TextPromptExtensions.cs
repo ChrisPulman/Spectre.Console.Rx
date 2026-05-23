@@ -55,10 +55,7 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> ShowChoices<T>(this TextPrompt<T> obj)
-    {
-        return ShowChoices(obj, true);
-    }
+    public static TextPrompt<T> ShowChoices<T>(this TextPrompt<T> obj) => ShowChoices(obj, true);
 
     /// <summary>
     /// Hides choices.
@@ -66,10 +63,7 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> HideChoices<T>(this TextPrompt<T> obj)
-    {
-        return ShowChoices(obj, false);
-    }
+    public static TextPrompt<T> HideChoices<T>(this TextPrompt<T> obj) => ShowChoices(obj, false);
 
     /// <summary>
     /// Show or hide the default value.
@@ -92,10 +86,7 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> ShowDefaultValue<T>(this TextPrompt<T> obj)
-    {
-        return ShowDefaultValue(obj, true);
-    }
+    public static TextPrompt<T> ShowDefaultValue<T>(this TextPrompt<T> obj) => ShowDefaultValue(obj, true);
 
     /// <summary>
     /// Whether or not to write the default value in the text input field to be modified by the end user.
@@ -117,10 +108,7 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> HideDefaultValue<T>(this TextPrompt<T> obj)
-    {
-        return ShowDefaultValue(obj, false);
-    }
+    public static TextPrompt<T> HideDefaultValue<T>(this TextPrompt<T> obj) => ShowDefaultValue(obj, false);
 
     /// <summary>
     /// Sets the validation error message for the prompt.

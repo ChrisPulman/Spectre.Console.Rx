@@ -182,8 +182,5 @@ internal sealed class ListPromptState<T>
         return false;
     }
 
-    internal void Cancel()
-    {
-        IsCancelled = true;
-    }
+    internal void Cancel() => IsCancelled = true;
 }

@@ -130,11 +130,8 @@ internal static class FigletFontParser
         };
     }
 
-    private static bool IsValidSignature(string signature)
-    {
-        return signature.Length == 6
+    private static bool IsValidSignature(string signature) => signature.Length == 6
             && signature[0] == 'f' && signature[1] == 'l'
             && signature[2] == 'f' && signature[3] == '2'
             && signature[4] == 'a';
-    }
 }

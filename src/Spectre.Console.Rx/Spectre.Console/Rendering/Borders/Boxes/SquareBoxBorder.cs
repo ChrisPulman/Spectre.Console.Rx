@@ -6,19 +6,16 @@ namespace Spectre.Console.Rx.Rendering;
 public sealed class SquareBoxBorder : BoxBorder
 {
     /// <inheritdoc/>
-    public override string GetPart(BoxBorderPart part)
+    public override string GetPart(BoxBorderPart part) => part switch
     {
-        return part switch
-        {
-            BoxBorderPart.TopLeft => "┌",
-            BoxBorderPart.Top => "─",
-            BoxBorderPart.TopRight => "┐",
-            BoxBorderPart.Left => "│",
-            BoxBorderPart.Right => "│",
-            BoxBorderPart.BottomLeft => "└",
-            BoxBorderPart.Bottom => "─",
-            BoxBorderPart.BottomRight => "┘",
-            _ => throw new InvalidOperationException("Unknown border part."),
-        };
-    }
+        BoxBorderPart.TopLeft => "┌",
+        BoxBorderPart.Top => "─",
+        BoxBorderPart.TopRight => "┐",
+        BoxBorderPart.Left => "│",
+        BoxBorderPart.Right => "│",
+        BoxBorderPart.BottomLeft => "└",
+        BoxBorderPart.Bottom => "─",
+        BoxBorderPart.BottomRight => "┘",
+        _ => throw new InvalidOperationException("Unknown border part."),
+    };
 }

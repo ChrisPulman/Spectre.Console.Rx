@@ -3,11 +3,15 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// A renderable panel.
 /// </summary>
-public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, IPaddable
+/// <remarks>
+/// Initializes a new instance of the <see cref="Panel"/> class.
+/// </remarks>
+/// <param name="content">The panel content.</param>
+public sealed class Panel(IRenderable content) : Renderable, IHasBoxBorder, IHasBorder, IExpandable, IPaddable
 {
     private const int EdgeWidth = 2;
 
-    private readonly IRenderable _child;
+    private readonly IRenderable _child = content ?? throw new ArgumentNullException(nameof(content));
 
     /// <inheritdoc/>
     public BoxBorder Border { get; set; } = BoxBorder.Square;
@@ -57,15 +61,6 @@ public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, 
     public Panel(string text)
         : this(new Markup(text))
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Panel"/> class.
-    /// </summary>
-    /// <param name="content">The panel content.</param>
-    public Panel(IRenderable content)
-    {
-        _child = content ?? throw new ArgumentNullException(nameof(content));
     }
 
     /// <inheritdoc/>

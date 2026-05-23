@@ -6,8 +6,5 @@ namespace Spectre.Console.Rx.Rendering;
 public sealed class NoBoxBorder : BoxBorder
 {
     /// <inheritdoc/>
-    public override string GetPart(BoxBorderPart part)
-    {
-        return " ";
-    }
+    public override string GetPart(BoxBorderPart part) => " ";
 }

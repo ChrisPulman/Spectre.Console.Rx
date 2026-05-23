@@ -180,17 +180,10 @@ internal static class TypeNameHelper
         builder.Append('>');
     }
 
-    private readonly struct DisplayNameOptions
+    private readonly struct DisplayNameOptions(bool fullName, bool includeGenericParameterNames, bool includeSystemNamespace)
     {
-        public bool FullName { get; }
-        public bool IncludeGenericParameterNames { get; }
-        public bool IncludeSystemNamespace { get; }
-
-        public DisplayNameOptions(bool fullName, bool includeGenericParameterNames, bool includeSystemNamespace)
-        {
-            FullName = fullName;
-            IncludeGenericParameterNames = includeGenericParameterNames;
-            IncludeSystemNamespace = includeSystemNamespace;
-        }
+        public bool FullName { get; } = fullName;
+        public bool IncludeGenericParameterNames { get; } = includeGenericParameterNames;
+        public bool IncludeSystemNamespace { get; } = includeSystemNamespace;
     }
 }

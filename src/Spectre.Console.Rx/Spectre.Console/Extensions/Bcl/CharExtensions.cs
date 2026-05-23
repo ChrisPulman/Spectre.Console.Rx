@@ -11,14 +11,8 @@ public static partial class CharExtensions
     /// </summary>
     /// <param name="character">The character to get the cell width of.</param>
     /// <returns>The cell width of the character.</returns>
-    public static int GetCellWidth(this char character)
-    {
-        return Cell.GetCellLength(character);
-    }
+    public static int GetCellWidth(this char character) => Cell.GetCellLength(character);
 #endif
 
-    internal static bool IsDigit(this char character, int min = 0)
-    {
-        return char.IsDigit(character) && character >= (char)min;
-    }
+    internal static bool IsDigit(this char character, int min = 0) => char.IsDigit(character) && character >= (char)min;
 }

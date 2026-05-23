@@ -4,10 +4,17 @@ namespace Spectre.Console.Rx;
 /// Represents a single list prompt.
 /// </summary>
 /// <typeparam name="T">The prompt result type.</typeparam>
-public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SelectionPrompt{T}"/> class.
+/// </remarks>
+/// <param name="comparer">
+/// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
+/// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
+/// </param>
+public sealed class SelectionPrompt<T>(IEqualityComparer<T>? comparer = null) : IPrompt<T>, IListPromptStrategy<T>
     where T : notnull
 {
-    private readonly ListPromptTree<T> _tree;
+    private readonly ListPromptTree<T> _tree = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
 
     /// <summary>
     /// Gets or sets the title.
@@ -80,18 +87,6 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     public Func<T>? CancelResult { get; set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SelectionPrompt{T}"/> class.
-    /// </summary>
-    /// <param name="comparer">
-    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
-    /// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
-    /// </param>
-    public SelectionPrompt(IEqualityComparer<T>? comparer = null)
-    {
-        _tree = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
-    }
-
-    /// <summary>
     /// Adds a choice.
     /// </summary>
     /// <param name="item">The item to add.</param>
@@ -104,10 +99,7 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     }
 
     /// <inheritdoc/>
-    public T Show(IAnsiConsole console)
-    {
-        return ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
-    }
+    public T Show(IAnsiConsole console) => ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
 
     /// <inheritdoc/>
     public async Task<T> ShowAsync(IAnsiConsole console, CancellationToken cancellationToken)

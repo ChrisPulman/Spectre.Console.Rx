@@ -3,10 +3,14 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// A console recorder used to record output from a console.
 /// </summary>
-public class Recorder : IAnsiConsole, IDisposable
+/// <remarks>
+/// Initializes a new instance of the <see cref="Recorder"/> class.
+/// </remarks>
+/// <param name="console">The console to record output for.</param>
+public class Recorder(IAnsiConsole console) : IAnsiConsole, IDisposable
 {
-    private readonly IAnsiConsole _console;
-    private readonly List<IRenderable> _recorded;
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly List<IRenderable> _recorded = [];
 
     /// <inheritdoc/>
     public Profile Profile => _console.Profile;
@@ -23,16 +27,6 @@ public class Recorder : IAnsiConsole, IDisposable
     /// <inheritdoc/>
     public RenderPipeline Pipeline => _console.Pipeline;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Recorder"/> class.
-    /// </summary>
-    /// <param name="console">The console to record output for.</param>
-    public Recorder(IAnsiConsole console)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _recorded = [];
-    }
-
     /// <inheritdoc/>
     [SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize")]
     public void Dispose()
@@ -41,10 +35,7 @@ public class Recorder : IAnsiConsole, IDisposable
     }
 
     /// <inheritdoc/>
-    public void Clear(bool home)
-    {
-        _console.Clear(home);
-    }
+    public void Clear(bool home) => _console.Clear(home);
 
     /// <inheritdoc/>
     public void Write(IRenderable renderable)

@@ -3,27 +3,21 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a table cell that can span multiple columns.
 /// </summary>
-public sealed class TableCell : IRenderable
+/// <remarks>
+/// Initializes a new instance of the <see cref="TableCell"/> class.
+/// </remarks>
+/// <param name="content">The cell content.</param>
+public sealed class TableCell(IRenderable content) : IRenderable
 {
     /// <summary>
     /// Gets the cell content.
     /// </summary>
-    public IRenderable Content { get; }
+    public IRenderable Content { get; } = content ?? throw new ArgumentNullException(nameof(content));
 
     /// <summary>
     /// Gets the number of columns this cell spans.
     /// </summary>
-    public int ColumnSpan { get; set; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TableCell"/> class.
-    /// </summary>
-    /// <param name="content">The cell content.</param>
-    public TableCell(IRenderable content)
-    {
-        Content = content ?? throw new ArgumentNullException(nameof(content));
-        ColumnSpan = 1;
-    }
+    public int ColumnSpan { get; set; } = 1;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TableCell"/> class.
@@ -60,14 +54,8 @@ public sealed class TableCell : IRenderable
     }
 
     /// <inheritdoc/>
-    Measurement IRenderable.Measure(RenderOptions options, int maxWidth)
-    {
-        return Content.Measure(options, maxWidth);
-    }
+    Measurement IRenderable.Measure(RenderOptions options, int maxWidth) => Content.Measure(options, maxWidth);
 
     /// <inheritdoc/>
-    IEnumerable<Segment> IRenderable.Render(RenderOptions options, int maxWidth)
-    {
-        return Content.Render(options, maxWidth);
-    }
+    IEnumerable<Segment> IRenderable.Render(RenderOptions options, int maxWidth) => Content.Render(options, maxWidth);
 }

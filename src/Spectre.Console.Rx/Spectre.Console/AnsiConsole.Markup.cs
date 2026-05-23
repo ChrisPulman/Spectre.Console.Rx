@@ -9,20 +9,14 @@ public static partial class AnsiConsole
     /// Writes the specified markup to the console.
     /// </summary>
     /// <param name="value">The value to write.</param>
-    public static void Markup(string value)
-    {
-        Markup(value);
-    }
+    public static void Markup(string value) => Markup(value);
 
     /// <summary>
     /// Writes the specified markup to the console.
     /// </summary>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void Markup(string format, params object[] args)
-    {
-        Markup(format, args);
-    }
+    public static void Markup(string format, params object[] args) => Markup(format, args);
 
     /// <summary>
     /// Writes the specified markup to the console.
@@ -37,10 +31,7 @@ public static partial class AnsiConsole
     /// </code>
     /// </example>
     /// <param name="value">The interpolated string value to write.</param>
-    public static void MarkupInterpolated(FormattableString value)
-    {
-        Console.MarkupInterpolated(value);
-    }
+    public static void MarkupInterpolated(FormattableString value) => Console.MarkupInterpolated(value);
 
     /// <summary>
     /// Writes the specified markup to the console.
@@ -48,10 +39,7 @@ public static partial class AnsiConsole
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void Markup(IFormatProvider provider, string format, params object[] args)
-    {
-        Markup(provider, format, args);
-    }
+    public static void Markup(IFormatProvider provider, string format, params object[] args) => Markup(provider, format, args);
 
     /// <summary>
     /// Writes the specified markup to the console.
@@ -67,29 +55,20 @@ public static partial class AnsiConsole
     /// </example>
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <param name="value">The interpolated string value to write.</param>
-    public static void MarkupInterpolated(IFormatProvider provider, FormattableString value)
-    {
-        Console.MarkupInterpolated(provider, value);
-    }
+    public static void MarkupInterpolated(IFormatProvider provider, FormattableString value) => Console.MarkupInterpolated(provider, value);
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
     /// </summary>
     /// <param name="value">The value to write.</param>
-    public static void MarkupLine(string value)
-    {
-        Console.MarkupLine(value);
-    }
+    public static void MarkupLine(string value) => Console.MarkupLine(value);
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
     /// </summary>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void MarkupLine(string format, params object[] args)
-    {
-        Console.MarkupLine(format, args);
-    }
+    public static void MarkupLine(string format, params object[] args) => Console.MarkupLine(format, args);
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
@@ -104,10 +83,7 @@ public static partial class AnsiConsole
     /// </code>
     /// </example>
     /// <param name="value">The interpolated string value to write.</param>
-    public static void MarkupLineInterpolated(FormattableString value)
-    {
-        Console.MarkupLineInterpolated(value);
-    }
+    public static void MarkupLineInterpolated(FormattableString value) => Console.MarkupLineInterpolated(value);
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
@@ -115,10 +91,7 @@ public static partial class AnsiConsole
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void MarkupLine(IFormatProvider provider, string format, params object[] args)
-    {
-        Console.MarkupLine(provider, format, args);
-    }
+    public static void MarkupLine(IFormatProvider provider, string format, params object[] args) => Console.MarkupLine(provider, format, args);
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
@@ -134,8 +107,5 @@ public static partial class AnsiConsole
     /// </example>
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <param name="value">The interpolated string value to write.</param>
-    public static void MarkupLineInterpolated(IFormatProvider provider, FormattableString value)
-    {
-        Console.MarkupLineInterpolated(provider, value);
-    }
+    public static void MarkupLineInterpolated(IFormatProvider provider, FormattableString value) => Console.MarkupLineInterpolated(provider, value);
 }

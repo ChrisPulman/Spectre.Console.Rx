@@ -47,16 +47,10 @@ public static partial class AnsiConsole
     /// <summary>
     /// Resets the current applied text decorations.
     /// </summary>
-    public static void ResetDecoration()
-    {
-        Decoration = Decoration.None;
-    }
+    public static void ResetDecoration() => Decoration = Decoration.None;
 
     /// <summary>
     /// Resets the current applied foreground and background colors.
     /// </summary>
-    public static void ResetColors()
-    {
-        CurrentStyle = Style.Plain;
-    }
+    public static void ResetColors() => CurrentStyle = Style.Plain;
 }

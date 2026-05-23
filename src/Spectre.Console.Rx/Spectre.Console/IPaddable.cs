@@ -87,10 +87,7 @@ public static class PaddableExtensions
     /// <param name="bottom">The bottom padding to apply.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T Padding<T>(this T obj, int left, int top, int right, int bottom)
-        where T : class, IPaddable
-    {
-        return Padding(obj, new Padding(left, top, right, bottom));
-    }
+        where T : class, IPaddable => Padding(obj, new Padding(left, top, right, bottom));
 
     /// <summary>
     /// Sets the horizontal and vertical padding.
@@ -101,10 +98,7 @@ public static class PaddableExtensions
     /// <param name="vertical">The top and bottom padding.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T Padding<T>(this T obj, int horizontal, int vertical)
-        where T : class, IPaddable
-    {
-        return Padding(obj, new Padding(horizontal, vertical));
-    }
+        where T : class, IPaddable => Padding(obj, new Padding(horizontal, vertical));
 
     /// <summary>
     /// Sets the padding.

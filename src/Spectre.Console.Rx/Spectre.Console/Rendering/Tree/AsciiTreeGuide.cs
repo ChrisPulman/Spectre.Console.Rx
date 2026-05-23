@@ -6,15 +6,12 @@ namespace Spectre.Console.Rx.Rendering;
 public sealed class AsciiTreeGuide : TreeGuide
 {
     /// <inheritdoc/>
-    public override string GetPart(TreeGuidePart part)
+    public override string GetPart(TreeGuidePart part) => part switch
     {
-        return part switch
-        {
-            TreeGuidePart.Space => "    ",
-            TreeGuidePart.Continue => "|   ",
-            TreeGuidePart.Fork => "|-- ",
-            TreeGuidePart.End => "`-- ",
-            _ => throw new ArgumentOutOfRangeException(nameof(part), part, "Unknown tree part."),
-        };
-    }
+        TreeGuidePart.Space => "    ",
+        TreeGuidePart.Continue => "|   ",
+        TreeGuidePart.Fork => "|-- ",
+        TreeGuidePart.End => "`-- ",
+        _ => throw new ArgumentOutOfRangeException(nameof(part), part, "Unknown tree part."),
+    };
 }

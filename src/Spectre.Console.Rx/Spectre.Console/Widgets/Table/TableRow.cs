@@ -49,15 +49,9 @@ public sealed class TableRow : IEnumerable<IRenderable>
         IsFooter = isFooter;
     }
 
-    internal static TableRow Header(IEnumerable<IRenderable> items)
-    {
-        return new TableRow(items, true, false);
-    }
+    internal static TableRow Header(IEnumerable<IRenderable> items) => new TableRow(items, true, false);
 
-    internal static TableRow Footer(IEnumerable<IRenderable> items)
-    {
-        return new TableRow(items, false, true);
-    }
+    internal static TableRow Footer(IEnumerable<IRenderable> items) => new TableRow(items, false, true);
 
     internal void Add(IRenderable item)
     {
@@ -67,14 +61,8 @@ public sealed class TableRow : IEnumerable<IRenderable>
     }
 
     /// <inheritdoc/>
-    public IEnumerator<IRenderable> GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    public IEnumerator<IRenderable> GetEnumerator() => _items.GetEnumerator();
 
     /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

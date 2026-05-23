@@ -14,8 +14,5 @@ internal sealed class MyGetEnricher : IProfileEnricher
         return false;
     }
 
-    public void Enrich(Profile profile)
-    {
-        profile.Capabilities.Interactive = false;
-    }
+    public void Enrich(Profile profile) => profile.Capabilities.Interactive = false;
 }

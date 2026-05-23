@@ -1,13 +1,8 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class LayoutPlaceholder : Renderable
+internal sealed class LayoutPlaceholder(Layout layout) : Renderable
 {
-    public Layout Layout { get; }
-
-    public LayoutPlaceholder(Layout layout)
-    {
-        Layout = layout ?? throw new ArgumentNullException(nameof(layout));
-    }
+    public Layout Layout { get; } = layout ?? throw new ArgumentNullException(nameof(layout));
 
     protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
     {

@@ -10,16 +10,10 @@ public abstract class JustInTimeRenderable : Renderable
     private IRenderable? _rendered;
 
     /// <inheritdoc/>
-    protected sealed override Measurement Measure(RenderOptions context, int maxWidth)
-    {
-        return GetInner().Measure(context, maxWidth);
-    }
+    protected sealed override Measurement Measure(RenderOptions context, int maxWidth) => GetInner().Measure(context, maxWidth);
 
     /// <inheritdoc/>
-    protected sealed override IEnumerable<Segment> Render(RenderOptions context, int width)
-    {
-        return GetInner().Render(context, width);
-    }
+    protected sealed override IEnumerable<Segment> Render(RenderOptions context, int width) => GetInner().Render(context, width);
 
     /// <summary>
     /// Builds the inner renderable.
@@ -32,18 +26,12 @@ public abstract class JustInTimeRenderable : Renderable
     /// If so, the underlying renderable needs rebuilding.
     /// </summary>
     /// <returns><c>true</c> if the object needs rebuilding, otherwise <c>false</c>.</returns>
-    protected virtual bool HasDirtyChildren()
-    {
-        return false;
-    }
+    protected virtual bool HasDirtyChildren() => false;
 
     /// <summary>
     /// Marks this instance as dirty.
     /// </summary>
-    protected void MarkAsDirty()
-    {
-        _dirty = true;
-    }
+    protected void MarkAsDirty() => _dirty = true;
 
     /// <summary>
     /// Marks this instance as dirty.

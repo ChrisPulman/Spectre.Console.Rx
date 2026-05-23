@@ -12,8 +12,5 @@ public sealed class NoTableBorder : TableBorder
     public override bool SupportsRowSeparator => false;
 
     /// <inheritdoc/>
-    public override string GetPart(TableBorderPart part)
-    {
-        return " ";
-    }
+    public override string GetPart(TableBorderPart part) => " ";
 }

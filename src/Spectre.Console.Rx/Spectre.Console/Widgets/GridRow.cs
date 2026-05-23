@@ -3,9 +3,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a grid row.
 /// </summary>
-public sealed class GridRow : IEnumerable<IRenderable>
+/// <remarks>
+/// Initializes a new instance of the <see cref="GridRow"/> class.
+/// </remarks>
+/// <param name="items">The row items.</param>
+public sealed class GridRow(IEnumerable<IRenderable> items) : IEnumerable<IRenderable>
 {
-    private readonly List<IRenderable> _items;
+    private readonly List<IRenderable> _items = new List<IRenderable>(items ?? []);
 
     /// <summary>
     /// Gets a row item at the specified grid column index.
@@ -17,15 +21,6 @@ public sealed class GridRow : IEnumerable<IRenderable>
         get => _items[index];
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="GridRow"/> class.
-    /// </summary>
-    /// <param name="items">The row items.</param>
-    public GridRow(IEnumerable<IRenderable> items)
-    {
-        _items = new List<IRenderable>(items ?? []);
-    }
-
     internal void Add(IRenderable item)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -34,14 +29,8 @@ public sealed class GridRow : IEnumerable<IRenderable>
     }
 
     /// <inheritdoc/>
-    public IEnumerator<IRenderable> GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    public IEnumerator<IRenderable> GetEnumerator() => _items.GetEnumerator();
 
     /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

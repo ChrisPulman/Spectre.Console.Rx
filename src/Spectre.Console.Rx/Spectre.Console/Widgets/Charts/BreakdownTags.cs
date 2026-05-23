@@ -1,19 +1,14 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class BreakdownTags : Renderable
+internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
 {
-    private readonly List<IBreakdownChartItem> _data;
+    private readonly List<IBreakdownChartItem> _data = data ?? throw new ArgumentNullException(nameof(data));
 
     public int? Width { get; set; }
     public CultureInfo? Culture { get; set; }
     public bool ShowTagValues { get; set; } = true;
     public Func<double, CultureInfo, string>? ValueFormatter { get; set; }
     public Color ValueColor { get; set; } = Color.Grey;
-
-    public BreakdownTags(List<IBreakdownChartItem> data)
-    {
-        _data = data ?? throw new ArgumentNullException(nameof(data));
-    }
 
     protected override Measurement Measure(RenderOptions options, int maxWidth)
     {
@@ -42,13 +37,10 @@ internal sealed class BreakdownTags : Renderable
         }
     }
 
-    private string GetTag(IBreakdownChartItem item, CultureInfo culture)
-    {
-        return string.Format(
+    private string GetTag(IBreakdownChartItem item, CultureInfo culture) => string.Format(
             culture, "[{0}]■[/] {1}",
             item.Color.ToMarkup() ?? "default",
             FormatValue(item, culture)).Trim();
-    }
 
     private string FormatValue(IBreakdownChartItem item, CultureInfo culture)
     {
@@ -65,8 +57,5 @@ internal sealed class BreakdownTags : Renderable
         return item.Label.EscapeMarkup();
     }
 
-    private static string DefaultFormatter(double value, CultureInfo culture)
-    {
-        return value.ToString(culture);
-    }
+    private static string DefaultFormatter(double value, CultureInfo culture) => value.ToString(culture);
 }

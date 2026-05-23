@@ -9,39 +9,36 @@ public sealed class MarkdownTableBorder : TableBorder
     public override bool SupportsRowSeparator => false;
 
     /// <inheritdoc/>
-    public override string GetPart(TableBorderPart part)
+    public override string GetPart(TableBorderPart part) => part switch
     {
-        return part switch
-        {
-            TableBorderPart.HeaderTopLeft => " ",
-            TableBorderPart.HeaderTop => " ",
-            TableBorderPart.HeaderTopSeparator => " ",
-            TableBorderPart.HeaderTopRight => " ",
-            TableBorderPart.HeaderLeft => "|",
-            TableBorderPart.HeaderSeparator => "|",
-            TableBorderPart.HeaderRight => "|",
-            TableBorderPart.HeaderBottomLeft => "|",
-            TableBorderPart.HeaderBottom => "-",
-            TableBorderPart.HeaderBottomSeparator => "|",
-            TableBorderPart.HeaderBottomRight => "|",
-            TableBorderPart.CellLeft => "|",
-            TableBorderPart.CellSeparator => "|",
-            TableBorderPart.CellRight => "|",
-            TableBorderPart.FooterTopLeft => " ",
-            TableBorderPart.FooterTop => " ",
-            TableBorderPart.FooterTopSeparator => " ",
-            TableBorderPart.FooterTopRight => " ",
-            TableBorderPart.FooterBottomLeft => " ",
-            TableBorderPart.FooterBottom => " ",
-            TableBorderPart.FooterBottomSeparator => " ",
-            TableBorderPart.FooterBottomRight => " ",
-            TableBorderPart.RowLeft => " ",
-            TableBorderPart.RowCenter => " ",
-            TableBorderPart.RowSeparator => " ",
-            TableBorderPart.RowRight => " ",
-            _ => throw new InvalidOperationException("Unknown border part."),
-        };
-    }
+        TableBorderPart.HeaderTopLeft => " ",
+        TableBorderPart.HeaderTop => " ",
+        TableBorderPart.HeaderTopSeparator => " ",
+        TableBorderPart.HeaderTopRight => " ",
+        TableBorderPart.HeaderLeft => "|",
+        TableBorderPart.HeaderSeparator => "|",
+        TableBorderPart.HeaderRight => "|",
+        TableBorderPart.HeaderBottomLeft => "|",
+        TableBorderPart.HeaderBottom => "-",
+        TableBorderPart.HeaderBottomSeparator => "|",
+        TableBorderPart.HeaderBottomRight => "|",
+        TableBorderPart.CellLeft => "|",
+        TableBorderPart.CellSeparator => "|",
+        TableBorderPart.CellRight => "|",
+        TableBorderPart.FooterTopLeft => " ",
+        TableBorderPart.FooterTop => " ",
+        TableBorderPart.FooterTopSeparator => " ",
+        TableBorderPart.FooterTopRight => " ",
+        TableBorderPart.FooterBottomLeft => " ",
+        TableBorderPart.FooterBottom => " ",
+        TableBorderPart.FooterBottomSeparator => " ",
+        TableBorderPart.FooterBottomRight => " ",
+        TableBorderPart.RowLeft => " ",
+        TableBorderPart.RowCenter => " ",
+        TableBorderPart.RowSeparator => " ",
+        TableBorderPart.RowRight => " ",
+        _ => throw new InvalidOperationException("Unknown border part."),
+    };
 
     /// <inheritdoc/>
     public override string GetColumnRow(TablePart part, IReadOnlyList<int> widths, IReadOnlyList<IColumn> columns)

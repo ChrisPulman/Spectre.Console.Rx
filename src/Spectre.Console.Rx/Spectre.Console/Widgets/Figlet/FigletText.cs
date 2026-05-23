@@ -3,10 +3,15 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents text rendered with a Figlet font.
 /// </summary>
-public sealed class FigletText : Renderable, IHasJustification
+/// <remarks>
+/// Initializes a new instance of the <see cref="FigletText"/> class.
+/// </remarks>
+/// <param name="font">The Figlet font to use.</param>
+/// <param name="text">The text.</param>
+public sealed class FigletText(FigletFont font, string text) : Renderable, IHasJustification
 {
-    private readonly FigletFont _font;
-    private readonly string _text;
+    private readonly FigletFont _font = font ?? throw new ArgumentNullException(nameof(font));
+    private readonly string _text = text ?? throw new ArgumentNullException(nameof(text));
 
     private const string OverscoreChars = @"|/\[]{}()<>";
 
@@ -38,17 +43,6 @@ public sealed class FigletText : Renderable, IHasJustification
     public FigletText(string text)
         : this(FigletFont.Default, text)
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FigletText"/> class.
-    /// </summary>
-    /// <param name="font">The Figlet font to use.</param>
-    /// <param name="text">The text.</param>
-    public FigletText(FigletFont font, string text)
-    {
-        _font = font ?? throw new ArgumentNullException(nameof(font));
-        _text = text ?? throw new ArgumentNullException(nameof(text));
     }
 
     /// <inheritdoc/>

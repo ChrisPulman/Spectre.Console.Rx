@@ -46,10 +46,7 @@ public sealed class StatusContext
     /// <summary>
     /// Refreshes the status.
     /// </summary>
-    public void Refresh()
-    {
-        _context.Refresh();
-    }
+    public void Refresh() => _context.Refresh();
 
     internal void Finish()
     {

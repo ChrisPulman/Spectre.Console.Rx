@@ -33,10 +33,7 @@ public sealed class Link(string url) : IEquatable<Link>
     }
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return ReferenceEquals(this, obj) || obj is Link other && Equals(other);
-    }
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is Link other && Equals(other);
 
     /// <inheritdoc />
     public override int GetHashCode()

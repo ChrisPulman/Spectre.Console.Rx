@@ -25,14 +25,15 @@ public static class SpectreConsoleRxReactiveUIBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.WithCoreServices();
-        builder
-            .WithTaskPoolScheduler(taskPoolScheduler ?? global::System.Reactive.Concurrency.TaskPoolScheduler.Default)
-            .WithMainThreadScheduler(mainThreadScheduler ?? AnsiConsoleRx.Scheduler);
 
         if (registerPlatformServices)
         {
             builder.WithPlatformServices();
         }
+
+        builder
+            .WithTaskPoolScheduler(taskPoolScheduler ?? global::System.Reactive.Concurrency.TaskPoolScheduler.Default)
+            .WithMainThreadScheduler(mainThreadScheduler ?? AnsiConsoleRx.Scheduler);
 
         return builder;
     }

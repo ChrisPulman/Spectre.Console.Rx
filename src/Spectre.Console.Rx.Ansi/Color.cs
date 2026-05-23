@@ -3,7 +3,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a color.
 /// </summary>
-public readonly partial struct Color : IEquatable<Color>
+/// <remarks>
+/// Initializes a new instance of the <see cref="Color"/> struct.
+/// </remarks>
+/// <param name="red">The red component.</param>
+/// <param name="green">The green component.</param>
+/// <param name="blue">The blue component.</param>
+public readonly partial struct Color(byte red, byte green, byte blue) : IEquatable<Color>
 {
     /// <summary>
     /// Gets the default color.
@@ -13,42 +19,27 @@ public readonly partial struct Color : IEquatable<Color>
     /// <summary>
     /// Gets the red component.
     /// </summary>
-    public byte R { get; }
+    public byte R { get; } = red;
 
     /// <summary>
     /// Gets the green component.
     /// </summary>
-    public byte G { get; }
+    public byte G { get; } = green;
 
     /// <summary>
     /// Gets the blue component.
     /// </summary>
-    public byte B { get; }
+    public byte B { get; } = blue;
 
     /// <summary>
     /// Gets the number of the color, if any.
     /// </summary>
-    internal byte? Number { get; }
+    internal byte? Number { get; } = null;
 
     /// <summary>
     /// Gets a value indicating whether or not this is the default color.
     /// </summary>
-    internal bool IsDefault { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Color"/> struct.
-    /// </summary>
-    /// <param name="red">The red component.</param>
-    /// <param name="green">The green component.</param>
-    /// <param name="blue">The blue component.</param>
-    public Color(byte red, byte green, byte blue)
-    {
-        R = red;
-        G = green;
-        B = blue;
-        IsDefault = false;
-        Number = null;
-    }
+    internal bool IsDefault { get; } = false;
 
     /// <summary>
     /// Blends two colors.
@@ -56,38 +47,30 @@ public readonly partial struct Color : IEquatable<Color>
     /// <param name="other">The other color.</param>
     /// <param name="factor">The blend factor.</param>
     /// <returns>The resulting color.</returns>
-    public Color Blend(Color other, float factor)
-    {
+    public Color Blend(Color other, float factor) =>
         // https://github.com/willmcgugan/rich/blob/f092b1d04252e6f6812021c0f415dd1d7be6a16a/rich/color.py#L494
-        return new Color(
+        new Color(
             (byte)(R + ((other.R - R) * factor)),
             (byte)(G + ((other.G - G) * factor)),
             (byte)(B + ((other.B - B) * factor)));
-    }
 
     /// <summary>
     /// Gets the hexadecimal representation of the color.
     /// </summary>
     /// <returns>The hexadecimal representation of the color.</returns>
-    public string ToHex()
-    {
-        return string.Format(
+    public string ToHex() => string.Format(
             CultureInfo.InvariantCulture,
             "{0}{1}{2}",
             R.ToString("X2", CultureInfo.InvariantCulture),
             G.ToString("X2", CultureInfo.InvariantCulture),
             B.ToString("X2", CultureInfo.InvariantCulture));
-    }
 
     /// <summary>
     /// Gets the exact or closest color in the specified <see cref="ColorSystem"/>.
     /// </summary>
     /// <param name="system">The color system.</param>
     /// <returns>The exact or closest color in the specified <see cref="ColorSystem"/>.</returns>
-    public Color ExactOrClosest(ColorSystem system)
-    {
-        return ColorPalette.ExactOrClosest(system, this);
-    }
+    public Color ExactOrClosest(ColorSystem system) => ColorPalette.ExactOrClosest(system, this);
 
     /// <inheritdoc/>
     public override int GetHashCode()
@@ -103,17 +86,11 @@ public readonly partial struct Color : IEquatable<Color>
     }
 
     /// <inheritdoc/>
-    public override bool Equals(object? obj)
-    {
-        return obj is Color color && Equals(color);
-    }
+    public override bool Equals(object? obj) => obj is Color color && Equals(color);
 
     /// <inheritdoc/>
-    public bool Equals(Color other)
-    {
-        return (IsDefault && other.IsDefault) ||
+    public bool Equals(Color other) => (IsDefault && other.IsDefault) ||
                (IsDefault == other.IsDefault && R == other.R && G == other.G && B == other.B);
-    }
 
     /// <summary>
     /// Checks if two <see cref="Color"/> instances are equal.
@@ -213,10 +190,7 @@ public readonly partial struct Color : IEquatable<Color>
     /// </summary>
     /// <param name="number">The color number.</param>
     /// <returns>The color representing the specified color number.</returns>
-    public static Color FromInt32(int number)
-    {
-        return ColorTable.GetColor(number);
-    }
+    public static Color FromInt32(int number) => ColorTable.GetColor(number);
 
     /// <summary>
     /// Creates a color from a hexadecimal string representation.
@@ -271,39 +245,33 @@ public readonly partial struct Color : IEquatable<Color>
     /// </summary>
     /// <param name="name">The name of the color.</param>
     /// <returns>The requested <see cref="Color"/> or <c>null</c> if not found.</returns>
-    public static Color? FromName(string name)
-    {
-        return ColorTable.GetColor(name);
-    }
+    public static Color? FromName(string name) => ColorTable.GetColor(name);
 
     /// <summary>
     /// Converts a <see cref="ConsoleColor"/> to a <see cref="Color"/>.
     /// </summary>
     /// <param name="color">The color to convert.</param>
     /// <returns>A <see cref="Color"/> representing the <see cref="ConsoleColor"/>.</returns>
-    public static Color FromConsoleColor(ConsoleColor color)
+    public static Color FromConsoleColor(ConsoleColor color) => color switch
     {
-        return color switch
-        {
-            ConsoleColor.Black => Black,
-            ConsoleColor.Blue => Blue,
-            ConsoleColor.Cyan => Aqua,
-            ConsoleColor.DarkBlue => Navy,
-            ConsoleColor.DarkCyan => Teal,
-            ConsoleColor.DarkGray => Grey,
-            ConsoleColor.DarkGreen => Green,
-            ConsoleColor.DarkMagenta => Purple,
-            ConsoleColor.DarkRed => Maroon,
-            ConsoleColor.DarkYellow => Olive,
-            ConsoleColor.Gray => Silver,
-            ConsoleColor.Green => Lime,
-            ConsoleColor.Magenta => Fuchsia,
-            ConsoleColor.Red => Red,
-            ConsoleColor.White => White,
-            ConsoleColor.Yellow => Yellow,
-            _ => Default,
-        };
-    }
+        ConsoleColor.Black => Black,
+        ConsoleColor.Blue => Blue,
+        ConsoleColor.Cyan => Aqua,
+        ConsoleColor.DarkBlue => Navy,
+        ConsoleColor.DarkCyan => Teal,
+        ConsoleColor.DarkGray => Grey,
+        ConsoleColor.DarkGreen => Green,
+        ConsoleColor.DarkMagenta => Purple,
+        ConsoleColor.DarkRed => Maroon,
+        ConsoleColor.DarkYellow => Olive,
+        ConsoleColor.Gray => Silver,
+        ConsoleColor.Green => Lime,
+        ConsoleColor.Magenta => Fuchsia,
+        ConsoleColor.Red => Red,
+        ConsoleColor.White => White,
+        ConsoleColor.Yellow => Yellow,
+        _ => Default,
+    };
 
     /// <summary>
     /// Converts the color to a markup string.

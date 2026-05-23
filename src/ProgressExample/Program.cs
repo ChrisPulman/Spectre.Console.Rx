@@ -3,8 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Spectre.Console.Rx;
 
 namespace Progress;
@@ -17,13 +18,14 @@ public static class Program
     /// <summary>
     /// Defines the entry point of the application.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public static async Task Main()
+    public static void Main()
     {
         AnsiConsole.MarkupLine("[yellow]Initializing warp drive[/]...");
+        using var completed = new ManualResetEventSlim(false);
+        Exception? error = null;
 
         // Show progress
-        await AnsiConsoleRx.Progress(p =>
+        using var subscription = AnsiConsoleRx.Progress(p =>
             p.AutoClear(false)
             .Columns(new ProgressColumn[]
             {
@@ -34,7 +36,7 @@ public static class Program
                     new SpinnerColumn(),            // Spinner
             }))
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .RunAsync(async ctx =>
+            .SelectMany(ctx =>
             {
                 var random = new Random(DateTime.Now.Millisecond);
 
@@ -42,10 +44,9 @@ public static class Program
                 var tasks = CreateTasks(ctx, random);
                 var warpTask = ctx.AddTask("Going to warp", autoStart: false).IsIndeterminate();
 
-                await ctx.Schedule(
-                    TimeSpan.FromMilliseconds(100),
-                    () => ctx.IsFinished,
-                    () =>
+                var primaryTasks = Observable
+                    .Interval(TimeSpan.FromMilliseconds(100), AnsiConsoleRx.Scheduler)
+                    .Do(_ =>
                     {
                         // Increment progress
                         foreach (var (task, increment) in tasks)
@@ -58,18 +59,48 @@ public static class Program
                         {
                             WriteLogMessage();
                         }
+                    })
+                    .TakeWhile(_ => !ctx.IsFinished)
+                    .Select(_ => Unit.Default)
+                    .IgnoreElements();
+
+                var warpTaskProgress = Observable
+                    .Defer(() =>
+                    {
+                        // Now start the "warp" task
+                        warpTask.StartTask();
+                        warpTask.IsIndeterminate(false);
+
+                        return Observable
+                            .Interval(TimeSpan.FromMilliseconds(100), AnsiConsoleRx.Scheduler)
+                            .Do(_ => warpTask.Increment(12 * random.NextDouble()))
+                            .TakeWhile(_ => !warpTask.IsFinished)
+                            .Select(_ => Unit.Default)
+                            .IgnoreElements();
                     });
 
-                // Now start the "warp" task
-                warpTask.StartTask();
-                warpTask.IsIndeterminate(false);
-                await ctx.Schedule(
-                    TimeSpan.FromMilliseconds(100),
-                    () => warpTask.Increment(12 * random.NextDouble()));
+                var done = Observable.Start(() => WriteLogMessage("[green]Done![/]"), AnsiConsoleRx.Scheduler);
 
-                // Done
-                await ctx.Schedule(_ => WriteLogMessage("[green]Done![/]"));
-            });
+                return primaryTasks
+                    .Concat(warpTaskProgress)
+                    .Concat(done)
+                    .Finally(ctx.Complete);
+            })
+            .Subscribe(
+                _ => { },
+                ex =>
+                {
+                    error = ex;
+                    completed.Set();
+                },
+                completed.Set);
+
+        completed.Wait();
+
+        if (error is not null)
+        {
+            throw new InvalidOperationException("Progress example failed.", error);
+        }
     }
 
     private static List<(ProgressTask Task, int Delay)> CreateTasks(ProgressContext context, Random random)

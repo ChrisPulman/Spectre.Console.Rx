@@ -3,9 +3,10 @@
 
 using System;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Spectre.Console.Rx;
 
 namespace LiveTable;
@@ -33,11 +34,13 @@ public static class Program
     /// Defines the entry point of the application.
     /// </summary>
     /// <param name="args">The command-line arguments.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
         var continuous = args.Contains("--continuous", StringComparer.OrdinalIgnoreCase);
         using var exit = new CancellationTokenSource();
+        using var completed = new ManualResetEventSlim(false);
+        Exception? error = null;
+
         Console.CancelKeyPress += (_, eventArgs) =>
         {
             eventArgs.Cancel = true;
@@ -53,12 +56,12 @@ public static class Program
             ? "Press [yellow]CTRL+C[/] to exit"
             : "Streaming [yellow]30[/] exchange-rate updates");
 
-        await AnsiConsoleRx.Live(table, p =>
+        using var subscription = AnsiConsoleRx.Live(table, p =>
             p.AutoClear(false)
             .Overflow(VerticalOverflow.Ellipsis)
             .Cropping(VerticalOverflowCropping.Bottom))
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .RunAsync(async ctx =>
+            .SelectMany(ctx =>
             {
                 // Add some initial rows
                 foreach (var a in Enumerable.Range(0, NumberOfRows))
@@ -73,35 +76,58 @@ public static class Program
                     ticks = ticks.Take(30);
                 }
 
-                try
-                {
-                    await ticks
-                        .ObserveOn(AnsiConsoleRx.Scheduler)
-                        .RunAsync(
-                            _ =>
-                            {
-                                // Continuously update the table
-                                if (table.Rows.Count > NumberOfRows)
-                                {
-                                    table.Rows.RemoveAt(0);
-                                }
+                return ticks
+                    .TakeUntil(FromCancellation(exit.Token))
+                    .ObserveOn(AnsiConsoleRx.Scheduler)
+                    .Do(_ =>
+                    {
+                        // Continuously update the table
+                        if (table.Rows.Count > NumberOfRows)
+                        {
+                            table.Rows.RemoveAt(0);
+                        }
 
-                                AddExchangeRateRow(table);
-                                ctx.Refresh();
-                            },
-                            exit.Token)
-                        .ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (exit.IsCancellationRequested)
+                        AddExchangeRateRow(table);
+                        ctx.Refresh();
+                    })
+                    .Select(_ => Unit.Default)
+                    .Finally(ctx.IsFinished);
+            })
+            .Subscribe(
+                _ => { },
+                ex =>
                 {
-                    // The user requested a clean shutdown.
-                }
-                finally
-                {
-                    ctx.IsFinished();
-                }
-            });
+                    error = ex;
+                    completed.Set();
+                },
+                completed.Set);
+
+        completed.Wait();
+
+        if (error is not null)
+        {
+            throw new InvalidOperationException("Live table example failed.", error);
+        }
     }
+
+    private static IObservable<Unit> FromCancellation(CancellationToken token) =>
+        Observable.Create<Unit>(observer =>
+        {
+            if (token.IsCancellationRequested)
+            {
+                observer.OnNext(Unit.Default);
+                observer.OnCompleted();
+                return Disposable.Empty;
+            }
+
+            var registration = token.Register(() =>
+            {
+                observer.OnNext(Unit.Default);
+                observer.OnCompleted();
+            });
+
+            return Disposable.Create(registration.Dispose);
+        });
 
     private static void AddExchangeRateRow(Table table)
     {

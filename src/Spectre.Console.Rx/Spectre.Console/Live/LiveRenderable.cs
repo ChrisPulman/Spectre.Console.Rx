@@ -1,9 +1,9 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class LiveRenderable : Renderable
+internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
 {
     private readonly object _lock = new();
-    private readonly IAnsiConsole _console;
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
     private IRenderable? _renderable;
     private SegmentShape? _shape;
 
@@ -12,16 +12,8 @@ internal sealed class LiveRenderable : Renderable
 
     [MemberNotNullWhen(true, nameof(Target))]
     public bool HasRenderable => _renderable != null;
-    public VerticalOverflow Overflow { get; set; }
-    public VerticalOverflowCropping OverflowCropping { get; set; }
-
-    public LiveRenderable(IAnsiConsole console)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-
-        Overflow = VerticalOverflow.Ellipsis;
-        OverflowCropping = VerticalOverflowCropping.Top;
-    }
+    public VerticalOverflow Overflow { get; set; } = VerticalOverflow.Ellipsis;
+    public VerticalOverflowCropping OverflowCropping { get; set; } = VerticalOverflowCropping.Top;
 
     public LiveRenderable(IAnsiConsole console, IRenderable renderable)
         : this(console)

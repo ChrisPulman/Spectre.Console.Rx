@@ -1,18 +1,12 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class TableRowEnumerator : IEnumerator<TableRow>
+internal sealed class TableRowEnumerator(TableRow[] items) : IEnumerator<TableRow>
 {
-    private readonly TableRow[] _items;
-    private int _index;
+    private readonly TableRow[] _items = items ?? throw new ArgumentNullException(nameof(items));
+    private int _index = -1;
 
     public TableRow Current => _items[_index];
     object? IEnumerator.Current => _items[_index];
-
-    public TableRowEnumerator(TableRow[] items)
-    {
-        _items = items ?? throw new ArgumentNullException(nameof(items));
-        _index = -1;
-    }
 
     public void Dispose()
     {
@@ -24,8 +18,5 @@ internal sealed class TableRowEnumerator : IEnumerator<TableRow>
         return _index < _items.Length;
     }
 
-    public void Reset()
-    {
-        _index = -1;
-    }
+    public void Reset() => _index = -1;
 }

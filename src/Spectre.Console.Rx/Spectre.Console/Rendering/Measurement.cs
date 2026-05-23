@@ -3,34 +3,25 @@ namespace Spectre.Console.Rx.Rendering;
 /// <summary>
 /// Represents a measurement.
 /// </summary>
-public readonly struct Measurement : IEquatable<Measurement>
+/// <remarks>
+/// Initializes a new instance of the <see cref="Measurement"/> struct.
+/// </remarks>
+/// <param name="min">The minimum width.</param>
+/// <param name="max">The maximum width.</param>
+public readonly struct Measurement(int min, int max) : IEquatable<Measurement>
 {
     /// <summary>
     /// Gets the minimum width.
     /// </summary>
-    public int Min { get; }
+    public int Min { get; } = min;
 
     /// <summary>
     /// Gets the maximum width.
     /// </summary>
-    public int Max { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Measurement"/> struct.
-    /// </summary>
-    /// <param name="min">The minimum width.</param>
-    /// <param name="max">The maximum width.</param>
-    public Measurement(int min, int max)
-    {
-        Min = min;
-        Max = max;
-    }
+    public int Max { get; } = max;
 
     /// <inheritdoc/>
-    public override bool Equals(object? obj)
-    {
-        return obj is Measurement measurement && Equals(measurement);
-    }
+    public override bool Equals(object? obj) => obj is Measurement measurement && Equals(measurement);
 
     /// <inheritdoc/>
     public override int GetHashCode()
@@ -45,10 +36,7 @@ public readonly struct Measurement : IEquatable<Measurement>
     }
 
     /// <inheritdoc/>
-    public bool Equals(Measurement other)
-    {
-        return Min == other.Min && Max == other.Max;
-    }
+    public bool Equals(Measurement other) => Min == other.Min && Max == other.Max;
 
     /// <summary>
     /// Checks if two <see cref="Measurement"/> instances are equal.
@@ -56,10 +44,7 @@ public readonly struct Measurement : IEquatable<Measurement>
     /// <param name="left">The first measurement instance to compare.</param>
     /// <param name="right">The second measurement instance to compare.</param>
     /// <returns><c>true</c> if the two measurements are equal, otherwise <c>false</c>.</returns>
-    public static bool operator ==(Measurement left, Measurement right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(Measurement left, Measurement right) => left.Equals(right);
 
     /// <summary>
     /// Checks if two <see cref="Measurement"/> instances are not equal.
@@ -67,8 +52,5 @@ public readonly struct Measurement : IEquatable<Measurement>
     /// <param name="left">The first measurement instance to compare.</param>
     /// <param name="right">The second measurement instance to compare.</param>
     /// <returns><c>true</c> if the two measurements are not equal, otherwise <c>false</c>.</returns>
-    public static bool operator !=(Measurement left, Measurement right)
-    {
-        return !(left == right);
-    }
+    public static bool operator !=(Measurement left, Measurement right) => !(left == right);
 }

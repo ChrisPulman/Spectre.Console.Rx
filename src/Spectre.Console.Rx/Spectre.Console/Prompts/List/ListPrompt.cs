@@ -1,16 +1,10 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPrompt<T>
+internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T> strategy)
     where T : notnull
 {
-    private readonly IAnsiConsole _console;
-    private readonly IListPromptStrategy<T> _strategy;
-
-    public ListPrompt(IAnsiConsole console, IListPromptStrategy<T> strategy)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
-    }
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly IListPromptStrategy<T> _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
 
     public async Task<ListPromptState<T>> Show(
         ListPromptTree<T> tree,

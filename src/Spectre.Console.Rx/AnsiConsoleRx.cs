@@ -36,9 +36,7 @@ public static class AnsiConsoleRx
     /// A <see cref="ProgressContext" /> observable.
     /// </returns>
     public static IObservable<ProgressContext> Progress(Func<Progress, Progress>? addProperties = null) =>
-        CreateExclusiveObservable<ProgressContext>(async (observer, cancellationToken) =>
-        {
-            await AnsiConsole
+        CreateExclusiveObservable<ProgressContext>(async (observer, cancellationToken) => await AnsiConsole
                 .Progress()
                 .AddProgressProperties(addProperties)
                 .StartAsync(async ctx =>
@@ -47,8 +45,7 @@ public static class AnsiConsoleRx
                     observer.OnNext(ctx);
                     await WaitUntilAsync(() => completion.IsCompleted || (ctx.HasStartedTasks && ctx.IsFinished), cancellationToken).ConfigureAwait(false);
                 })
-                .ConfigureAwait(false);
-        }, clearProgressTasks: true);
+                .ConfigureAwait(false), clearProgressTasks: true);
 
     /// <summary>
     /// Creates a status observable.
@@ -60,9 +57,7 @@ public static class AnsiConsoleRx
     {
         ArgumentNullException.ThrowIfNull(status);
 
-        return CreateExclusiveObservable<StatusContext>(async (observer, cancellationToken) =>
-        {
-            await AnsiConsole
+        return CreateExclusiveObservable<StatusContext>(async (observer, cancellationToken) => await AnsiConsole
                 .Status()
                 .AddStatusProperties(addProperties)
                 .StartAsync(status, async ctx =>
@@ -71,8 +66,7 @@ public static class AnsiConsoleRx
                     observer.OnNext(ctx);
                     await completion.WaitAsync(cancellationToken).ConfigureAwait(false);
                 })
-                .ConfigureAwait(false);
-        });
+                .ConfigureAwait(false));
     }
 
     /// <summary>
@@ -87,9 +81,7 @@ public static class AnsiConsoleRx
     {
         ArgumentNullException.ThrowIfNull(renderable);
 
-        return CreateExclusiveObservable<LiveDisplayContext>(async (observer, cancellationToken) =>
-        {
-            await AnsiConsole
+        return CreateExclusiveObservable<LiveDisplayContext>(async (observer, cancellationToken) => await AnsiConsole
                 .Live(renderable)
                 .AddLiveDisplayProperties(addProperties)
                 .StartAsync(async ctx =>
@@ -98,8 +90,7 @@ public static class AnsiConsoleRx
                     observer.OnNext(ctx);
                     await completion.WaitAsync(cancellationToken).ConfigureAwait(false);
                 })
-                .ConfigureAwait(false);
-        });
+                .ConfigureAwait(false));
     }
 
     /// <summary>

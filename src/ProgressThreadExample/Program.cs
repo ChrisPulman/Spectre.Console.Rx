@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Spectre.Console.Rx;
 
@@ -17,8 +19,7 @@ public static class Program
     /// <summary>
     /// Defines the entry point of the application.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public static async Task Main()
+    public static void Main()
     {
         // The list of objects used as input to the REST API call
         IList<string> cfs = new List<string>();
@@ -27,18 +28,21 @@ public static class Program
             cfs.Add($"Custom Format {i}");
         }
 
+        using var completed = new ManualResetEventSlim(false);
+        Exception? error = null;
+
         // Some time later...
-        await AnsiConsoleRx.Progress()
+        using var subscription = AnsiConsoleRx.Progress()
             .AddTasks(ctx => new[]
             {
                 ctx.AddTask("Deleting Custom Formats").MaxValue(cfs.Count),
             })
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .RunAsync(async ctx =>
+            .SelectMany(ctx =>
             {
                 var rng = new Random();
 
-                await cfs
+                return cfs
                     .ToObservable()
                     .Select(item => Observable.FromAsync(
                         async ct =>
@@ -49,9 +53,28 @@ public static class Program
                         AnsiConsoleRx.Scheduler))
                     .Merge(8)
                     .ObserveOn(SpectreConsoleScheduler.Instance)
-                    .RunAsync(_ => ctx.tasks[0].Increment(1));
+                    .Do(_ => ctx.tasks[0].Increment(1))
+                    .Select(_ => Unit.Default)
+                    .Finally(() =>
+                    {
+                        ctx.context.Complete();
+                        AnsiConsole.MarkupLine("[blue]Done![/]"); // Render a message when the sequence completes
+                    });
+            })
+            .Subscribe(
+                _ => { },
+                ex =>
+                {
+                    error = ex;
+                    completed.Set();
+                },
+                completed.Set);
 
-                AnsiConsole.MarkupLine("[blue]Done![/]"); // Render a message when the sequence completes
-            });
+        completed.Wait();
+
+        if (error is not null)
+        {
+            throw new InvalidOperationException("Progress thread example failed.", error);
+        }
     }
 }

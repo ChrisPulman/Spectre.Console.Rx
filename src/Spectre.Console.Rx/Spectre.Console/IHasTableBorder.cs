@@ -23,10 +23,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T NoBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.None);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.None);
 
     /// <summary>
     /// Display a square border.
@@ -35,10 +32,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T SquareBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Square);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Square);
 
     /// <summary>
     /// Display an ASCII border.
@@ -47,10 +41,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T AsciiBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Ascii);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Ascii);
 
     /// <summary>
     /// Display another ASCII border.
@@ -59,10 +50,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T Ascii2Border<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Ascii2);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Ascii2);
 
     /// <summary>
     /// Display an ASCII border with a double header border.
@@ -71,10 +59,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T AsciiDoubleHeadBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.AsciiDoubleHead);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.AsciiDoubleHead);
 
     /// <summary>
     /// Display a rounded border.
@@ -83,10 +68,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T RoundedBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Rounded);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Rounded);
 
     /// <summary>
     /// Display a minimal border.
@@ -95,10 +77,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T MinimalBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Minimal);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Minimal);
 
     /// <summary>
     /// Display a minimal border with a heavy head.
@@ -107,10 +86,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T MinimalHeavyHeadBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.MinimalHeavyHead);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.MinimalHeavyHead);
 
     /// <summary>
     /// Display a minimal border with a double header border.
@@ -119,10 +95,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T MinimalDoubleHeadBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.MinimalDoubleHead);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.MinimalDoubleHead);
 
     /// <summary>
     /// Display a simple border.
@@ -131,10 +104,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T SimpleBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Simple);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Simple);
 
     /// <summary>
     /// Display a simple border with heavy lines.
@@ -143,10 +113,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T SimpleHeavyBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.SimpleHeavy);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.SimpleHeavy);
 
     /// <summary>
     /// Display a simple border.
@@ -155,10 +122,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T HorizontalBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Horizontal);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Horizontal);
 
     /// <summary>
     /// Display a heavy border.
@@ -167,10 +131,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T HeavyBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Heavy);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Heavy);
 
     /// <summary>
     /// Display a border with a heavy edge.
@@ -179,10 +140,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T HeavyEdgeBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.HeavyEdge);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.HeavyEdge);
 
     /// <summary>
     /// Display a border with a heavy header.
@@ -191,10 +149,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T HeavyHeadBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.HeavyHead);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.HeavyHead);
 
     /// <summary>
     /// Display a double border.
@@ -203,10 +158,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T DoubleBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Double);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Double);
 
     /// <summary>
     /// Display a border with a double edge.
@@ -215,10 +167,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T DoubleEdgeBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.DoubleEdge);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.DoubleEdge);
 
     /// <summary>
     /// Display a minimalist border.
@@ -227,10 +176,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T MinimalistBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Minimalist);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Minimalist);
 
     /// <summary>
     /// Display a markdown border.
@@ -239,10 +185,7 @@ public static class HasTableBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T MarkdownBorder<T>(this T obj)
-        where T : class, IHasTableBorder
-    {
-        return Border(obj, TableBorder.Markdown);
-    }
+        where T : class, IHasTableBorder => Border(obj, TableBorder.Markdown);
 
     /// <summary>
     /// Sets the border.

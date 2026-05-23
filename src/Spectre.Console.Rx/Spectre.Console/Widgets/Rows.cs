@@ -3,9 +3,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Renders things in rows.
 /// </summary>
-public sealed class Rows : Renderable, IExpandable
+/// <remarks>
+/// Initializes a new instance of the <see cref="Rows"/> class.
+/// </remarks>
+/// <param name="children">The items to render as rows.</param>
+public sealed class Rows(IEnumerable<IRenderable> children) : Renderable, IExpandable
 {
-    private readonly List<IRenderable> _children;
+    private readonly List<IRenderable> _children = new List<IRenderable>(children ?? throw new ArgumentNullException(nameof(children)));
 
     /// <inheritdoc/>
     public bool Expand { get; set; }
@@ -17,15 +21,6 @@ public sealed class Rows : Renderable, IExpandable
     public Rows(params IRenderable[] items)
         : this((IEnumerable<IRenderable>)items)
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Rows"/> class.
-    /// </summary>
-    /// <param name="children">The items to render as rows.</param>
-    public Rows(IEnumerable<IRenderable> children)
-    {
-        _children = new List<IRenderable>(children ?? throw new ArgumentNullException(nameof(children)));
     }
 
     /// <inheritdoc/>

@@ -18,10 +18,7 @@ internal sealed class StringBuffer : IDisposable
         Position = 0;
     }
 
-    public void Dispose()
-    {
-        _reader.Dispose();
-    }
+    public void Dispose() => _reader.Dispose();
 
     public char Peek()
     {

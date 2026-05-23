@@ -87,12 +87,9 @@ public sealed class Canvas : Renderable
     }
 
     /// <inheritdoc/>
-    protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
-    {
-        return options.Unicode
+    protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth) => options.Unicode
             ? RenderUnicode(maxWidth)
             : RenderNonUnicode(maxWidth);
-    }
 
     private IEnumerable<Segment> RenderUnicode(int maxWidth)
     {

@@ -39,10 +39,7 @@ public static class HasBoxBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T NoBorder<T>(this T obj)
-        where T : class, IHasBoxBorder
-    {
-        return Border(obj, BoxBorder.None);
-    }
+        where T : class, IHasBoxBorder => Border(obj, BoxBorder.None);
 
     /// <summary>
     /// Display a square border.
@@ -51,10 +48,7 @@ public static class HasBoxBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T SquareBorder<T>(this T obj)
-        where T : class, IHasBoxBorder
-    {
-        return Border(obj, BoxBorder.Square);
-    }
+        where T : class, IHasBoxBorder => Border(obj, BoxBorder.Square);
 
     /// <summary>
     /// Display an ASCII border.
@@ -63,10 +57,7 @@ public static class HasBoxBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T AsciiBorder<T>(this T obj)
-        where T : class, IHasBoxBorder
-    {
-        return Border(obj, BoxBorder.Ascii);
-    }
+        where T : class, IHasBoxBorder => Border(obj, BoxBorder.Ascii);
 
     /// <summary>
     /// Display a rounded border.
@@ -75,10 +66,7 @@ public static class HasBoxBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T RoundedBorder<T>(this T obj)
-        where T : class, IHasBoxBorder
-    {
-        return Border(obj, BoxBorder.Rounded);
-    }
+        where T : class, IHasBoxBorder => Border(obj, BoxBorder.Rounded);
 
     /// <summary>
     /// Display a heavy border.
@@ -87,10 +75,7 @@ public static class HasBoxBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T HeavyBorder<T>(this T obj)
-        where T : class, IHasBoxBorder
-    {
-        return Border(obj, BoxBorder.Heavy);
-    }
+        where T : class, IHasBoxBorder => Border(obj, BoxBorder.Heavy);
 
     /// <summary>
     /// Display a double border.
@@ -99,8 +84,5 @@ public static class HasBoxBorderExtensions
     /// <param name="obj">The object to set the border for.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static T DoubleBorder<T>(this T obj)
-        where T : class, IHasBoxBorder
-    {
-        return Border(obj, BoxBorder.Double);
-    }
+        where T : class, IHasBoxBorder => Border(obj, BoxBorder.Double);
 }

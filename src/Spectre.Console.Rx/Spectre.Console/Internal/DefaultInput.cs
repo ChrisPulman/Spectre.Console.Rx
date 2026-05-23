@@ -1,13 +1,8 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class DefaultInput : IAnsiConsoleInput
+internal sealed class DefaultInput(Profile profile) : IAnsiConsoleInput
 {
-    private readonly Profile _profile;
-
-    public DefaultInput(Profile profile)
-    {
-        _profile = profile ?? throw new ArgumentNullException(nameof(profile));
-    }
+    private readonly Profile _profile = profile ?? throw new ArgumentNullException(nameof(profile));
 
     public bool IsKeyAvailable()
     {

@@ -19,14 +19,8 @@ public sealed class SegmentLineEnumerator : IEnumerable<Segment>
     }
 
     /// <inheritdoc/>
-    public IEnumerator<Segment> GetEnumerator()
-    {
-        return new SegmentLineIterator(_lines);
-    }
+    public IEnumerator<Segment> GetEnumerator() => new SegmentLineIterator(_lines);
 
     /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

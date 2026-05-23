@@ -3,9 +3,13 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a tree node.
 /// </summary>
-public sealed class TreeNode : IHasTreeNodes
+/// <remarks>
+/// Initializes a new instance of the <see cref="TreeNode"/> class.
+/// </remarks>
+/// <param name="renderable">The tree node label.</param>
+public sealed class TreeNode(IRenderable renderable) : IHasTreeNodes
 {
-    internal IRenderable Renderable { get; }
+    internal IRenderable Renderable { get; } = renderable;
 
     /// <summary>
     /// Gets the tree node's child nodes.
@@ -16,15 +20,6 @@ public sealed class TreeNode : IHasTreeNodes
     /// Gets or sets a value indicating whether or not the tree node is expanded or not.
     /// </summary>
     public bool Expanded { get; set; } = true;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TreeNode"/> class.
-    /// </summary>
-    /// <param name="renderable">The tree node label.</param>
-    public TreeNode(IRenderable renderable)
-    {
-        Renderable = renderable;
-    }
 }
 
 /// <summary>
@@ -37,20 +32,14 @@ public static class TreeNodeExtensions
     /// </summary>
     /// <param name="node">The tree node.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TreeNode Expand(this TreeNode node)
-    {
-        return Expand(node, true);
-    }
+    public static TreeNode Expand(this TreeNode node) => Expand(node, true);
 
     /// <summary>
     /// Collapses the tree.
     /// </summary>
     /// <param name="node">The tree node.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TreeNode Collapse(this TreeNode node)
-    {
-        return Expand(node, false);
-    }
+    public static TreeNode Collapse(this TreeNode node) => Expand(node, false);
 
     /// <summary>
     /// Sets whether or not the tree node should be expanded.

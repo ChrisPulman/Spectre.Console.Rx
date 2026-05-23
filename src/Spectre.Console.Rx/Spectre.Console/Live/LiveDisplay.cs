@@ -3,10 +3,15 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a live display.
 /// </summary>
-public sealed class LiveDisplay
+/// <remarks>
+/// Initializes a new instance of the <see cref="LiveDisplay"/> class.
+/// </remarks>
+/// <param name="console">The console.</param>
+/// <param name="target">The target renderable to update.</param>
+public sealed class LiveDisplay(IAnsiConsole console, IRenderable target)
 {
-    private readonly IAnsiConsole _console;
-    private readonly IRenderable _target;
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly IRenderable _target = target ?? throw new ArgumentNullException(nameof(target));
 
     /// <summary>
     /// Gets or sets a value indicating whether or not the live display should
@@ -24,17 +29,6 @@ public sealed class LiveDisplay
     /// Gets or sets the vertical overflow cropping strategy.
     /// </summary>
     public VerticalOverflowCropping Cropping { get; set; } = VerticalOverflowCropping.Top;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LiveDisplay"/> class.
-    /// </summary>
-    /// <param name="console">The console.</param>
-    /// <param name="target">The target renderable to update.</param>
-    public LiveDisplay(IAnsiConsole console, IRenderable target)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _target = target ?? throw new ArgumentNullException(nameof(target));
-    }
 
     /// <summary>
     /// Starts the live display.

@@ -94,10 +94,7 @@ public sealed class Grid : JustInTimeRenderable, IExpandable
     }
 
     /// <inheritdoc/>
-    protected override bool HasDirtyChildren()
-    {
-        return _columns.Any(c => ((IHasDirtyState)c).IsDirty);
-    }
+    protected override bool HasDirtyChildren() => _columns.Any(c => ((IHasDirtyState)c).IsDirty);
 
     /// <inheritdoc/>
     protected override IRenderable Build()

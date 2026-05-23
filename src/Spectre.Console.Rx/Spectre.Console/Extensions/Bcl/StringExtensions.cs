@@ -15,10 +15,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="text">The text to get the cell width of.</param>
     /// <returns>The cell width of the text.</returns>
-    public static int GetCellWidth(this string text)
-    {
-        return Cell.GetCellLength(text);
-    }
+    public static int GetCellWidth(this string text) => Cell.GetCellLength(text);
 
     internal static string CapitalizeFirstLetter(this string? text, CultureInfo? culture = null)
     {
@@ -37,11 +34,8 @@ public static class StringExtensions
         return text;
     }
 
-    internal static string? RemoveNewLines(this string? text)
-    {
-        return text?.ReplaceExact("\r\n", string.Empty)
+    internal static string? RemoveNewLines(this string? text) => text?.ReplaceExact("\r\n", string.Empty)
             ?.ReplaceExact("\n", string.Empty);
-    }
 
     internal static string NormalizeNewLines(this string? text, bool native = false)
     {
@@ -123,29 +117,24 @@ public static class StringExtensions
         return string.Concat(Enumerable.Repeat(text, count));
     }
 
-    internal static string ReplaceExact(this string text, string oldValue, string? newValue)
-    {
+    internal static string ReplaceExact(this string text, string oldValue, string? newValue) =>
 #if NETSTANDARD2_0
-        return text.Replace(oldValue, newValue);
+        text.Replace(oldValue, newValue);
 #else
         return text.Replace(oldValue, newValue, StringComparison.Ordinal);
 #endif
-    }
 
-    internal static bool ContainsExact(this string text, string value)
-    {
+
+    internal static bool ContainsExact(this string text, string value) =>
 #if NETSTANDARD2_0
-        return text.Contains(value);
+        text.Contains(value);
 #else
         return text.Contains(value, StringComparison.Ordinal);
 #endif
-    }
+
 
 #if NETSTANDARD2_0
-    internal static bool Contains(this string target, string value, System.StringComparison comparisonType)
-    {
-        return target.IndexOf(value, comparisonType) != -1;
-    }
+    internal static bool Contains(this string target, string value, System.StringComparison comparisonType) => target.IndexOf(value, comparisonType) != -1;
 #endif
 
     /// <summary>

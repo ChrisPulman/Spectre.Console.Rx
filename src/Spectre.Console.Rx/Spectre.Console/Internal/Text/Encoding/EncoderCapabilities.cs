@@ -1,8 +1,8 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class EncoderCapabilities : IReadOnlyCapabilities
+internal sealed class EncoderCapabilities(ColorSystem colors) : IReadOnlyCapabilities
 {
-    public ColorSystem ColorSystem { get; }
+    public ColorSystem ColorSystem { get; } = colors;
 
     public bool Ansi => false;
     public bool Links => false;
@@ -11,9 +11,4 @@ internal sealed class EncoderCapabilities : IReadOnlyCapabilities
     public bool Interactive => false;
     public bool Unicode => true;
     public bool AlternateBuffer => false;
-
-    public EncoderCapabilities(ColorSystem colors)
-    {
-        ColorSystem = colors;
-    }
 }

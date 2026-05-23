@@ -11,10 +11,7 @@ public static partial class AnsiConsole
     /// <param name="exception">The exception to write to the console.</param>
     /// <param name="format">The exception format options.</param>
     [RequiresDynamicCode(ExceptionRenderableBuilder.AotWarning)]
-    public static void WriteException(Exception exception, ExceptionFormats format = ExceptionFormats.Default)
-    {
-        Console.WriteException(exception, format);
-    }
+    public static void WriteException(Exception exception, ExceptionFormats format = ExceptionFormats.Default) => Console.WriteException(exception, format);
 
     /// <summary>
     /// Writes an exception to the console.
@@ -22,8 +19,5 @@ public static partial class AnsiConsole
     /// <param name="exception">The exception to write to the console.</param>
     /// <param name="settings">The exception settings.</param>
     [RequiresDynamicCode(ExceptionRenderableBuilder.AotWarning)]
-    public static void WriteException(Exception exception, ExceptionSettings settings)
-    {
-        Console.WriteException(exception, settings);
-    }
+    public static void WriteException(Exception exception, ExceptionSettings settings) => Console.WriteException(exception, settings);
 }

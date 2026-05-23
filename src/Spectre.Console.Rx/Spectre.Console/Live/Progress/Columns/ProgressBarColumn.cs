@@ -31,20 +31,17 @@ public sealed class ProgressBarColumn : ProgressColumn
     public Style IndeterminateStyle { get; set; } = ProgressBar.DefaultPulseStyle;
 
     /// <inheritdoc/>
-    public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
+    public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime) => new ProgressBar
     {
-        return new ProgressBar
-        {
-            MaxValue = task.MaxValue,
-            Value = task.Value,
-            Width = Width,
-            CompletedStyle = CompletedStyle,
-            FinishedStyle = FinishedStyle,
-            RemainingStyle = RemainingStyle,
-            IndeterminateStyle = IndeterminateStyle,
-            IsIndeterminate = task.IsIndeterminate,
-        };
-    }
+        MaxValue = task.MaxValue,
+        Value = task.Value,
+        Width = Width,
+        CompletedStyle = CompletedStyle,
+        FinishedStyle = FinishedStyle,
+        RemainingStyle = RemainingStyle,
+        IndeterminateStyle = IndeterminateStyle,
+        IsIndeterminate = task.IsIndeterminate,
+    };
 }
 
 /// <summary>

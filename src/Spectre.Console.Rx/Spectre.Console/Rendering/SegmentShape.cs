@@ -1,15 +1,9 @@
 namespace Spectre.Console.Rx.Rendering;
 
-internal readonly struct SegmentShape
+internal readonly struct SegmentShape(int width, int height)
 {
-    public int Width { get; }
-    public int Height { get; }
-
-    public SegmentShape(int width, int height)
-    {
-        Width = width;
-        Height = height;
-    }
+    public int Width { get; } = width;
+    public int Height { get; } = height;
 
     public static SegmentShape Calculate(RenderOptions options, List<SegmentLine> lines)
     {
@@ -21,12 +15,9 @@ internal readonly struct SegmentShape
         return new SegmentShape(width, height);
     }
 
-    public SegmentShape Inflate(SegmentShape other)
-    {
-        return new SegmentShape(
+    public SegmentShape Inflate(SegmentShape other) => new SegmentShape(
             Math.Max(Width, other.Width),
             Math.Max(Height, other.Height));
-    }
 
     public void Apply(RenderOptions options, ref List<SegmentLine> lines)
     {

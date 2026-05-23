@@ -1,35 +1,24 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class LegacyConsoleBackend : IAnsiConsoleBackend
+internal sealed class LegacyConsoleBackend(IAnsiConsole console) : IAnsiConsoleBackend
 {
-    private readonly IAnsiConsole _console;
-    private Style _lastStyle;
+    private readonly IAnsiConsole _console = console ?? throw new System.ArgumentNullException(nameof(console));
+    private Style _lastStyle = Style.Plain;
 
-    public IAnsiConsoleCursor Cursor { get; }
+    public IAnsiConsoleCursor Cursor { get; } = new LegacyConsoleCursor();
 
-    public LegacyConsoleBackend(IAnsiConsole console)
-    {
-        _console = console ?? throw new System.ArgumentNullException(nameof(console));
-        _lastStyle = Style.Plain;
+    public void Clear(bool home) => TryConsoleOperation(() =>
+                                         {
+                                             var (x, y) = (System.Console.CursorLeft, System.Console.CursorTop);
 
-        Cursor = new LegacyConsoleCursor();
-    }
+                                             System.Console.Clear();
 
-    public void Clear(bool home)
-    {
-        TryConsoleOperation(() =>
-        {
-            var (x, y) = (System.Console.CursorLeft, System.Console.CursorTop);
-
-            System.Console.Clear();
-
-            if (!home)
-            {
-                // Set the cursor position
-                System.Console.SetCursorPosition(x, y);
-            }
-        });
-    }
+                                             if (!home)
+                                             {
+                                                 // Set the cursor position
+                                                 System.Console.SetCursorPosition(x, y);
+                                             }
+                                         });
 
     public void Write(IRenderable renderable)
     {

@@ -3,10 +3,15 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a task list.
 /// </summary>
-public sealed class Progress
+/// <remarks>
+/// Initializes a new instance of the <see cref="Progress"/> class.
+/// </remarks>
+/// <param name="console">The console to render to.</param>
+/// <param name="timeProvider">The time provider to use. Defaults to <see cref="TimeProvider.System"/>.</param>
+public sealed class Progress(IAnsiConsole console, TimeProvider? timeProvider = null)
 {
-    private readonly IAnsiConsole _console;
-    private readonly TimeProvider _timeProvider;
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
     /// <summary>
     /// Gets or sets a optional custom render function.
@@ -46,28 +51,14 @@ public sealed class Progress
     /// </summary>
     public TimeSpan RefreshRate { get; set; } = TimeSpan.FromMilliseconds(100);
 
-    internal List<ProgressColumn> Columns { get; }
-
-    internal ProgressRenderer? FallbackRenderer { get; set; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Progress"/> class.
-    /// </summary>
-    /// <param name="console">The console to render to.</param>
-    /// <param name="timeProvider">The time provider to use. Defaults to <see cref="TimeProvider.System"/>.</param>
-    public Progress(IAnsiConsole console, TimeProvider? timeProvider = null)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _timeProvider = timeProvider ?? TimeProvider.System;
-
-        // Initialize with default columns
-        Columns =
+    internal List<ProgressColumn> Columns { get; } =
         [
             new TaskDescriptionColumn(),
             new ProgressBarColumn(),
             new PercentageColumn()
         ];
-    }
+
+    internal ProgressRenderer? FallbackRenderer { get; set; }
 
     /// <summary>
     /// Starts the progress task list.
@@ -288,18 +279,12 @@ public static class ProgressExtensions
     /// </summary>
     /// <param name="progress">The <see cref="Progress"/> instance.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static Progress ExcludeVerticalPadding(this Progress progress)
-    {
-        return progress.ExcludeVerticalPadding(true);
-    }
+    public static Progress ExcludeVerticalPadding(this Progress progress) => progress.ExcludeVerticalPadding(true);
 
     /// <summary>
     /// Includes the vertical padding in the display.
     /// </summary>
     /// <param name="progress">The <see cref="Progress"/> instance.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static Progress IncludeVerticalPadding(this Progress progress)
-    {
-        return progress.ExcludeVerticalPadding(false);
-    }
+    public static Progress IncludeVerticalPadding(this Progress progress) => progress.ExcludeVerticalPadding(false);
 }

@@ -272,10 +272,7 @@ public static class CalendarExtensions
     /// <param name="customEventHighlightStyle">The calendar event custom highlight style.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static Calendar AddCalendarEvent(this Calendar calendar, DateTime date,
-        Style? customEventHighlightStyle = null)
-    {
-        return AddCalendarEvent(calendar, string.Empty, date.Year, date.Month, date.Day, customEventHighlightStyle);
-    }
+        Style? customEventHighlightStyle = null) => AddCalendarEvent(calendar, string.Empty, date.Year, date.Month, date.Day, customEventHighlightStyle);
 
     /// <summary>
     /// Adds a calendar event.
@@ -286,10 +283,7 @@ public static class CalendarExtensions
     /// <param name="customEventHighlightStyle">The calendar event custom highlight style.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static Calendar AddCalendarEvent(this Calendar calendar, string description, DateTime date,
-        Style? customEventHighlightStyle = null)
-    {
-        return AddCalendarEvent(calendar, description, date.Year, date.Month, date.Day, customEventHighlightStyle);
-    }
+        Style? customEventHighlightStyle = null) => AddCalendarEvent(calendar, description, date.Year, date.Month, date.Day, customEventHighlightStyle);
 
     /// <summary>
     /// Adds a calendar event.
@@ -301,10 +295,7 @@ public static class CalendarExtensions
     /// <param name="customEventHighlightStyle">The calendar event custom highlight style.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static Calendar AddCalendarEvent(this Calendar calendar, int year, int month, int day,
-        Style? customEventHighlightStyle = null)
-    {
-        return AddCalendarEvent(calendar, string.Empty, year, month, day, customEventHighlightStyle);
-    }
+        Style? customEventHighlightStyle = null) => AddCalendarEvent(calendar, string.Empty, year, month, day, customEventHighlightStyle);
 
     /// <summary>
     /// Adds a calendar event.

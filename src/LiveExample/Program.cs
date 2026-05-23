@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Spectre.Console.Rx;
 
 namespace Live;
@@ -16,17 +17,17 @@ public static class Program
     /// <summary>
     /// Defines the entry point of the application.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public static async Task Main()
+    public static void Main()
     {
         var table = new Table();
+        using var completed = new ManualResetEventSlim(false);
+        Exception? error = null;
 
         // Animate
-        await AnsiConsoleRx.Live(Align.Center(table), ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
+        using var subscription = AnsiConsoleRx.Live(Align.Center(table), ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .RunAsync(ctx =>
+            .Do(ctx =>
             {
-
                 // Columns
                 ctx.Update(230, () => table.AddColumn("Release date"))
                 .Update(230, () => table.AddColumn("Title"))
@@ -79,6 +80,22 @@ public static class Program
 
                 // Caption
                 .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]")).IsFinished();
-            });
+            })
+            .Select(_ => Unit.Default)
+            .Subscribe(
+                _ => { },
+                ex =>
+                {
+                    error = ex;
+                    completed.Set();
+                },
+                completed.Set);
+
+        completed.Wait();
+
+        if (error is not null)
+        {
+            throw new InvalidOperationException("Live example failed.", error);
+        }
     }
 }

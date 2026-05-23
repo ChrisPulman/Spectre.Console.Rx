@@ -9,15 +9,12 @@ public sealed class BoldLineTreeGuide : TreeGuide
     public override TreeGuide? SafeTreeGuide => Ascii;
 
     /// <inheritdoc/>
-    public override string GetPart(TreeGuidePart part)
+    public override string GetPart(TreeGuidePart part) => part switch
     {
-        return part switch
-        {
-            TreeGuidePart.Space => "    ",
-            TreeGuidePart.Continue => "┃   ",
-            TreeGuidePart.Fork => "┣━━ ",
-            TreeGuidePart.End => "┗━━ ",
-            _ => throw new ArgumentOutOfRangeException(nameof(part), part, "Unknown tree part."),
-        };
-    }
+        TreeGuidePart.Space => "    ",
+        TreeGuidePart.Continue => "┃   ",
+        TreeGuidePart.Fork => "┣━━ ",
+        TreeGuidePart.End => "┗━━ ",
+        _ => throw new ArgumentOutOfRangeException(nameof(part), part, "Unknown tree part."),
+    };
 }

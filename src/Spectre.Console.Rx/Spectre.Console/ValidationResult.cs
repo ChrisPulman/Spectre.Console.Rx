@@ -25,18 +25,12 @@ public sealed class ValidationResult
     /// Returns a <see cref="ValidationResult"/> representing successful validation.
     /// </summary>
     /// <returns>The validation result.</returns>
-    public static ValidationResult Success()
-    {
-        return new ValidationResult(true, null);
-    }
+    public static ValidationResult Success() => new ValidationResult(true, null);
 
     /// <summary>
     /// Returns a <see cref="ValidationResult"/> representing a validation error.
     /// </summary>
     /// <param name="message">The validation error message, or <c>null</c> to show the default validation error message.</param>
     /// <returns>The validation result.</returns>
-    public static ValidationResult Error(string? message = null)
-    {
-        return new ValidationResult(false, message);
-    }
+    public static ValidationResult Error(string? message = null) => new ValidationResult(false, message);
 }

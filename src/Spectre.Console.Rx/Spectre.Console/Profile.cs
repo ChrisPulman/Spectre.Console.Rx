@@ -3,14 +3,20 @@ namespace Spectre.Console.Rx;
 /// <summary>
 /// Represents a console profile.
 /// </summary>
-public sealed class Profile
+/// <remarks>
+/// Initializes a new instance of the <see cref="Profile"/> class.
+/// </remarks>
+/// <param name="out">The output buffer.</param>
+/// <param name="capabilities">The capabilities.</param>
+/// <param name="encoding">The output encoding.</param>
+public sealed class Profile(IAnsiConsoleOutput @out, Capabilities capabilities, Encoding encoding)
 {
-    private readonly HashSet<string> _enrichers;
+    private readonly HashSet<string> _enrichers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private static readonly string[] _defaultEnricher = ["Default"];
 
-    private IAnsiConsoleOutput _out;
-    private Encoding _encoding;
-    private Capabilities _capabilities;
+    private IAnsiConsoleOutput _out = @out ?? throw new ArgumentNullException(nameof(@out));
+    private Encoding _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
+    private Capabilities _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
     private int? _width;
     private int? _height;
 
@@ -114,29 +120,12 @@ public sealed class Profile
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Profile"/> class.
-    /// </summary>
-    /// <param name="out">The output buffer.</param>
-    /// <param name="capabilities">The capabilities.</param>
-    /// <param name="encoding">The output encoding.</param>
-    public Profile(IAnsiConsoleOutput @out, Capabilities capabilities, Encoding encoding)
-    {
-        _enrichers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        _out = @out ?? throw new ArgumentNullException(nameof(@out));
-        _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
-        _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
-    }
-
-    /// <summary>
     /// Checks whether the current profile supports
     /// the specified color system.
     /// </summary>
     /// <param name="colorSystem">The color system to check.</param>
     /// <returns><c>true</c> if the color system is supported, otherwise <c>false</c>.</returns>
-    public bool Supports(ColorSystem colorSystem)
-    {
-        return (int)colorSystem <= (int)Capabilities.ColorSystem;
-    }
+    public bool Supports(ColorSystem colorSystem) => (int)colorSystem <= (int)Capabilities.ColorSystem;
 
     internal void AddEnricher(string name)
     {

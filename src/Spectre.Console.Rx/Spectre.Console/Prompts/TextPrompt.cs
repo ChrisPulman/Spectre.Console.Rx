@@ -4,10 +4,15 @@ namespace Spectre.Console.Rx;
 /// Represents a prompt.
 /// </summary>
 /// <typeparam name="T">The prompt result type.</typeparam>
-public sealed class TextPrompt<T> : IPrompt<T>, IHasCulture
+/// <remarks>
+/// Initializes a new instance of the <see cref="TextPrompt{T}"/> class.
+/// </remarks>
+/// <param name="prompt">The prompt markup text.</param>
+/// <param name="comparer">The comparer used for choices.</param>
+public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null) : IPrompt<T>, IHasCulture
 {
-    private readonly string _prompt;
-    private readonly StringComparer? _comparer;
+    private readonly string _prompt = prompt ?? throw new System.ArgumentNullException(nameof(prompt));
+    private readonly StringComparer? _comparer = comparer ?? StringComparer.OrdinalIgnoreCase;
 
     /// <summary>
     /// Gets or sets the prompt style.
@@ -100,26 +105,12 @@ public sealed class TextPrompt<T> : IPrompt<T>, IHasCulture
     internal TextPromptInputHandler? InputHandler { get; set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TextPrompt{T}"/> class.
-    /// </summary>
-    /// <param name="prompt">The prompt markup text.</param>
-    /// <param name="comparer">The comparer used for choices.</param>
-    public TextPrompt(string prompt, StringComparer? comparer = null)
-    {
-        _prompt = prompt ?? throw new System.ArgumentNullException(nameof(prompt));
-        _comparer = comparer ?? StringComparer.OrdinalIgnoreCase;
-    }
-
-    /// <summary>
     /// Shows the prompt and requests input from the user.
     /// </summary>
     /// <param name="console">The console to show the prompt in.</param>
     /// <returns>The user input converted to the expected type.</returns>
     /// <inheritdoc/>
-    public T Show(IAnsiConsole console)
-    {
-        return ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
-    }
+    public T Show(IAnsiConsole console) => ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
 
     /// <inheritdoc/>
     public async Task<T> ShowAsync(IAnsiConsole console, CancellationToken cancellationToken)

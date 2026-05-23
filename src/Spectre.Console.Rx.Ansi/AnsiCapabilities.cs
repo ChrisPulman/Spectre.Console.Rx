@@ -33,10 +33,7 @@ public class AnsiCapabilities : IReadOnlyAnsiCapabilities
     /// </summary>
     /// <param name="writer">The text writer to use.</param>
     /// <returns>A <see cref="AnsiCapabilities"/> instance.</returns>
-    public static AnsiCapabilities Create(TextWriter writer)
-    {
-        return Create(writer, new AnsiWriterSettings());
-    }
+    public static AnsiCapabilities Create(TextWriter writer) => Create(writer, new AnsiWriterSettings());
 
     /// <summary>
     /// Creates a <see cref="AnsiCapabilities"/> instance from the provided arguments.

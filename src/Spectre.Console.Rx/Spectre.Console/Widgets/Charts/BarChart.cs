@@ -262,20 +262,14 @@ public static class BarChartExtensions
     /// </summary>
     /// <param name="chart">The bar chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BarChart ShowValues(this BarChart chart)
-    {
-        return ShowValues(chart, true);
-    }
+    public static BarChart ShowValues(this BarChart chart) => ShowValues(chart, true);
 
     /// <summary>
     /// Hides values next to each bar in the bar chart.
     /// </summary>
     /// <param name="chart">The bar chart.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static BarChart HideValues(this BarChart chart)
-    {
-        return ShowValues(chart, false);
-    }
+    public static BarChart HideValues(this BarChart chart) => ShowValues(chart, false);
 
     /// <summary>
     /// Sets whether or not values should be shown

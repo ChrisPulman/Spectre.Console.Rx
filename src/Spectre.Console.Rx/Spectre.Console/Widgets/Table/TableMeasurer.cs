@@ -1,20 +1,12 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class TableMeasurer : TableAccessor
+internal sealed class TableMeasurer(Table table, RenderOptions options) : TableAccessor(table, options)
 {
     private const int EdgeCount = 2;
 
-    private readonly int? _explicitWidth;
-    private readonly TableBorder _border;
-    private readonly bool _padRightCell;
-
-    public TableMeasurer(Table table, RenderOptions options)
-        : base(table, options)
-    {
-        _explicitWidth = table.Width;
-        _border = table.Border;
-        _padRightCell = table.PadRightCell;
-    }
+    private readonly int? _explicitWidth = table.Width;
+    private readonly TableBorder _border = table.Border;
+    private readonly bool _padRightCell = table.PadRightCell;
 
     public int CalculateTotalCellWidth(int maxWidth)
     {

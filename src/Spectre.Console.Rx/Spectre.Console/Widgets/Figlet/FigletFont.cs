@@ -102,25 +102,16 @@ public sealed class FigletFont
     /// </summary>
     /// <param name="path">The path of the Figlet font to load.</param>
     /// <returns>The loaded Figlet font.</returns>
-    public static FigletFont Load(string path)
-    {
-        return Parse(File.ReadAllText(path));
-    }
+    public static FigletFont Load(string path) => Parse(File.ReadAllText(path));
 
     /// <summary>
     /// Parses a Figlet font from the specified <see cref="string"/>.
     /// </summary>
     /// <param name="source">The Figlet font source.</param>
     /// <returns>The parsed Figlet font.</returns>
-    public static FigletFont Parse(string source)
-    {
-        return FigletFontParser.Parse(source);
-    }
+    public static FigletFont Parse(string source) => FigletFontParser.Parse(source);
 
-    internal int GetWidth(string text)
-    {
-        return text.Sum(character => GetCharacter(character)?.Width ?? 0);
-    }
+    internal int GetWidth(string text) => text.Sum(character => GetCharacter(character)?.Width ?? 0);
 
     internal IEnumerable<FigletCharacter> GetCharacters(string text)
     {

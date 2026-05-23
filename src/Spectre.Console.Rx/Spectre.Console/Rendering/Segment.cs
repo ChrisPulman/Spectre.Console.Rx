@@ -92,10 +92,7 @@ public class Segment
     /// </summary>
     /// <param name="control">The control code.</param>
     /// <returns>A segment representing a control code.</returns>
-    public static Segment Control(string control)
-    {
-        return new Segment(control, Style.Plain, null, false, true);
-    }
+    public static Segment Control(string control) => new Segment(control, Style.Plain, null, false, true);
 
     /// <summary>
     /// Gets the number of cells that this segment
@@ -139,10 +136,7 @@ public class Segment
     /// Returns a new segment without any trailing line endings.
     /// </summary>
     /// <returns>A new segment without any trailing line endings.</returns>
-    public Segment StripLineEndings()
-    {
-        return new Segment(Text.TrimEnd('\n').TrimEnd('\r'), Style);
-    }
+    public Segment StripLineEndings() => new Segment(Text.TrimEnd('\n').TrimEnd('\r'), Style);
 
     /// <summary>
     /// Splits the segment at the offset.
@@ -187,10 +181,7 @@ public class Segment
     /// Clones the segment.
     /// </summary>
     /// <returns>A new segment that's identical to this one.</returns>
-    public Segment Clone()
-    {
-        return new Segment(Text, Style);
-    }
+    public Segment Clone() => new Segment(Text, Style);
 
     /// <summary>
     /// Splits the provided segments into lines.
@@ -616,20 +607,14 @@ public class Segment
         public bool IsLineBreak() => _originalSegment.IsLineBreak;
         public bool StyleEquals(Style segmentStyle) => segmentStyle.Equals(_originalSegment.Style);
 
-        public void Append(string text)
-        {
-            _textBuilder.Append(text);
-        }
+        public void Append(string text) => _textBuilder.Append(text);
 
-        public Segment Build()
-        {
-            return new Segment(
+        public Segment Build() => new Segment(
                 _textBuilder.ToString(),
                 _originalSegment.Style,
                 _originalSegment.Link,
                 _originalSegment.IsLineBreak,
                 _originalSegment.IsControlCode);
-        }
 
         public void Reset(Segment segment)
         {

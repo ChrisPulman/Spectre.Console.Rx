@@ -1,16 +1,10 @@
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPromptTree<T>
+internal sealed class ListPromptTree<T>(IEqualityComparer<T> comparer)
     where T : notnull
 {
-    private readonly List<ListPromptItem<T>> _roots;
-    private readonly IEqualityComparer<T> _comparer;
-
-    public ListPromptTree(IEqualityComparer<T> comparer)
-    {
-        _roots = [];
-        _comparer = comparer ?? throw new ArgumentNullException(nameof(comparer));
-    }
+    private readonly List<ListPromptItem<T>> _roots = [];
+    private readonly IEqualityComparer<T> _comparer = comparer ?? throw new ArgumentNullException(nameof(comparer));
 
     public ListPromptItem<T>? Find(T item)
     {
@@ -45,10 +39,7 @@ internal sealed class ListPromptTree<T>
         return null;
     }
 
-    public void Add(ListPromptItem<T> node)
-    {
-        _roots.Add(node);
-    }
+    public void Add(ListPromptItem<T> node) => _roots.Add(node);
 
     public IEnumerable<ListPromptItem<T>> Traverse()
     {

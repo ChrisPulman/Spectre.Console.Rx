@@ -62,8 +62,5 @@ public record class RenderOptions(IReadOnlyCapabilities Capabilities, Size Conso
 internal static class RenderOptionsExtensions
 {
     public static BoxBorder GetSafeBorder<T>(this RenderOptions options, T border)
-        where T : IHasBoxBorder, IHasBorder
-    {
-        return BoxExtensions.GetSafeBorder(border.Border, !options.Unicode && border.UseSafeBorder);
-    }
+        where T : IHasBoxBorder, IHasBorder => BoxExtensions.GetSafeBorder(border.Border, !options.Unicode && border.UseSafeBorder);
 }

@@ -24,10 +24,7 @@ public sealed class PercentageColumn : ProgressColumn
     }
 
     /// <inheritdoc/>
-    public override int? GetColumnWidth(RenderOptions options)
-    {
-        return 4;
-    }
+    public override int? GetColumnWidth(RenderOptions options) => 4;
 }
 
 /// <summary>

@@ -183,13 +183,10 @@ public static class StyleExtensions
     /// <param name="style">The style.</param>
     /// <param name="color">The foreground color.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static Style Foreground(this Style style, Color color)
-    {
-        return new Style(
+    public static Style Foreground(this Style style, Color color) => new Style(
             foreground: color,
             background: style.Background,
             decoration: style.Decoration);
-    }
 
     /// <summary>
     /// Creates a new style from the specified one with
@@ -198,13 +195,10 @@ public static class StyleExtensions
     /// <param name="style">The style.</param>
     /// <param name="color">The background color.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static Style Background(this Style style, Color color)
-    {
-        return new Style(
+    public static Style Background(this Style style, Color color) => new Style(
             foreground: style.Foreground,
             background: color,
             decoration: style.Decoration);
-    }
 
     /// <summary>
     /// Creates a new style from the specified one with
@@ -213,13 +207,10 @@ public static class StyleExtensions
     /// <param name="style">The style.</param>
     /// <param name="decoration">The text decoration.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static Style Decoration(this Style style, Decoration decoration)
-    {
-        return new Style(
+    public static Style Decoration(this Style style, Decoration decoration) => new Style(
             foreground: style.Foreground,
             background: style.Background,
             decoration: decoration);
-    }
 
     internal static Style Combine(this Style? style, IEnumerable<Style> source)
     {

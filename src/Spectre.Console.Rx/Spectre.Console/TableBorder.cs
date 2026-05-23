@@ -70,39 +70,36 @@ public abstract partial class TableBorder
     /// </summary>
     /// <param name="part">The table part.</param>
     /// <returns>The table parts used to render the specific table row.</returns>
-    protected (string Left, string Center, string Separator, string Right) GetTableParts(TablePart part)
+    protected (string Left, string Center, string Separator, string Right) GetTableParts(TablePart part) => part switch
     {
-        return part switch
-        {
-            // Top part
-            TablePart.Top =>
-                (GetPart(TableBorderPart.HeaderTopLeft), GetPart(TableBorderPart.HeaderTop),
-                GetPart(TableBorderPart.HeaderTopSeparator), GetPart(TableBorderPart.HeaderTopRight)),
+        // Top part
+        TablePart.Top =>
+            (GetPart(TableBorderPart.HeaderTopLeft), GetPart(TableBorderPart.HeaderTop),
+            GetPart(TableBorderPart.HeaderTopSeparator), GetPart(TableBorderPart.HeaderTopRight)),
 
-            // Separator between header and cells
-            TablePart.HeaderSeparator =>
-                (GetPart(TableBorderPart.HeaderBottomLeft), GetPart(TableBorderPart.HeaderBottom),
-                GetPart(TableBorderPart.HeaderBottomSeparator), GetPart(TableBorderPart.HeaderBottomRight)),
+        // Separator between header and cells
+        TablePart.HeaderSeparator =>
+            (GetPart(TableBorderPart.HeaderBottomLeft), GetPart(TableBorderPart.HeaderBottom),
+            GetPart(TableBorderPart.HeaderBottomSeparator), GetPart(TableBorderPart.HeaderBottomRight)),
 
-            // Separator between header and cells
-            TablePart.RowSeparator =>
-                (GetPart(TableBorderPart.RowLeft), GetPart(TableBorderPart.RowCenter),
-                    GetPart(TableBorderPart.RowSeparator), GetPart(TableBorderPart.RowRight)),
+        // Separator between header and cells
+        TablePart.RowSeparator =>
+            (GetPart(TableBorderPart.RowLeft), GetPart(TableBorderPart.RowCenter),
+                GetPart(TableBorderPart.RowSeparator), GetPart(TableBorderPart.RowRight)),
 
-            // Separator between footer and cells
-            TablePart.FooterSeparator =>
-                (GetPart(TableBorderPart.FooterTopLeft), GetPart(TableBorderPart.FooterTop),
-                GetPart(TableBorderPart.FooterTopSeparator), GetPart(TableBorderPart.FooterTopRight)),
+        // Separator between footer and cells
+        TablePart.FooterSeparator =>
+            (GetPart(TableBorderPart.FooterTopLeft), GetPart(TableBorderPart.FooterTop),
+            GetPart(TableBorderPart.FooterTopSeparator), GetPart(TableBorderPart.FooterTopRight)),
 
-            // Bottom part
-            TablePart.Bottom =>
-                (GetPart(TableBorderPart.FooterBottomLeft), GetPart(TableBorderPart.FooterBottom),
-                GetPart(TableBorderPart.FooterBottomSeparator), GetPart(TableBorderPart.FooterBottomRight)),
+        // Bottom part
+        TablePart.Bottom =>
+            (GetPart(TableBorderPart.FooterBottomLeft), GetPart(TableBorderPart.FooterBottom),
+            GetPart(TableBorderPart.FooterBottomSeparator), GetPart(TableBorderPart.FooterBottomRight)),
 
-            // Unknown
-            _ => throw new NotSupportedException("Unknown column row part"),
-        };
-    }
+        // Unknown
+        _ => throw new NotSupportedException("Unknown column row part"),
+    };
 }
 
 /// <summary>
