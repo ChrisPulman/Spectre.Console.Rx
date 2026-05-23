@@ -1,13 +1,10 @@
-﻿// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal static class TypeNameHelper
 {
-    // from  https://github.com/benaadams/Ben.Demystifier/blob/main/src/Ben.Demystifier/TypeNameHelper.cs
+    // from https://github.com/benaadams/Ben.Demystifier/blob/main/src/Ben.Demystifier/TypeNameHelper.cs
     // which was adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
-    public static readonly Dictionary<Type, string> BuiltInTypeNames = new()
+    public static readonly Dictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
     {
         { typeof(void), "void" },
         { typeof(bool), "bool" },
@@ -27,7 +24,7 @@ internal static class TypeNameHelper
         { typeof(ushort), "ushort" },
     };
 
-    public static readonly Dictionary<string, string> FSharpTypeNames = new()
+    public static readonly Dictionary<string, string> FSharpTypeNames = new Dictionary<string, string>
     {
         { "Unit", "void" },
         { "FSharpOption", "Option" },
@@ -42,11 +39,12 @@ internal static class TypeNameHelper
     /// <param name="type">The <see cref="Type"/>.</param>
     /// <param name="fullName"><c>true</c> to print a fully qualified name.</param>
     /// <param name="includeGenericParameterNames"><c>true</c> to include generic parameter names.</param>
+    /// <param name="includeSystemNamespace"><c>true</c> to include the <c>System</c> namespace.</param>
     /// <returns>The pretty printed type name.</returns>
-    public static string GetTypeDisplayName(Type type, bool fullName = false, bool includeGenericParameterNames = true)
+    public static string GetTypeDisplayName(Type type, bool fullName = false, bool includeGenericParameterNames = true, bool includeSystemNamespace = false)
     {
         var builder = new StringBuilder();
-        ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
+        ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames, includeSystemNamespace));
         return builder.ToString();
     }
 
@@ -74,11 +72,11 @@ internal static class TypeNameHelper
         {
             builder.Append(builtInName);
         }
-        else if (type.Namespace == nameof(System))
+        else if (type.Namespace == nameof(System) && !options.IncludeSystemNamespace)
         {
             builder.Append(type.Name);
         }
-        else if (type.Assembly.ManifestModule.Name == "FSharp.Core.dll"
+        else if (type.Assembly.GetName().Name == "FSharp.Core.dll"
                  && FSharpTypeNames.TryGetValue(type.Name, out builtInName))
         {
             builder.Append(builtInName);
@@ -111,9 +109,9 @@ internal static class TypeNameHelper
 
         while (type.IsArray)
         {
-            builder.Append('[')
-                .Append(',', type.GetArrayRank() - 1)
-                .Append(']');
+            builder.Append('[');
+            builder.Append(',', type.GetArrayRank() - 1);
+            builder.Append(']');
             if (type.GetElementType() is not { } elementType)
             {
                 break;
@@ -123,7 +121,8 @@ internal static class TypeNameHelper
         }
     }
 
-    private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length, DisplayNameOptions options)
+    private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length,
+        DisplayNameOptions options)
     {
         var offset = 0;
         if (type.IsNested && type.DeclaringType is not null)
@@ -140,8 +139,8 @@ internal static class TypeNameHelper
             }
             else if (!string.IsNullOrEmpty(type.Namespace))
             {
-                builder.Append(type.Namespace)
-                    .Append('.');
+                builder.Append(type.Namespace);
+                builder.Append('.');
             }
         }
 
@@ -152,7 +151,7 @@ internal static class TypeNameHelper
             return;
         }
 
-        if (type.Assembly.ManifestModule.Name == "FSharp.Core.dll"
+        if (type.Assembly.GetName().Name == "FSharp.Core.dll"
             && FSharpTypeNames.TryGetValue(type.Name, out var builtInName))
         {
             builder.Append(builtInName);
@@ -181,10 +180,10 @@ internal static class TypeNameHelper
         builder.Append('>');
     }
 
-    private readonly struct DisplayNameOptions(bool fullName, bool includeGenericParameterNames)
+    private readonly struct DisplayNameOptions(bool fullName, bool includeGenericParameterNames, bool includeSystemNamespace)
     {
         public bool FullName { get; } = fullName;
-
         public bool IncludeGenericParameterNames { get; } = includeGenericParameterNames;
+        public bool IncludeSystemNamespace { get; } = includeSystemNamespace;
     }
 }

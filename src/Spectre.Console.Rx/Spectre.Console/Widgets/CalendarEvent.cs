@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -13,19 +10,9 @@ namespace Spectre.Console.Rx;
 /// <param name="year">The year of the calendar event.</param>
 /// <param name="month">The month of the calendar event.</param>
 /// <param name="day">The day of the calendar event.</param>
-public sealed class CalendarEvent(string description, int year, int month, int day)
+/// <param name="customHighlightStyle">The custom highlight style of the calendar event.</param>
+public sealed class CalendarEvent(string description, int year, int month, int day, Style? customHighlightStyle = null)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CalendarEvent"/> class.
-    /// </summary>
-    /// <param name="year">The year of the calendar event.</param>
-    /// <param name="month">The month of the calendar event.</param>
-    /// <param name="day">The day of the calendar event.</param>
-    public CalendarEvent(int year, int month, int day)
-        : this(string.Empty, year, month, day)
-    {
-    }
-
     /// <summary>
     /// Gets the description of the calendar event.
     /// </summary>
@@ -45,4 +32,21 @@ public sealed class CalendarEvent(string description, int year, int month, int d
     /// Gets the day of the calendar event.
     /// </summary>
     public int Day { get; } = day;
+
+    /// <summary>
+    /// Gets the custom highlight style of the calendar event.
+    /// </summary>
+    public Style? CustomHighlightStyle { get; } = customHighlightStyle;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CalendarEvent"/> class.
+    /// </summary>
+    /// <param name="year">The year of the calendar event.</param>
+    /// <param name="month">The month of the calendar event.</param>
+    /// <param name="day">The day of the calendar event.</param>
+    /// <param name="customHighlightStyle">The custom highlight style of the calendar event.</param>
+    public CalendarEvent(int year, int month, int day, Style? customHighlightStyle = null)
+        : this(string.Empty, year, month, day, customHighlightStyle)
+    {
+    }
 }

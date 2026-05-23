@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,6 +5,17 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public static partial class AnsiConsole
 {
+    /// <summary>
+    /// Renders the specified <see cref="IRenderable"/> to the console.
+    /// </summary>
+    /// <param name="renderable">The object to render.</param>
+    public static void Write(IRenderable renderable)
+    {
+        ArgumentNullException.ThrowIfNull(renderable);
+
+        Console.Write(renderable);
+    }
+
     /// <summary>
     /// Writes the specified string value to the console.
     /// </summary>
@@ -156,10 +164,7 @@ public static partial class AnsiConsole
     /// <param name="value">The value to write.</param>
     public static void Write(IFormatProvider provider, char[] value)
     {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         for (var index = 0; index < value.Length; index++)
         {

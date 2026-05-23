@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class ProgressBar : Renderable, IHasCulture
@@ -9,29 +6,20 @@ internal sealed class ProgressBar : Renderable, IHasCulture
     private const int PULSESPEED = 15;
 
     public double Value { get; set; }
-
     public double MaxValue { get; set; } = 100;
 
     public int? Width { get; set; }
-
     public bool ShowRemaining { get; set; } = true;
-
     public char UnicodeBar { get; set; } = '━';
-
     public char AsciiBar { get; set; } = '-';
-
     public bool ShowValue { get; set; }
-
     public bool IsIndeterminate { get; set; }
-
     public CultureInfo? Culture { get; set; }
+    public Func<double, CultureInfo, string>? ValueFormatter { get; set; }
 
     public Style CompletedStyle { get; set; } = Color.Yellow;
-
     public Style FinishedStyle { get; set; } = Color.Green;
-
     public Style RemainingStyle { get; set; } = Color.Grey;
-
     public Style IndeterminateStyle { get; set; } = DefaultPulseStyle;
 
     internal static Style DefaultPulseStyle { get; } = new Style(foreground: Color.DodgerBlue1, background: Color.Grey23);
@@ -63,7 +51,7 @@ internal sealed class ProgressBar : Renderable, IHasCulture
         var barCount = Math.Max(0, (int)(width * (completedBarCount / MaxValue)));
 
         // Show value?
-        var value = completedBarCount.ToString(Culture ?? CultureInfo.InvariantCulture);
+        var value = ValueFormatter != null ? ValueFormatter(completedBarCount, Culture ?? CultureInfo.InvariantCulture) : completedBarCount.ToString(Culture ?? CultureInfo.InvariantCulture);
         if (ShowValue)
         {
             barCount = barCount - value.Length - 1;
@@ -101,7 +89,7 @@ internal sealed class ProgressBar : Renderable, IHasCulture
     private IEnumerable<Segment> RenderIndeterminate(RenderOptions options, int width)
     {
         var bar = options.Unicode ? UnicodeBar.ToString() : AsciiBar.ToString();
-        var style = IndeterminateStyle ?? DefaultPulseStyle;
+        var style = IndeterminateStyle;
 
         IEnumerable<Segment> GetPulseSegments()
         {

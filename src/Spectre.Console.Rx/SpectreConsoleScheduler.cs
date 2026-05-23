@@ -3,7 +3,7 @@
 
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
-using System.Runtime.ExceptionServices;
+using Spectre.Console.Rx.Internal;
 
 namespace Spectre.Console.Rx;
 
@@ -14,7 +14,8 @@ namespace Spectre.Console.Rx;
 /// <seealso cref="IDisposable" />
 public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
 {
-    private static readonly SpectreConsoleSynchronizationContext _synchronizationContext = new();
+    private readonly SpectreConsoleSynchronizationContext _synchronizationContext = new();
+    private readonly ManualResetEventSlim _started = new();
     private readonly Thread _thread;
     private bool _disposedValue;
 
@@ -35,6 +36,7 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
         };
 
         _thread.Start();
+        _started.Wait();
     }
 
     /// <summary>
@@ -80,7 +82,16 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
         }
 
         IsRunning = true;
-        _synchronizationContext.Start();
+        _started.Set();
+
+        try
+        {
+            _synchronizationContext.Start();
+        }
+        finally
+        {
+            IsRunning = false;
+        }
     }
 
     /// <summary>
@@ -96,6 +107,9 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
         IsRunning = false;
         _synchronizationContext.Stop();
     }
+
+    /// <inheritdoc/>
+    public Task Sleep(TimeSpan delay, CancellationToken cancellationToken = default) => Task.Delay(delay, cancellationToken);
 
     /// <summary>
     /// Schedules an action to be executed.
@@ -127,35 +141,13 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
             return d;
         }
 
-        // Execute on the scheduler thread and wait until completion to preserve current semantics.
-        var finished = new ManualResetEventSlim(false);
-        ExceptionDispatchInfo? edi = null;
-
         _synchronizationContext.Post(() =>
         {
-            try
+            if (!d.IsDisposed)
             {
-                if (!d.IsDisposed)
-                {
-                    d.Disposable = action(this, state);
-                }
-            }
-            catch (Exception ex)
-            {
-                edi = ExceptionDispatchInfo.Capture(ex);
-            }
-            finally
-            {
-                finished.Set();
+                d.Disposable = action(this, state);
             }
         });
-
-        // Wait for the scheduled work to finish on the scheduler thread.
-        finished.Wait();
-        finished.Dispose();
-
-        // Re-throw any exception that occurred on the scheduler thread to the caller.
-        edi?.Throw();
 
         return d;
     }
@@ -208,6 +200,7 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
             {
                 Stop();
                 _synchronizationContext.Dispose();
+                _started.Dispose();
 
                 // Ensure the scheduler thread exits cleanly if it's still running.
                 if (_thread.IsAlive)

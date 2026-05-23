@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -15,15 +12,7 @@ public static partial class AnsiConsoleExtensions
     /// <param name="action">The action to execute within the alternate screen buffer.</param>
     public static void AlternateScreen(this IAnsiConsole console, Action action)
     {
-        if (console is null)
-        {
-            throw new ArgumentNullException(nameof(console));
-        }
-
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
         if (!console.Profile.Capabilities.Ansi)
         {
@@ -36,7 +25,11 @@ public static partial class AnsiConsoleExtensions
         }
 
         // Switch to alternate screen
-        console.Write(new ControlCode("\u001b[?1049h\u001b[H"));
+        console.WriteAnsi(w =>
+        {
+            w.EnterAltScreen();
+            w.CursorHome();
+        });
 
         try
         {
@@ -46,7 +39,7 @@ public static partial class AnsiConsoleExtensions
         finally
         {
             // Switch back to primary screen
-            console.Write(new ControlCode("\u001b[?1049l"));
+            console.WriteAnsi(w => w.ExitAltScreen());
         }
     }
 }

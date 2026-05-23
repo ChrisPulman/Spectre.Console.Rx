@@ -1,22 +1,18 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class ListWithCallback<T>(Action callback) : IList<T>, IReadOnlyList<T>
 {
-    private readonly List<T> _list = new();
+    private readonly List<T> _list = [];
     private readonly Action _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-
-    public int Count => _list.Count;
-
-    public bool IsReadOnly => false;
 
     public T this[int index]
     {
         get => _list[index];
         set => _list[index] = value;
     }
+
+    public int Count => _list.Count;
+    public bool IsReadOnly => false;
 
     public void Add(T item)
     {

@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -9,6 +6,24 @@ namespace Spectre.Console.Rx;
 public sealed class TableRow : IEnumerable<IRenderable>
 {
     private readonly List<IRenderable> _items;
+
+    /// <summary>
+    /// Gets the number of columns in the row.
+    /// </summary>
+    public int Count => _items.Count;
+
+    internal bool IsHeader { get; }
+    internal bool IsFooter { get; }
+
+    /// <summary>
+    /// Gets a row item at the specified table column index.
+    /// </summary>
+    /// <param name="index">The table column index.</param>
+    /// <returns>The row item at the specified table column index.</returns>
+    public IRenderable this[int index]
+    {
+        get => _items[index];
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TableRow"/> class.
@@ -21,45 +36,33 @@ public sealed class TableRow : IEnumerable<IRenderable>
 
     private TableRow(IEnumerable<IRenderable> items, bool isHeader, bool isFooter)
     {
-        _items = new List<IRenderable>(items ?? Array.Empty<IRenderable>());
+        _items = new List<IRenderable>(items ?? []);
+
+        // Reject column spanning in header or footer rows
+        if ((isHeader || isFooter) && _items.OfType<TableCell>().Any(cell => cell.ColumnSpan > 1))
+        {
+            var rowType = isHeader ? "header" : "footer";
+            throw new InvalidOperationException($"Column spanning is not supported in table {rowType} rows.");
+        }
 
         IsHeader = isHeader;
         IsFooter = isFooter;
     }
 
-    /// <summary>
-    /// Gets the number of columns in the row.
-    /// </summary>
-    public int Count => _items.Count;
+    internal static TableRow Header(IEnumerable<IRenderable> items) => new TableRow(items, true, false);
 
-    internal bool IsHeader { get; }
+    internal static TableRow Footer(IEnumerable<IRenderable> items) => new TableRow(items, false, true);
 
-    internal bool IsFooter { get; }
+    internal void Add(IRenderable item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
 
-    /// <summary>
-    /// Gets a row item at the specified table column index.
-    /// </summary>
-    /// <param name="index">The table column index.</param>
-    /// <returns>The row item at the specified table column index.</returns>
-    public IRenderable this[int index] => _items[index];
+        _items.Add(item);
+    }
 
     /// <inheritdoc/>
     public IEnumerator<IRenderable> GetEnumerator() => _items.GetEnumerator();
 
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    internal static TableRow Header(IEnumerable<IRenderable> items) => new(items, true, false);
-
-    internal static TableRow Footer(IEnumerable<IRenderable> items) => new(items, false, true);
-
-    internal void Add(IRenderable item)
-    {
-        if (item is null)
-        {
-            throw new ArgumentNullException(nameof(item));
-        }
-
-        _items.Add(item);
-    }
 }

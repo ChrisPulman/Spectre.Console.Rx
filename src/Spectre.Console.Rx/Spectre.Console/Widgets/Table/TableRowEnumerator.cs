@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class TableRowEnumerator(TableRow[] items) : IEnumerator<TableRow>
@@ -9,7 +6,6 @@ internal sealed class TableRowEnumerator(TableRow[] items) : IEnumerator<TableRo
     private int _index = -1;
 
     public TableRow Current => _items[_index];
-
     object? IEnumerator.Current => _items[_index];
 
     public void Dispose()

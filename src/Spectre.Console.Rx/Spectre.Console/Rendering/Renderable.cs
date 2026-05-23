@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -22,7 +19,7 @@ public abstract class Renderable : IRenderable
     /// <param name="options">The render options.</param>
     /// <param name="maxWidth">The maximum allowed width.</param>
     /// <returns>The minimum and maximum width of the object.</returns>
-    protected virtual Measurement Measure(RenderOptions options, int maxWidth) => new(maxWidth, maxWidth);
+    protected virtual Measurement Measure(RenderOptions options, int maxWidth) => new Measurement(maxWidth, maxWidth);
 
     /// <summary>
     /// Renders the object.

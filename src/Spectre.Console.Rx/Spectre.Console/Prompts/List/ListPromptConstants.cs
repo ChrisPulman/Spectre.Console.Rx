@@ -1,9 +1,6 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal static class ListPromptConstants
+internal sealed class ListPromptConstants
 {
     public const string Arrow = ">";
     public const string Checkbox = "[[ ]]";
@@ -12,4 +9,15 @@ internal static class ListPromptConstants
     public const string InstructionsMarkup = "[grey](Press <space> to select, <enter> to accept)[/]";
     public const string MoreChoicesMarkup = "[grey](Move up and down to reveal more choices)[/]";
     public const string SearchPlaceholderMarkup = "[grey](Type to search)[/]";
+
+    public static string GetSelectedCheckbox(bool isGroup, SelectionMode mode, Style? style = null)
+    {
+        if (style != null)
+        {
+            return "[[" + $"[{style.Value.ToMarkup()}]X[/]" + "]]";
+        }
+
+        return isGroup && mode == SelectionMode.Leaf
+            ? GroupSelectedCheckbox : SelectedCheckbox;
+    }
 }

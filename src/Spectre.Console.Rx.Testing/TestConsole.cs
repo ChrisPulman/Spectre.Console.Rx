@@ -1,16 +1,49 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Testing;
 
 /// <summary>
 /// A testable console.
 /// </summary>
-public sealed class TestConsole : IAnsiConsole
+public sealed class TestConsole : IAnsiConsole, IDisposable
 {
     private readonly IAnsiConsole _console;
     private readonly StringWriter _writer;
     private IAnsiConsoleCursor? _cursor;
+
+    /// <inheritdoc/>
+    public Profile Profile => _console.Profile;
+
+    /// <inheritdoc/>
+    public IExclusivityMode ExclusivityMode => _console.ExclusivityMode;
+
+    /// <summary>
+    /// Gets the console input.
+    /// </summary>
+    public TestConsoleInput Input { get; }
+
+    /// <inheritdoc/>
+    public RenderPipeline Pipeline => _console.Pipeline;
+
+    /// <inheritdoc/>
+    public IAnsiConsoleCursor Cursor => _cursor ?? _console.Cursor;
+
+    /// <inheritdoc/>
+    IAnsiConsoleInput IAnsiConsole.Input => Input;
+
+    /// <summary>
+    /// Gets the console output.
+    /// </summary>
+    public string Output => _writer.ToString();
+
+    /// <summary>
+    /// Gets the console output lines.
+    /// </summary>
+    public IReadOnlyList<string> Lines => Output.NormalizeLineEndings().TrimEnd('\n').Split(['\n']);
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not VT/ANSI sequences
+    /// should be emitted to the console.
+    /// </summary>
+    public bool EmitAnsiSequences { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestConsole"/> class.
@@ -43,51 +76,16 @@ public sealed class TestConsole : IAnsiConsole
     }
 
     /// <inheritdoc/>
-    public Profile Profile => _console.Profile;
-
-    /// <inheritdoc/>
-    public IExclusivityMode ExclusivityMode => _console.ExclusivityMode;
-
-    /// <summary>
-    /// Gets the console input.
-    /// </summary>
-    public TestConsoleInput Input { get; }
-
-    /// <inheritdoc/>
-    public RenderPipeline Pipeline => _console.Pipeline;
-
-    /// <inheritdoc/>
-    public IAnsiConsoleCursor Cursor => _cursor ?? _console.Cursor;
-
-    /// <inheritdoc/>
-    IAnsiConsoleInput IAnsiConsole.Input => Input;
-
-    /// <summary>
-    /// Gets the console output.
-    /// </summary>
-    public string Output => _writer.ToString();
-
-    /// <summary>
-    /// Gets the console output lines.
-    /// </summary>
-    public IReadOnlyList<string> Lines =>
-        Output.NormalizeLineEndings().TrimEnd('\n').Split(['\n']);
-
-    /// <summary>
-    /// Gets or sets a value indicating whether or not VT/ANSI sequences
-    /// should be emitted to the console.
-    /// </summary>
-    public bool EmitAnsiSequences { get; set; }
-
-    /// <inheritdoc/>
     public void Dispose()
     {
         _writer.Dispose();
-        _console.Dispose();
     }
 
     /// <inheritdoc/>
-    public void Clear(bool home) => _console.Clear(home);
+    public void Clear(bool home)
+    {
+        _console.Clear(home);
+    }
 
     /// <inheritdoc/>
     public void Write(IRenderable renderable)
@@ -110,5 +108,14 @@ public sealed class TestConsole : IAnsiConsole
         }
     }
 
-    internal void SetCursor(IAnsiConsoleCursor? cursor) => _cursor = cursor;
+    /// <inheritdoc/>
+    public void WriteAnsi(Action<AnsiWriter> action)
+    {
+        _console.WriteAnsi(action);
+    }
+
+    internal void SetCursor(IAnsiConsoleCursor? cursor)
+    {
+        _cursor = cursor;
+    }
 }

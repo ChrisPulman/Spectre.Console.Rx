@@ -1,27 +1,19 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Represents a multi selection list prompt.
 /// </summary>
 /// <typeparam name="T">The prompt result type.</typeparam>
-public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrategy<T>
+/// <remarks>
+/// Initializes a new instance of the <see cref="MultiSelectionPrompt{T}"/> class.
+/// </remarks>
+/// <param name="comparer">
+/// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
+/// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
+/// </param>
+public sealed class MultiSelectionPrompt<T>(IEqualityComparer<T>? comparer = null) : IPrompt<List<T>>, IListPromptStrategy<T>
     where T : notnull
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MultiSelectionPrompt{T}"/> class.
-    /// </summary>
-    /// <param name="comparer">
-    /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
-    /// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
-    /// </param>
-    public MultiSelectionPrompt(IEqualityComparer<T>? comparer = null)
-    {
-        Tree = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
-    }
-
     /// <summary>
     /// Gets or sets the title.
     /// </summary>
@@ -37,7 +29,7 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     /// Gets or sets a value indicating whether the selection should wrap around when reaching the edge.
     /// Defaults to <c>false</c>.
     /// </summary>
-    public bool WrapAround { get; set; }
+    public bool WrapAround { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the highlight style of the selected choice.
@@ -72,7 +64,18 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     /// </summary>
     public SelectionMode Mode { get; set; } = SelectionMode.Leaf;
 
-    internal ListPromptTree<T> Tree { get; }
+    internal ListPromptTree<T> Tree { get; } = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
+
+    /// <summary>
+    /// Gets or sets the choice to show as selected when the prompt is first displayed.
+    /// By default the first choice is selected.
+    /// </summary>
+    public T? DefaultValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets a Func that will be triggered if Cancel is triggered by the 'ESC' key.
+    /// </summary>
+    public Func<List<T>>? CancelResult { get; set; }
 
     /// <summary>
     /// Adds a choice.
@@ -94,7 +97,13 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     {
         // Create the list prompt
         var prompt = new ListPrompt<T>(console, this);
-        var result = await prompt.Show(Tree, Mode, false, false, PageSize, WrapAround, cancellationToken).ConfigureAwait(false);
+        var converter = Converter ?? TypeConverterHelper.ConvertToString;
+        var result = await prompt.Show(Tree, converter, Mode, false, false, PageSize, WrapAround, cancellationToken).ConfigureAwait(false);
+
+        if (result.IsCancelled && CancelResult is not null)
+        {
+            return CancelResult();
+        }
 
         if (Mode == SelectionMode.Leaf)
         {
@@ -145,6 +154,11 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     /// <inheritdoc/>
     ListPromptInputResult IListPromptStrategy<T>.HandleInput(ConsoleKeyInfo key, ListPromptState<T> state)
     {
+        if (key.Key == ConsoleKey.Escape && CancelResult is not null)
+        {
+            return ListPromptInputResult.Abort;
+        }
+
         if (key.Key == ConsoleKey.Enter)
         {
             if (Required && state.Items.None(x => x.IsSelected))
@@ -219,7 +233,8 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
     }
 
     /// <inheritdoc/>
-    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex, IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText)
+    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex,
+        IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText)
     {
         var list = new List<IRenderable>();
         var highlightStyle = HighlightStyle ?? Color.Blue;
@@ -252,8 +267,7 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
             }
 
             var checkbox = item.Node.IsSelected
-                ? (item.Node.IsGroup && Mode == SelectionMode.Leaf
-                    ? ListPromptConstants.GroupSelectedCheckbox : ListPromptConstants.SelectedCheckbox)
+                ? ListPromptConstants.GetSelectedCheckbox(item.Node.IsGroup, Mode, HighlightStyle)
                 : ListPromptConstants.Checkbox;
 
             grid.AddRow(new Markup(indent + prompt + " " + checkbox + " " + text, style));
@@ -273,5 +287,16 @@ public sealed class MultiSelectionPrompt<T> : IPrompt<List<T>>, IListPromptStrat
 
         // Combine all items
         return new Rows(list);
+    }
+
+    /// <inheritdoc/>
+    int IListPromptStrategy<T>.CalculateInitialIndex(IReadOnlyList<ListPromptItem<T>> nodes)
+    {
+        if (DefaultValue is not null)
+        {
+            return Tree.IndexOf(DefaultValue) ?? 0;
+        }
+
+        return 0;
     }
 }

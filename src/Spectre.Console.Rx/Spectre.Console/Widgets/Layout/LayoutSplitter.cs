@@ -1,14 +1,9 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal abstract class LayoutSplitter
 {
     public static LayoutSplitter Column { get; } = new ColumnSplitter();
-
     public static LayoutSplitter Row { get; } = new RowSplitter();
-
     public static LayoutSplitter Null { get; } = new NullSplitter();
 
     public abstract IEnumerable<(Layout Child, Region Region)> Divide(Region region, IEnumerable<Layout> layouts);

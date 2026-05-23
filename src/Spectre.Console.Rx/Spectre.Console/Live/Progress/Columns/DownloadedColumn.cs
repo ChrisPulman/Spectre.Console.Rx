@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -13,10 +10,20 @@ public sealed class DownloadedColumn : ProgressColumn
     /// </summary>
     public CultureInfo? Culture { get; set; }
 
+    /// <summary>
+    /// Gets or sets the <see cref="FileSizeBase"/> to use.
+    /// </summary>
+    public FileSizeBase Base { get; set; } = FileSizeBase.Binary;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to display the transfer speed in bits.
+    /// </summary>
+    public bool ShowBits { get; set; }
+
     /// <inheritdoc/>
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
-        var total = new FileSize(task.MaxValue);
+        var total = new FileSize(task.MaxValue, Base, ShowBits);
 
         if (task.IsFinished)
         {
@@ -25,13 +32,15 @@ public sealed class DownloadedColumn : ProgressColumn
                 total.Format(Culture),
                 total.Suffix));
         }
+        else
+        {
+            var downloaded = new FileSize(task.Value, total.Prefix, Base, ShowBits);
 
-        var downloaded = new FileSize(task.Value, total.Unit);
-
-        return new Markup(string.Format(
-            "{0}[grey]/[/]{1} [grey]{2}[/]",
-            downloaded.Format(Culture),
-            total.Format(Culture),
-            total.Suffix));
+            return new Markup(string.Format(
+                "{0}[grey]/[/]{1} [grey]{2}[/]",
+                downloaded.Format(Culture),
+                total.Format(Culture),
+                total.Suffix));
+        }
     }
 }

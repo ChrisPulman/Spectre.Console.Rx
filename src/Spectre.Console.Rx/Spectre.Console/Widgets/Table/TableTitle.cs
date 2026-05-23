@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -30,7 +27,7 @@ public sealed class TableTitle(string text, Style? style = null)
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public TableTitle SetStyle(Style? style)
     {
-        Style = style ?? Style.Plain;
+        Style = style ?? Spectre.Console.Rx.Style.Plain;
         return this;
     }
 
@@ -41,12 +38,9 @@ public sealed class TableTitle(string text, Style? style = null)
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public TableTitle SetStyle(string style)
     {
-        if (style is null)
-        {
-            throw new ArgumentNullException(nameof(style));
-        }
+        ArgumentNullException.ThrowIfNull(style);
 
-        Style = Style.Parse(style);
+        Style = Spectre.Console.Rx.Style.Parse(style);
         return this;
     }
 }

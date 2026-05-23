@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -169,10 +166,7 @@ public static partial class AnsiConsole
     /// <param name="value">The value to write.</param>
     public static void WriteLine(IFormatProvider provider, char[] value)
     {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         for (var index = 0; index < value.Length; index++)
         {

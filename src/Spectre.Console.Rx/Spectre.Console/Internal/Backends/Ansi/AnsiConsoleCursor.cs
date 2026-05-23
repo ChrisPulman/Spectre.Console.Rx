@@ -1,8 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using static Spectre.Console.Rx.AnsiSequences;
-
 namespace Spectre.Console.Rx;
 
 internal sealed class AnsiConsoleCursor(AnsiConsoleBackend backend) : IAnsiConsoleCursor
@@ -13,11 +8,11 @@ internal sealed class AnsiConsoleCursor(AnsiConsoleBackend backend) : IAnsiConso
     {
         if (show)
         {
-            _backend.Write(new ControlCode(SM(DECTCEM)));
+            _backend.Write(w => w.ShowCursor());
         }
         else
         {
-            _backend.Write(new ControlCode(RM(DECTCEM)));
+            _backend.Write(w => w.HideCursor());
         }
     }
 
@@ -31,19 +26,19 @@ internal sealed class AnsiConsoleCursor(AnsiConsoleBackend backend) : IAnsiConso
         switch (direction)
         {
             case CursorDirection.Up:
-                _backend.Write(new ControlCode(CUU(steps)));
+                _backend.Write(w => w.CursorUp(steps));
                 break;
             case CursorDirection.Down:
-                _backend.Write(new ControlCode(CUD(steps)));
+                _backend.Write(w => w.CursorDown(steps));
                 break;
             case CursorDirection.Right:
-                _backend.Write(new ControlCode(CUF(steps)));
+                _backend.Write(w => w.CursorRight(steps));
                 break;
             case CursorDirection.Left:
-                _backend.Write(new ControlCode(CUB(steps)));
+                _backend.Write(w => w.CursorLeft(steps));
                 break;
         }
     }
 
-    public void SetPosition(int column, int line) => _backend.Write(new ControlCode(CUP(line, column)));
+    public void SetPosition(int column, int line) => _backend.Write(w => w.CursorPosition(line, column));
 }

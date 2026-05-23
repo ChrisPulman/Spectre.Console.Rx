@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -59,10 +56,7 @@ public static partial class AnsiConsole
             throw new InvalidOperationException("Cannot export HTML since a recording hasn't been started.");
         }
 
-        if (encoder is null)
-        {
-            throw new ArgumentNullException(nameof(encoder));
-        }
+        ArgumentNullException.ThrowIfNull(encoder);
 
         return _recorder.Export(encoder);
     }

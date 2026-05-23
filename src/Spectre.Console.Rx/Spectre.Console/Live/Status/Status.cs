@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -67,10 +64,7 @@ public sealed class Status(IAnsiConsole console)
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task StartAsync(string status, Func<StatusContext, Task> action)
     {
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        ArgumentNullException.ThrowIfNull(action);
 
         _ = await StartAsync<object?>(status, async statusContext =>
         {
@@ -88,10 +82,7 @@ public sealed class Status(IAnsiConsole console)
     /// <returns>A <see cref="Task{T}"/> representing the asynchronous operation.</returns>
     public async Task<T> StartAsync<T>(string status, Func<StatusContext, Task<T>> func)
     {
-        if (func is null)
-        {
-            throw new ArgumentNullException(nameof(func));
-        }
+        ArgumentNullException.ThrowIfNull(func);
 
         // Set the progress columns
         var spinnerColumn = new SpinnerColumn(Spinner ?? Spinner.Known.Default)
@@ -115,9 +106,56 @@ public sealed class Status(IAnsiConsole console)
         return await progress.StartAsync(async ctx =>
         {
             var statusContext = new StatusContext(ctx, ctx.AddTask(status), spinnerColumn);
-            var result = await func(statusContext).ConfigureAwait(false);
-            _console.Dispose();
-            return result;
+            return await func(statusContext).ConfigureAwait(false);
         }).ConfigureAwait(false);
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="Status"/>.
+/// </summary>
+public static class StatusExtensions
+{
+    /// <summary>
+    /// Sets whether or not auto refresh is enabled.
+    /// If disabled, you will manually have to refresh the progress.
+    /// </summary>
+    /// <param name="status">The <see cref="Status"/> instance.</param>
+    /// <param name="enabled">Whether or not auto refresh is enabled.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Status AutoRefresh(this Status status, bool enabled)
+    {
+        ArgumentNullException.ThrowIfNull(status);
+
+        status.AutoRefresh = enabled;
+        return status;
+    }
+
+    /// <summary>
+    /// Sets the spinner.
+    /// </summary>
+    /// <param name="status">The <see cref="Status"/> instance.</param>
+    /// <param name="spinner">The spinner.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Status Spinner(this Status status, Spinner spinner)
+    {
+        ArgumentNullException.ThrowIfNull(status);
+
+        status.Spinner = spinner;
+        return status;
+    }
+
+    /// <summary>
+    /// Sets the spinner style.
+    /// </summary>
+    /// <param name="status">The <see cref="Status"/> instance.</param>
+    /// <param name="style">The spinner style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Status SpinnerStyle(this Status status, Style? style)
+    {
+        ArgumentNullException.ThrowIfNull(status);
+
+        status.SpinnerStyle = style;
+        return status;
     }
 }

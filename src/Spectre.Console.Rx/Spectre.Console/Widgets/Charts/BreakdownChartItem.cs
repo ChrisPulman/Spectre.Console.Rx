@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -9,6 +6,9 @@ namespace Spectre.Console.Rx;
 /// <remarks>
 /// Initializes a new instance of the <see cref="BreakdownChartItem"/> class.
 /// </remarks>
+/// <param name="label">The item label.</param>
+/// <param name="value">The item value.</param>
+/// <param name="color">The item color.</param>
 public sealed class BreakdownChartItem(string label, double value, Color color) : IBreakdownChartItem
 {
     /// <summary>

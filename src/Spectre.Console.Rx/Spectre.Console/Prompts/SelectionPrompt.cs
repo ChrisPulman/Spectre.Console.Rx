@@ -1,23 +1,20 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
-/// SelectionPrompt.
+/// Represents a single list prompt.
 /// </summary>
-/// <typeparam name="T">The type.</typeparam>
-/// <seealso cref="Spectre.Console.Rx.IPrompt&lt;T&gt;" />
-/// <seealso cref="Spectre.Console.Rx.IListPromptStrategy&lt;T&gt;" />
-public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
+/// <typeparam name="T">The prompt result type.</typeparam>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SelectionPrompt{T}"/> class.
+/// </remarks>
+/// <param name="comparer">
+/// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing items,
+/// or <c>null</c> to use the default <see cref="IEqualityComparer{T}"/> for the type of the item.
+/// </param>
+public sealed class SelectionPrompt<T>(IEqualityComparer<T>? comparer = null) : IPrompt<T>, IListPromptStrategy<T>
     where T : notnull
 {
-    private readonly ListPromptTree<T> _tree;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SelectionPrompt{T}"/> class.
-    /// </summary>
-    public SelectionPrompt() => _tree = new ListPromptTree<T>(EqualityComparer<T>.Default);
+    private readonly ListPromptTree<T> _tree = new ListPromptTree<T>(comparer ?? EqualityComparer<T>.Default);
 
     /// <summary>
     /// Gets or sets the title.
@@ -34,7 +31,7 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     /// Gets or sets a value indicating whether the selection should wrap around when reaching the edge.
     /// Defaults to <c>false</c>.
     /// </summary>
-    public bool WrapAround { get; set; }
+    public bool WrapAround { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the highlight style of the selected choice.
@@ -79,6 +76,17 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     public bool SearchEnabled { get; set; }
 
     /// <summary>
+    /// Gets or sets the choice to show as selected when the prompt is first displayed.
+    /// By default the first choice is selected.
+    /// </summary>
+    public T? DefaultValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets a Func that will be triggered if Cancel is triggered by the 'ESC' key.
+    /// </summary>
+    public Func<T>? CancelResult { get; set; }
+
+    /// <summary>
     /// Adds a choice.
     /// </summary>
     /// <param name="item">The item to add.</param>
@@ -98,7 +106,13 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     {
         // Create the list prompt
         var prompt = new ListPrompt<T>(console, this);
-        var result = await prompt.Show(_tree, Mode, true, SearchEnabled, PageSize, WrapAround, cancellationToken).ConfigureAwait(false);
+        var converter = Converter ?? TypeConverterHelper.ConvertToString;
+        var result = await prompt.Show(_tree, converter, Mode, true, SearchEnabled, PageSize, WrapAround, cancellationToken).ConfigureAwait(false);
+
+        if (result.IsCancelled && CancelResult is not null)
+        {
+            return CancelResult();
+        }
 
         // Return the selected item
         return result.Items[result.Index].Data;
@@ -107,7 +121,9 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     /// <inheritdoc/>
     ListPromptInputResult IListPromptStrategy<T>.HandleInput(ConsoleKeyInfo key, ListPromptState<T> state)
     {
-        if (key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Spacebar || key.Key == ConsoleKey.Packet)
+        if (key.Key == ConsoleKey.Enter
+         || key.Key == ConsoleKey.Packet
+         || (!state.SearchEnabled && key.Key == ConsoleKey.Spacebar))
         {
             // Selecting a non leaf in "leaf mode" is not allowed
             if (state.Current.IsGroup && Mode == SelectionMode.Leaf)
@@ -116,6 +132,11 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
             }
 
             return ListPromptInputResult.Submit;
+        }
+
+        if (key.Key == ConsoleKey.Escape && CancelResult is not null)
+        {
+            return ListPromptInputResult.Abort;
         }
 
         return ListPromptInputResult.None;
@@ -135,17 +156,17 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
         var scrollable = totalItemCount > requestedPageSize;
         if (SearchEnabled || scrollable)
         {
-            extra++;
+            extra += 1;
         }
 
         if (SearchEnabled)
         {
-            extra++;
+            extra += 1;
         }
 
         if (scrollable)
         {
-            extra++;
+            extra += 1;
         }
 
         if (requestedPageSize > console.Profile.Height - extra)
@@ -157,7 +178,8 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
     }
 
     /// <inheritdoc/>
-    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex, IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText)
+    IRenderable IListPromptStrategy<T>.Render(IAnsiConsole console, bool scrollable, int cursorIndex,
+        IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText)
     {
         var list = new List<IRenderable>();
         var disabledStyle = DisabledStyle ?? Color.Grey;
@@ -195,7 +217,7 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
 
             if (searchText.Length > 0 && !(item.Node.IsGroup && Mode == SelectionMode.Leaf))
             {
-                text = text.Highlight(searchText, searchHighlightStyle);
+                text = AnsiMarkup.Highlight(text, searchText, searchHighlightStyle);
             }
 
             grid.AddRow(new Markup(indent + prompt + " " + text, style));
@@ -222,5 +244,16 @@ public sealed class SelectionPrompt<T> : IPrompt<T>, IListPromptStrategy<T>
         }
 
         return new Rows(list);
+    }
+
+    /// <inheritdoc/>
+    int IListPromptStrategy<T>.CalculateInitialIndex(IReadOnlyList<ListPromptItem<T>> nodes)
+    {
+        if (DefaultValue is not null)
+        {
+            return _tree.IndexOf(DefaultValue) ?? 0;
+        }
+
+        return 0;
     }
 }

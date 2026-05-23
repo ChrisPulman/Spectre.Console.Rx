@@ -9,6 +9,7 @@ namespace Spectre.Console.Rx.Internal;
 internal class SpectreConsoleSynchronizationContext : SynchronizationContext, IDisposable
 {
     private readonly SpectreConsoleMessageQueue<Message> _messageQueue = new();
+    private int _stopped = 1;
     private bool _disposedValue;
 
     /// <summary>
@@ -45,22 +46,35 @@ internal class SpectreConsoleSynchronizationContext : SynchronizationContext, ID
     [SuppressMessage("Roslynator", "RCS1231:Make parameter ref read-only.", Justification = "Netstandard does not support")]
     public void Start(CancellationToken cancellationToken)
     {
+        Interlocked.Exchange(ref _stopped, 0);
         Message msg;
-        do
+        try
         {
-            // blocks until a message comes in:
-            msg = _messageQueue.Receive(cancellationToken);
+            do
+            {
+                // blocks until a message comes in:
+                msg = _messageQueue.Receive(cancellationToken);
 
-            // execute the code on this thread
-            msg.Callback?.Invoke(msg.State);
+                try
+                {
+                    // execute the code on this thread
+                    msg.Callback?.Invoke(msg.State);
+                }
+                finally
+                {
+                    // let Send() know we're done:
+                    msg.FinishedEvent?.Set();
+                }
 
-            // let Send() know we're done:
-            msg.FinishedEvent?.Set();
-
-            // exit on the quit message
+                // exit on the quit message
+            }
+            while (msg.Callback != null && !cancellationToken.IsCancellationRequested);
+            cancellationToken.ThrowIfCancellationRequested();
         }
-        while (msg.Callback != null && !cancellationToken.IsCancellationRequested);
-        cancellationToken.ThrowIfCancellationRequested();
+        finally
+        {
+            Interlocked.Exchange(ref _stopped, 1);
+        }
     }
 
     /// <summary>
@@ -68,21 +82,34 @@ internal class SpectreConsoleSynchronizationContext : SynchronizationContext, ID
     /// </summary>
     public void Start()
     {
+        Interlocked.Exchange(ref _stopped, 0);
         Message msg;
-        do
+        try
         {
-            // blocks until a message comes in:
-            msg = _messageQueue.Receive();
+            do
+            {
+                // blocks until a message comes in:
+                msg = _messageQueue.Receive();
 
-            // execute the code on this thread
-            msg.Callback?.Invoke(msg.State);
+                try
+                {
+                    // execute the code on this thread
+                    msg.Callback?.Invoke(msg.State);
+                }
+                finally
+                {
+                    // let Send() know we're done:
+                    msg.FinishedEvent?.Set();
+                }
 
-            // let Send() know we're done:
-            msg.FinishedEvent?.Set();
-
-            // exit on the quit message
+                // exit on the quit message
+            }
+            while (msg.Callback != null);
         }
-        while (msg.Callback != null);
+        finally
+        {
+            Interlocked.Exchange(ref _stopped, 1);
+        }
     }
 
     /// <summary>
@@ -90,6 +117,17 @@ internal class SpectreConsoleSynchronizationContext : SynchronizationContext, ID
     /// </summary>
     public void Stop()
     {
+        if (Interlocked.Exchange(ref _stopped, 1) == 1)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(Current, this))
+        {
+            _messageQueue.Post(new Message(null, null, null));
+            return;
+        }
+
         var ev = new ManualResetEventSlim(false);
         try
         {

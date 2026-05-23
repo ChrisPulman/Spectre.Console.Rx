@@ -1,0 +1,32 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Examples/">
+    <Project Path="BenchmarkSuite1/BenchmarkSuite1.csproj" />
+    <Project Path="CombinedExample/CombinedExample.csproj" />
+    <Project Path="LiveExample/LiveExample.csproj" />
+    <Project Path="LiveTableExample/LiveTableExample.csproj" />
+    <Project Path="ProgressExample/ProgressExample.csproj" />
+    <Project Path="ProgressThreadExample/ProgressThreadExample.csproj" />
+    <Project Path="ReactiveUIConsoleExample/ReactiveUIConsoleExample.csproj" />
+    <Project Path="StatusExample/StatusExample.csproj" />
+    <Project Path="UsingSpectreConsole/UsingSpectreConsole.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Spectre.Console.Rx.Ansi.Tests/Spectre.Console.Rx.Ansi.Tests.csproj" />
+    <Project Path="Tests/Using.Spectre.Console.Rx.Tests.csproj" />
+  </Folder>
+  <Project Path="../build/_build.csproj">
+    <Build Solution="*|Any CPU" Project="false" />
+  </Project>
+  <Project Path="Spectre.Console.Rx.Ansi/Spectre.Console.Rx.Ansi.csproj" />
+  <Project Path="Spectre.Console.Rx.ImageSharp/Spectre.Console.Rx.ImageSharp.csproj" />
+  <Project Path="Spectre.Console.Rx.Json/Spectre.Console.Rx.Json.csproj" />
+  <Project Path="Spectre.Console.Rx.ReactiveUI/Spectre.Console.Rx.ReactiveUI.csproj" />
+  <Project Path="Spectre.Console.Rx.SourceGenerator/Spectre.Console.Rx.SourceGenerator.csproj" />
+  <Project Path="Spectre.Console.Rx.Testing/Spectre.Console.Rx.Testing.csproj" />
+  <Project Path="Spectre.Console.Rx/Spectre.Console.Rx.csproj" />
+</Solution>

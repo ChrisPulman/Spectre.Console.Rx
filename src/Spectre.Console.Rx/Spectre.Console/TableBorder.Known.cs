@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -86,13 +83,18 @@ public abstract partial class TableBorder
     /// <summary>
     /// Gets a double border.
     /// </summary>
-    [SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "Intensional")]
+    [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     public static TableBorder Double { get; } = new DoubleTableBorder();
 
     /// <summary>
     /// Gets a border with a double edge.
     /// </summary>
     public static TableBorder DoubleEdge { get; } = new DoubleEdgeTableBorder();
+
+    /// <summary>
+    /// Gets a minimalist border.
+    /// </summary>
+    public static TableBorder Minimalist { get; } = new MinimalistTableBorder();
 
     /// <summary>
     /// Gets a markdown border.

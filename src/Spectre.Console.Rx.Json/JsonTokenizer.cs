@@ -1,8 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.Text;
-
 namespace Spectre.Console.Rx.Json;
 
 internal static class JsonTokenizer
@@ -30,10 +25,10 @@ internal static class JsonTokenizer
             { "null", JsonTokenType.Null },
         };
 
-        _allowedEscapedChars = new HashSet<char>
-        {
-            '\"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u',
-        };
+        _allowedEscapedChars =
+        [
+            '\"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u'
+        ];
     }
 
     public static List<JsonToken> Tokenize(string text)
@@ -147,7 +142,7 @@ internal static class JsonTokenizer
         if (buffer.Peek() == '-')
         {
             buffer.Read();
-            accumulator.Append('-');
+            accumulator.Append("-");
         }
 
         // Digits

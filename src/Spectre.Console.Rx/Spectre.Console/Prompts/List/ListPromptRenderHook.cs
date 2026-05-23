@@ -1,35 +1,22 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPromptRenderHook<T> : IRenderHook
+internal sealed class ListPromptRenderHook<T>(
+    IAnsiConsole console,
+    Func<IRenderable> builder) : IRenderHook
     where T : notnull
 {
-    private readonly IAnsiConsole _console;
-    private readonly Func<IRenderable> _builder;
-    private readonly LiveRenderable _live;
-    private readonly object _lock;
-    private bool _dirty;
-
-    public ListPromptRenderHook(
-        IAnsiConsole console,
-        Func<IRenderable> builder)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _builder = builder ?? throw new ArgumentNullException(nameof(builder));
-
-        _live = new LiveRenderable(console);
-        _lock = new object();
-        _dirty = true;
-    }
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly Func<IRenderable> _builder = builder ?? throw new ArgumentNullException(nameof(builder));
+    private readonly LiveRenderable _live = new LiveRenderable(console);
+    private readonly object _lock = new();
+    private bool _dirty = true;
 
     public void Clear() => _console.Write(_live.RestoreCursor());
 
     public void Refresh()
     {
         _dirty = true;
-        _console.Write(new ControlCode(string.Empty));
+        _console.Write(ControlCode.Empty);
     }
 
     public IEnumerable<IRenderable> Process(RenderOptions options, IEnumerable<IRenderable> renderables)
@@ -42,7 +29,7 @@ internal sealed class ListPromptRenderHook<T> : IRenderHook
                 _dirty = false;
             }
 
-            yield return _live.PositionCursor();
+            yield return _live.PositionCursor(options);
 
             foreach (var renderable in renderables)
             {

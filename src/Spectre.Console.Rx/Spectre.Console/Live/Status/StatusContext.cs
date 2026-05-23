@@ -1,32 +1,13 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Represents a context that can be used to interact with a <see cref="Status"/>.
 /// </summary>
-public sealed class StatusContext : IContext
+public sealed class StatusContext
 {
     private readonly ProgressContext _context;
     private readonly ProgressTask _task;
     private readonly SpinnerColumn _spinnerColumn;
-    private bool _disposedValue;
-
-    internal StatusContext(ProgressContext context, ProgressTask task, SpinnerColumn spinnerColumn)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _task = task ?? throw new ArgumentNullException(nameof(task));
-        _spinnerColumn = spinnerColumn ?? throw new ArgumentNullException(nameof(spinnerColumn));
-    }
-
-    /// <summary>
-    /// Gets a value indicating whether this instance is finished.
-    /// </summary>
-    /// <value>
-    ///   <c>true</c> if this instance is finished; otherwise, <c>false</c>.
-    /// </value>
-    public bool IsFinished { get; internal set; }
 
     /// <summary>
     /// Gets or sets the current status.
@@ -55,51 +36,83 @@ public sealed class StatusContext : IContext
         set => _spinnerColumn.Style = value;
     }
 
+    internal StatusContext(ProgressContext context, ProgressTask task, SpinnerColumn spinnerColumn)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _task = task ?? throw new ArgumentNullException(nameof(task));
+        _spinnerColumn = spinnerColumn ?? throw new ArgumentNullException(nameof(spinnerColumn));
+    }
+
     /// <summary>
     /// Refreshes the status.
     /// </summary>
     public void Refresh() => _context.Refresh();
 
-    /// <summary>
-    /// Releases unmanaged and - optionally - managed resources.
-    /// </summary>
-    public void Dispose()
+    internal void Finish()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
+        _task.StopTask();
+        _context.Refresh();
     }
 
     private void SetStatus(string status)
     {
-        if (status is null)
-        {
-            throw new ArgumentNullException(nameof(status));
-        }
+        ArgumentNullException.ThrowIfNull(status);
 
         _task.Description = status;
     }
 
     private void SetSpinner(Spinner spinner)
     {
-        if (spinner is null)
-        {
-            throw new ArgumentNullException(nameof(spinner));
-        }
+        ArgumentNullException.ThrowIfNull(spinner);
 
         _spinnerColumn.Spinner = spinner;
     }
+}
 
-    private void Dispose(bool disposing)
+/// <summary>
+/// Contains extension methods for <see cref="StatusContext"/>.
+/// </summary>
+public static class StatusContextExtensions
+{
+    /// <summary>
+    /// Sets the status message.
+    /// </summary>
+    /// <param name="context">The status context.</param>
+    /// <param name="status">The status message.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static StatusContext Status(this StatusContext context, string status)
     {
-        if (!_disposedValue)
-        {
-            if (disposing)
-            {
-                _context.Dispose();
-            }
+        ArgumentNullException.ThrowIfNull(context);
 
-            _disposedValue = true;
-        }
+        context.Status = status;
+        return context;
+    }
+
+    /// <summary>
+    /// Sets the spinner.
+    /// </summary>
+    /// <param name="context">The status context.</param>
+    /// <param name="spinner">The spinner.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static StatusContext Spinner(this StatusContext context, Spinner spinner)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        context.Spinner = spinner;
+        return context;
+    }
+
+    /// <summary>
+    /// Sets the spinner style.
+    /// </summary>
+    /// <param name="context">The status context.</param>
+    /// <param name="style">The spinner style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static StatusContext SpinnerStyle(this StatusContext context, Style? style)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        context.SpinnerStyle = style;
+        return context;
     }
 }

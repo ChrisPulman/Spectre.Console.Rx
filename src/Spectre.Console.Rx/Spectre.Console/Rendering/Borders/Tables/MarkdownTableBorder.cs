@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -65,7 +62,7 @@ public sealed class MarkdownTableBorder : TableBorder
         {
             var padding = columns[columnIndex].Padding;
 
-            if (padding?.Left > 0)
+            if (padding != null && padding.Value.Left > 0)
             {
                 // Left padding
                 builder.Append(" ".Repeat(padding.Value.Left));
@@ -80,25 +77,25 @@ public sealed class MarkdownTableBorder : TableBorder
             else if (justification.Value == Justify.Left)
             {
                 // Left
-                builder.Append(':')
-                    .Append(center.Repeat(columnWidth - 1));
+                builder.Append(':');
+                builder.Append(center.Repeat(columnWidth - 1));
             }
             else if (justification.Value == Justify.Center)
             {
                 // Centered
-                builder.Append(':')
-                    .Append(center.Repeat(columnWidth - 2))
-                    .Append(':');
+                builder.Append(':');
+                builder.Append(center.Repeat(columnWidth - 2));
+                builder.Append(':');
             }
             else if (justification.Value == Justify.Right)
             {
                 // Right
-                builder.Append(center.Repeat(columnWidth - 1))
-                    .Append(':');
+                builder.Append(center.Repeat(columnWidth - 1));
+                builder.Append(':');
             }
 
             // Right padding
-            if (padding?.Right > 0)
+            if (padding != null && padding.Value.Right > 0)
             {
                 builder.Append(" ".Repeat(padding.Value.Right));
             }

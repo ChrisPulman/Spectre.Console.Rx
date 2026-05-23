@@ -1,12 +1,12 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class StringBuffer : IDisposable
 {
     private readonly StringReader _reader;
     private readonly int _length;
+
+    public int Position { get; private set; }
+    public bool Eof => Position >= _length;
 
     public StringBuffer(string text)
     {
@@ -17,10 +17,6 @@ internal sealed class StringBuffer : IDisposable
 
         Position = 0;
     }
-
-    public int Position { get; private set; }
-
-    public bool Eof => Position >= _length;
 
     public void Dispose() => _reader.Dispose();
 

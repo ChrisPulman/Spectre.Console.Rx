@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -15,25 +12,6 @@ namespace Spectre.Console.Rx;
 /// <param name="bottom">The bottom padding.</param>
 public readonly struct Padding(int left, int top, int right, int bottom) : IEquatable<Padding>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Padding"/> struct.
-    /// </summary>
-    /// <param name="size">The padding for all sides.</param>
-    public Padding(int size)
-        : this(size, size, size, size)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Padding"/> struct.
-    /// </summary>
-    /// <param name="horizontal">The left and right padding.</param>
-    /// <param name="vertical">The top and bottom padding.</param>
-    public Padding(int horizontal, int vertical)
-        : this(horizontal, vertical, horizontal, vertical)
-    {
-    }
-
     /// <summary>
     /// Gets the left padding.
     /// </summary>
@@ -55,20 +33,23 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
     public int Bottom { get; } = bottom;
 
     /// <summary>
-    /// Checks if two <see cref="Padding"/> instances are equal.
+    /// Initializes a new instance of the <see cref="Padding"/> struct.
     /// </summary>
-    /// <param name="left">The first <see cref="Padding"/> instance to compare.</param>
-    /// <param name="right">The second <see cref="Padding"/> instance to compare.</param>
-    /// <returns><c>true</c> if the two instances are equal, otherwise <c>false</c>.</returns>
-    public static bool operator ==(in Padding left, in Padding right) => left.Equals(right);
+    /// <param name="size">The padding for all sides.</param>
+    public Padding(int size)
+        : this(size, size, size, size)
+    {
+    }
 
     /// <summary>
-    /// Checks if two <see cref="Padding"/> instances are not equal.
+    /// Initializes a new instance of the <see cref="Padding"/> struct.
     /// </summary>
-    /// <param name="left">The first <see cref="Padding"/> instance to compare.</param>
-    /// <param name="right">The second <see cref="Padding"/> instance to compare.</param>
-    /// <returns><c>true</c> if the two instances are not equal, otherwise <c>false</c>.</returns>
-    public static bool operator !=(in Padding left, in Padding right) => !(left == right);
+    /// <param name="horizontal">The left and right padding.</param>
+    /// <param name="vertical">The top and bottom padding.</param>
+    public Padding(int horizontal, int vertical)
+        : this(horizontal, vertical, horizontal, vertical)
+    {
+    }
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is Padding padding && Equals(padding);
@@ -76,7 +57,6 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-#if NETSTANDARD2_0
         unchecked
         {
             var hash = (int)2166136261;
@@ -86,11 +66,6 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
             hash = (hash * 16777619) ^ Bottom.GetHashCode();
             return hash;
         }
-#else
-#pragma warning disable IDE0022 // Use expression body for method
-        return HashCode.Combine(Left, Top, Right, Bottom);
-#pragma warning restore IDE0022 // Use expression body for method
-#endif
     }
 
     /// <inheritdoc/>
@@ -98,6 +73,22 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
             && Top == other.Top
             && Right == other.Right
             && Bottom == other.Bottom;
+
+    /// <summary>
+    /// Checks if two <see cref="Padding"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="Padding"/> instance to compare.</param>
+    /// <param name="right">The second <see cref="Padding"/> instance to compare.</param>
+    /// <returns><c>true</c> if the two instances are equal, otherwise <c>false</c>.</returns>
+    public static bool operator ==(Padding left, Padding right) => left.Equals(right);
+
+    /// <summary>
+    /// Checks if two <see cref="Padding"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="Padding"/> instance to compare.</param>
+    /// <param name="right">The second <see cref="Padding"/> instance to compare.</param>
+    /// <returns><c>true</c> if the two instances are not equal, otherwise <c>false</c>.</returns>
+    public static bool operator !=(Padding left, Padding right) => !(left == right);
 
     /// <summary>
     /// Gets the padding width.
@@ -110,4 +101,38 @@ public readonly struct Padding(int left, int top, int right, int bottom) : IEqua
     /// </summary>
     /// <returns>The padding height.</returns>
     public int GetHeight() => Top + Bottom;
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="Padding"/>.
+/// </summary>
+public static class PaddingExtensions
+{
+    /// <summary>
+    /// Gets the left padding.
+    /// </summary>
+    /// <param name="padding">The padding.</param>
+    /// <returns>The left padding or zero if <c>padding</c> is null.</returns>
+    public static int GetLeftSafe(this Padding? padding) => padding?.Left ?? 0;
+
+    /// <summary>
+    /// Gets the right padding.
+    /// </summary>
+    /// <param name="padding">The padding.</param>
+    /// <returns>The right padding or zero if <c>padding</c> is null.</returns>
+    public static int GetRightSafe(this Padding? padding) => padding?.Right ?? 0;
+
+    /// <summary>
+    /// Gets the top padding.
+    /// </summary>
+    /// <param name="padding">The padding.</param>
+    /// <returns>The top padding or zero if <c>padding</c> is null.</returns>
+    public static int GetTopSafe(this Padding? padding) => padding?.Top ?? 0;
+
+    /// <summary>
+    /// Gets the bottom padding.
+    /// </summary>
+    /// <param name="padding">The padding.</param>
+    /// <returns>The bottom padding or zero if <c>padding</c> is null.</returns>
+    public static int GetBottomSafe(this Padding? padding) => padding?.Bottom ?? 0;
 }

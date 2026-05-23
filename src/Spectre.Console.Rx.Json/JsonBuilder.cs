@@ -1,7 +1,28 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Json;
+
+internal sealed class JsonBuilderContext
+{
+    public Paragraph Paragraph { get; }
+    public int Level { get; set; }
+    public string Indentation { get; set; }
+    public JsonTextStyles Styling { get; }
+
+    public JsonBuilderContext(
+        JsonTextStyles styling, string indentation)
+    {
+        Paragraph = new Paragraph();
+        Styling = styling;
+        Indentation = indentation;
+    }
+
+    public void InsertIndentation()
+    {
+        for (var level = 0; level < Level; level++)
+        {
+            Paragraph.Append(Indentation);
+        }
+    }
+}
 
 internal sealed class JsonBuilder : JsonSyntaxVisitor<JsonBuilderContext>
 {
@@ -11,7 +32,7 @@ internal sealed class JsonBuilder : JsonSyntaxVisitor<JsonBuilderContext>
     {
         context.Paragraph.Append("{", context.Styling.BracesStyle);
         context.Paragraph.Append("\n");
-        context.Indentation++;
+        context.Level++;
 
         foreach (var (_, _, last, property) in syntax.Members.Enumerate())
         {
@@ -26,7 +47,7 @@ internal sealed class JsonBuilder : JsonSyntaxVisitor<JsonBuilderContext>
             context.Paragraph.Append("\n");
         }
 
-        context.Indentation--;
+        context.Level--;
         context.InsertIndentation();
         context.Paragraph.Append("}", context.Styling.BracesStyle);
     }
@@ -35,7 +56,7 @@ internal sealed class JsonBuilder : JsonSyntaxVisitor<JsonBuilderContext>
     {
         context.Paragraph.Append("[", context.Styling.BracketsStyle);
         context.Paragraph.Append("\n");
-        context.Indentation++;
+        context.Level++;
 
         foreach (var (_, _, last, item) in syntax.Items.Enumerate())
         {
@@ -50,7 +71,7 @@ internal sealed class JsonBuilder : JsonSyntaxVisitor<JsonBuilderContext>
             context.Paragraph.Append("\n");
         }
 
-        context.Indentation--;
+        context.Level--;
         context.InsertIndentation();
         context.Paragraph.Append("]", context.Styling.BracketsStyle);
     }
@@ -64,15 +85,23 @@ internal sealed class JsonBuilder : JsonSyntaxVisitor<JsonBuilderContext>
         syntax.Value.Accept(this, context);
     }
 
-    public override void VisitNumber(JsonNumber syntax, JsonBuilderContext context) =>
+    public override void VisitNumber(JsonNumber syntax, JsonBuilderContext context)
+    {
         context.Paragraph.Append(syntax.Lexeme, context.Styling.NumberStyle);
+    }
 
-    public override void VisitString(JsonString syntax, JsonBuilderContext context) =>
+    public override void VisitString(JsonString syntax, JsonBuilderContext context)
+    {
         context.Paragraph.Append(syntax.Lexeme, context.Styling.StringStyle);
+    }
 
-    public override void VisitBoolean(JsonBoolean syntax, JsonBuilderContext context) =>
+    public override void VisitBoolean(JsonBoolean syntax, JsonBuilderContext context)
+    {
         context.Paragraph.Append(syntax.Lexeme, context.Styling.BooleanStyle);
+    }
 
-    public override void VisitNull(JsonNull syntax, JsonBuilderContext context) =>
+    public override void VisitNull(JsonNull syntax, JsonBuilderContext context)
+    {
         context.Paragraph.Append(syntax.Lexeme, context.Styling.NullStyle);
+    }
 }

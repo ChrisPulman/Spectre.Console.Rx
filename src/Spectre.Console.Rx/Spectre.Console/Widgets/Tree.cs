@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -10,18 +7,7 @@ namespace Spectre.Console.Rx;
 public sealed class Tree : Renderable, IHasTreeNodes
 {
     private readonly TreeNode _root;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Tree"/> class.
-    /// </summary>
-    /// <param name="renderable">The tree label.</param>
-    public Tree(IRenderable renderable) => _root = new TreeNode(renderable);
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Tree"/> class.
-    /// </summary>
-    /// <param name="label">The tree label.</param>
-    public Tree(string label) => _root = new TreeNode(new Markup(label));
+    private bool _expanded = true;
 
     /// <summary>
     /// Gets or sets the tree style.
@@ -41,7 +27,33 @@ public sealed class Tree : Renderable, IHasTreeNodes
     /// <summary>
     /// Gets or sets a value indicating whether or not the tree is expanded or not.
     /// </summary>
-    public bool Expanded { get; set; } = true;
+    public bool Expanded
+    {
+        get => _expanded;
+        set
+        {
+            _expanded = value;
+            _root.Expand(value);
+        }
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Tree"/> class.
+    /// </summary>
+    /// <param name="renderable">The tree label.</param>
+    public Tree(IRenderable renderable)
+    {
+        _root = new TreeNode(renderable);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Tree"/> class.
+    /// </summary>
+    /// <param name="label">The tree label.</param>
+    public Tree(string label)
+    {
+        _root = new TreeNode(new Markup(label));
+    }
 
     /// <inheritdoc />
     protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
@@ -50,12 +62,10 @@ public sealed class Tree : Renderable, IHasTreeNodes
         var visitedNodes = new HashSet<TreeNode>();
 
         var stack = new Stack<Queue<TreeNode>>();
-        stack.Push(new Queue<TreeNode>(new[] { _root }));
+        stack.Push(new Queue<TreeNode>([_root]));
 
-        var levels = new List<Segment>
-        {
-            GetGuide(options, TreeGuidePart.Continue)
-        };
+        var levels = new List<Segment>();
+        levels.Add(GetGuide(options, TreeGuidePart.Continue));
 
         while (stack.Count > 0)
         {
@@ -120,6 +130,40 @@ public sealed class Tree : Renderable, IHasTreeNodes
     private Segment GetGuide(RenderOptions options, TreeGuidePart part)
     {
         var guide = Guide.GetSafeTreeGuide(safe: !options.Unicode);
-        return new Segment(guide.GetPart(part), Style ?? Style.Plain);
+        return new Segment(guide.GetPart(part), Style ?? Spectre.Console.Rx.Style.Plain);
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="Tree"/>.
+/// </summary>
+public static class TreeExtensions
+{
+    /// <summary>
+    /// Sets the tree style.
+    /// </summary>
+    /// <param name="tree">The tree.</param>
+    /// <param name="style">The tree style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Tree Style(this Tree tree, Style? style)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+
+        tree.Style = style;
+        return tree;
+    }
+
+    /// <summary>
+    /// Sets the tree guide line appearance.
+    /// </summary>
+    /// <param name="tree">The tree.</param>
+    /// <param name="guide">The tree guide lines to use.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Tree Guide(this Tree tree, TreeGuide guide)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+
+        tree.Guide = guide;
+        return tree;
     }
 }

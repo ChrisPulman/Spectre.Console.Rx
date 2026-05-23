@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -12,7 +9,6 @@ namespace Spectre.Console.Rx;
 /// <param name="writer">The output writer.</param>
 public sealed class AnsiConsoleOutput(TextWriter writer) : IAnsiConsoleOutput
 {
-
     /// <inheritdoc/>
     public TextWriter Writer { get; } = writer ?? throw new ArgumentNullException(nameof(writer));
 

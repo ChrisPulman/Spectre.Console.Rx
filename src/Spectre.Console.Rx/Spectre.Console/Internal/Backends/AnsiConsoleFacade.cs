@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class AnsiConsoleFacade : IAnsiConsole
@@ -8,30 +5,24 @@ internal sealed class AnsiConsoleFacade : IAnsiConsole
     private readonly object _renderLock;
     private readonly AnsiConsoleBackend _ansiBackend;
     private readonly LegacyConsoleBackend _legacyBackend;
-    private bool _disposedValue;
+
+    public Profile Profile { get; }
+    public IAnsiConsoleCursor Cursor => GetBackend().Cursor;
+    public IAnsiConsoleInput Input { get; }
+    public IExclusivityMode ExclusivityMode { get; }
+    public RenderPipeline Pipeline { get; }
 
     public AnsiConsoleFacade(Profile profile, IExclusivityMode exclusivityMode)
     {
-        _renderLock = new object();
-
         Profile = profile ?? throw new ArgumentNullException(nameof(profile));
         Input = new DefaultInput(Profile);
         ExclusivityMode = exclusivityMode ?? throw new ArgumentNullException(nameof(exclusivityMode));
         Pipeline = new RenderPipeline();
 
+        _renderLock = new object();
         _ansiBackend = new AnsiConsoleBackend(this);
         _legacyBackend = new LegacyConsoleBackend(this);
     }
-
-    public Profile Profile { get; }
-
-    public IAnsiConsoleCursor Cursor => GetBackend().Cursor;
-
-    public IAnsiConsoleInput Input { get; }
-
-    public IExclusivityMode ExclusivityMode { get; }
-
-    public RenderPipeline Pipeline { get; }
 
     public void Clear(bool home)
     {
@@ -49,11 +40,12 @@ internal sealed class AnsiConsoleFacade : IAnsiConsole
         }
     }
 
-    public void Dispose()
+    public void WriteAnsi(Action<AnsiWriter> action)
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
+        lock (_renderLock)
+        {
+            GetBackend().Write(action);
+        }
     }
 
     private IAnsiConsoleBackend GetBackend()
@@ -64,18 +56,5 @@ internal sealed class AnsiConsoleFacade : IAnsiConsole
         }
 
         return _legacyBackend;
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!_disposedValue)
-        {
-            if (disposing)
-            {
-                ExclusivityMode.Dispose();
-            }
-
-            _disposedValue = true;
-        }
     }
 }

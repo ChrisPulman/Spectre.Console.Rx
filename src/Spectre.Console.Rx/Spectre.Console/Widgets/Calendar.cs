@@ -1,12 +1,9 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// A renderable calendar.
 /// </summary>
-public sealed class Calendar : JustInTimeRenderable, IHasCulture, IHasTableBorder, IAlignable
+public sealed class Calendar : JustInTimeRenderable, IHasCulture, IHasTableBorder
 {
     private const int NumberOfWeekDays = 7;
     private const int ExpectedRowCount = 6;
@@ -23,46 +20,6 @@ public sealed class Calendar : JustInTimeRenderable, IHasCulture, IHasTableBorde
     private Style _highlightStyle;
     private bool _showHeader;
     private Style? _headerStyle;
-    private Justify? _alignment;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Calendar"/> class.
-    /// </summary>
-    /// <param name="date">The calendar date.</param>
-    public Calendar(DateTime date)
-        : this(date.Year, date.Month, date.Day)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Calendar"/> class.
-    /// </summary>
-    /// <param name="year">The calendar year.</param>
-    /// <param name="month">The calendar month.</param>
-    public Calendar(int year, int month)
-        : this(year, month, 1)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Calendar"/> class.
-    /// </summary>
-    /// <param name="year">The calendar year.</param>
-    /// <param name="month">The calendar month.</param>
-    /// <param name="day">The calendar day.</param>
-    public Calendar(int year, int month, int day)
-    {
-        _year = year;
-        _month = month;
-        _day = day;
-        _border = TableBorder.Square;
-        _useSafeBorder = true;
-        _borderStyle = null;
-        _culture = CultureInfo.InvariantCulture;
-        _highlightStyle = Color.Blue;
-        _showHeader = true;
-        _calendarEvents = new ListWithCallback<CalendarEvent>(MarkAsDirty);
-    }
 
     /// <summary>
     /// Gets or sets the calendar year.
@@ -148,33 +105,61 @@ public sealed class Calendar : JustInTimeRenderable, IHasCulture, IHasTableBorde
         set => MarkAsDirty(() => _headerStyle = value);
     }
 
-    /// <inheritdoc/>
-    [Obsolete("Use the Align widget instead. This property will be removed in a later release.")]
-    public Justify? Alignment
-    {
-        get => _alignment;
-        set => MarkAsDirty(() => _alignment = value);
-    }
-
     /// <summary>
     /// Gets a list containing all calendar events.
     /// </summary>
     public IList<CalendarEvent> CalendarEvents => _calendarEvents;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Calendar"/> class.
+    /// </summary>
+    /// <param name="date">The calendar date.</param>
+    public Calendar(DateTime date)
+        : this(date.Year, date.Month, date.Day)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Calendar"/> class.
+    /// </summary>
+    /// <param name="year">The calendar year.</param>
+    /// <param name="month">The calendar month.</param>
+    public Calendar(int year, int month)
+        : this(year, month, 1)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Calendar"/> class.
+    /// </summary>
+    /// <param name="year">The calendar year.</param>
+    /// <param name="month">The calendar month.</param>
+    /// <param name="day">The calendar day.</param>
+    public Calendar(int year, int month, int day)
+    {
+        _year = year;
+        _month = month;
+        _day = day;
+        _border = TableBorder.Square;
+        _useSafeBorder = true;
+        _borderStyle = null;
+        _culture = CultureInfo.InvariantCulture;
+        _highlightStyle = Color.Blue;
+        _showHeader = true;
+        _calendarEvents = new ListWithCallback<CalendarEvent>(MarkAsDirty);
+    }
 
     /// <inheritdoc/>
     protected override IRenderable Build()
     {
         var culture = Culture ?? CultureInfo.InvariantCulture;
 
-#pragma warning disable CS0618 // Type or member is obsolete
         var table = new Table
         {
             Border = _border,
             UseSafeBorder = _useSafeBorder,
             BorderStyle = _borderStyle,
-            Alignment = _alignment,
         };
-#pragma warning restore CS0618 // Type or member is obsolete
 
         if (ShowHeader)
         {
@@ -199,9 +184,11 @@ public sealed class Calendar : JustInTimeRenderable, IHasCulture, IHasTableBorde
         {
             if (weekdays[currentDay - 1] == weekday)
             {
-                if (_calendarEvents.Any(e => e.Month == Month && e.Day == currentDay))
+                var todayEvent = _calendarEvents.LastOrDefault(e => e.Month == Month && e.Day == currentDay);
+                if (todayEvent != null)
                 {
-                    row.Add(new Markup(currentDay.ToString(CultureInfo.InvariantCulture) + "*", _highlightStyle));
+                    row.Add(new Markup(currentDay.ToString(CultureInfo.InvariantCulture) + "*",
+                        todayEvent.CustomHighlightStyle ?? _highlightStyle));
                 }
                 else
                 {
@@ -269,5 +256,117 @@ public sealed class Calendar : JustInTimeRenderable, IHasCulture, IHasTableBorde
         }
 
         return result.ToArray();
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="Calendar"/>.
+/// </summary>
+public static class CalendarExtensions
+{
+    /// <summary>
+    /// Adds a calendar event.
+    /// </summary>
+    /// <param name="calendar">The calendar to add the calendar event to.</param>
+    /// <param name="date">The calendar event date.</param>
+    /// <param name="customEventHighlightStyle">The calendar event custom highlight style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar AddCalendarEvent(this Calendar calendar, DateTime date,
+        Style? customEventHighlightStyle = null) => AddCalendarEvent(calendar, string.Empty, date.Year, date.Month, date.Day, customEventHighlightStyle);
+
+    /// <summary>
+    /// Adds a calendar event.
+    /// </summary>
+    /// <param name="calendar">The calendar to add the calendar event to.</param>
+    /// <param name="description">The calendar event description.</param>
+    /// <param name="date">The calendar event date.</param>
+    /// <param name="customEventHighlightStyle">The calendar event custom highlight style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar AddCalendarEvent(this Calendar calendar, string description, DateTime date,
+        Style? customEventHighlightStyle = null) => AddCalendarEvent(calendar, description, date.Year, date.Month, date.Day, customEventHighlightStyle);
+
+    /// <summary>
+    /// Adds a calendar event.
+    /// </summary>
+    /// <param name="calendar">The calendar to add the calendar event to.</param>
+    /// <param name="year">The year of the calendar event.</param>
+    /// <param name="month">The month of the calendar event.</param>
+    /// <param name="day">The day of the calendar event.</param>
+    /// <param name="customEventHighlightStyle">The calendar event custom highlight style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar AddCalendarEvent(this Calendar calendar, int year, int month, int day,
+        Style? customEventHighlightStyle = null) => AddCalendarEvent(calendar, string.Empty, year, month, day, customEventHighlightStyle);
+
+    /// <summary>
+    /// Adds a calendar event.
+    /// </summary>
+    /// <param name="calendar">The calendar.</param>
+    /// <param name="description">The calendar event description.</param>
+    /// <param name="year">The year of the calendar event.</param>
+    /// <param name="month">The month of the calendar event.</param>
+    /// <param name="day">The day of the calendar event.</param>
+    /// <param name="customEventHighlightStyle">The calendar event custom highlight style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar AddCalendarEvent(this Calendar calendar, string description, int year, int month, int day,
+        Style? customEventHighlightStyle = null)
+    {
+        ArgumentNullException.ThrowIfNull(calendar);
+
+        calendar.CalendarEvents.Add(new CalendarEvent(description, year, month, day, customEventHighlightStyle));
+        return calendar;
+    }
+
+    /// <summary>
+    /// Sets the calendar's highlight <see cref="Style"/>.
+    /// </summary>
+    /// <param name="calendar">The calendar.</param>
+    /// <param name="style">The default highlight style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar HighlightStyle(this Calendar calendar, Style? style)
+    {
+        ArgumentNullException.ThrowIfNull(calendar);
+
+        calendar.HighlightStyle = style ?? Style.Plain;
+        return calendar;
+    }
+
+    /// <summary>
+    /// Sets the calendar's header <see cref="Style"/>.
+    /// </summary>
+    /// <param name="calendar">The calendar.</param>
+    /// <param name="style">The header style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar HeaderStyle(this Calendar calendar, Style? style)
+    {
+        ArgumentNullException.ThrowIfNull(calendar);
+
+        calendar.HeaderStyle = style ?? Style.Plain;
+        return calendar;
+    }
+
+    /// <summary>
+    /// Shows the calendar header.
+    /// </summary>
+    /// <param name="calendar">The calendar.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar ShowHeader(this Calendar calendar)
+    {
+        ArgumentNullException.ThrowIfNull(calendar);
+
+        calendar.ShowHeader = true;
+        return calendar;
+    }
+
+    /// <summary>
+    /// Hides the calendar header.
+    /// </summary>
+    /// <param name="calendar">The calendar.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Calendar HideHeader(this Calendar calendar)
+    {
+        ArgumentNullException.ThrowIfNull(calendar);
+
+        calendar.ShowHeader = false;
+        return calendar;
     }
 }

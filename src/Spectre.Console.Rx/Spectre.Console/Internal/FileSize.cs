@@ -1,40 +1,73 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal readonly struct FileSize
 {
-    public FileSize(double bytes)
-    {
-        Bytes = bytes;
-        Unit = Detect(bytes);
-    }
-
-    public FileSize(double bytes, FileSizeUnit unit)
-    {
-        Bytes = bytes;
-        Unit = unit;
-    }
-
     public double Bytes { get; }
+    public double Bits => Bytes * 8;
 
-    public FileSizeUnit Unit { get; }
+    public FileSizePrefix Prefix { get; } = FileSizePrefix.None;
+
+    private readonly FileSizeBase _prefixBase = FileSizeBase.Binary;
+
+    /// <summary>
+    /// If enabled, will display the output in bits, rather than bytes.
+    /// </summary>
+    private readonly bool _showBits = false;
 
     public string Suffix => GetSuffix();
 
-    public readonly string Format(CultureInfo? culture = null)
+    public FileSize(double bytes)
     {
-        var @base = GetBase(Unit);
-        if (@base == 0)
+        Bytes = bytes;
+        Prefix = DetectPrefix(bytes);
+    }
+
+    public FileSize(double bytes, FileSizeBase @base)
+    {
+        Bytes = bytes;
+        _prefixBase = @base;
+        Prefix = DetectPrefix(bytes);
+    }
+
+    public FileSize(double bytes, FileSizeBase @base, bool showBits)
+    {
+        Bytes = bytes;
+        _showBits = showBits;
+
+        _prefixBase = @base;
+        Prefix = DetectPrefix(bytes);
+    }
+
+    public FileSize(double bytes, FileSizePrefix prefix)
+    {
+        Bytes = bytes;
+        Prefix = prefix;
+    }
+
+    public FileSize(double bytes, FileSizePrefix prefix, FileSizeBase @base, bool showBits)
+    {
+        Bytes = bytes;
+        _showBits = showBits;
+
+        _prefixBase = @base;
+        Prefix = prefix;
+    }
+
+    public string Format(CultureInfo? culture = null)
+    {
+        var unitBase = Math.Pow((int)_prefixBase, (int)Prefix);
+
+        if (_showBits)
         {
-            @base = 1;
+            var bits = Bits / unitBase;
+            return Prefix == FileSizePrefix.None ?
+                ((int)bits).ToString(culture ?? CultureInfo.InvariantCulture)
+                : bits.ToString("F1", culture ?? CultureInfo.InvariantCulture);
         }
 
-        var bytes = Bytes / @base;
-
-        return Unit == FileSizeUnit.Byte
-            ? ((int)bytes).ToString(culture ?? CultureInfo.InvariantCulture)
+        var bytes = Bytes / unitBase;
+        return Prefix == FileSizePrefix.None ?
+            ((int)bytes).ToString(culture ?? CultureInfo.InvariantCulture)
             : bytes.ToString("F1", culture ?? CultureInfo.InvariantCulture);
     }
 
@@ -50,32 +83,66 @@ internal readonly struct FileSize
         return Format(culture);
     }
 
-    private static FileSizeUnit Detect(double bytes)
+    private string GetSuffix() => (Bytes, Unit: Prefix, PrefixBase: _prefixBase, ShowBits: _showBits) switch
     {
-        foreach (var unit in (FileSizeUnit[])Enum.GetValues(typeof(FileSizeUnit)))
+        (_, FileSizePrefix.Kilo, FileSizeBase.Binary, false) => "KiB",
+        (_, FileSizePrefix.Mega, FileSizeBase.Binary, false) => "MiB",
+        (_, FileSizePrefix.Giga, FileSizeBase.Binary, false) => "GiB",
+        (_, FileSizePrefix.Tera, FileSizeBase.Binary, false) => "TiB",
+        (_, FileSizePrefix.Peta, FileSizeBase.Binary, false) => "PiB",
+        (_, FileSizePrefix.Exa, FileSizeBase.Binary, false) => "EiB",
+        (_, FileSizePrefix.Zetta, FileSizeBase.Binary, false) => "ZiB",
+        (_, FileSizePrefix.Yotta, FileSizeBase.Binary, false) => "YiB",
+
+        (_, FileSizePrefix.Kilo, FileSizeBase.Binary, true) => "Kibit",
+        (_, FileSizePrefix.Mega, FileSizeBase.Binary, true) => "Mibit",
+        (_, FileSizePrefix.Giga, FileSizeBase.Binary, true) => "Gibit",
+        (_, FileSizePrefix.Tera, FileSizeBase.Binary, true) => "Tibit",
+        (_, FileSizePrefix.Peta, FileSizeBase.Binary, true) => "Pibit",
+        (_, FileSizePrefix.Exa, FileSizeBase.Binary, true) => "Eibit",
+        (_, FileSizePrefix.Zetta, FileSizeBase.Binary, true) => "Zibit",
+        (_, FileSizePrefix.Yotta, FileSizeBase.Binary, true) => "Yibit",
+
+        (_, FileSizePrefix.Kilo, FileSizeBase.Decimal, false) => "KB",
+        (_, FileSizePrefix.Mega, FileSizeBase.Decimal, false) => "MB",
+        (_, FileSizePrefix.Giga, FileSizeBase.Decimal, false) => "GB",
+        (_, FileSizePrefix.Tera, FileSizeBase.Decimal, false) => "TB",
+        (_, FileSizePrefix.Peta, FileSizeBase.Decimal, false) => "PB",
+        (_, FileSizePrefix.Exa, FileSizeBase.Decimal, false) => "EB",
+        (_, FileSizePrefix.Zetta, FileSizeBase.Decimal, false) => "ZB",
+        (_, FileSizePrefix.Yotta, FileSizeBase.Decimal, false) => "YB",
+
+        (_, FileSizePrefix.Kilo, FileSizeBase.Decimal, true) => "Kbit",
+        (_, FileSizePrefix.Mega, FileSizeBase.Decimal, true) => "Mbit",
+        (_, FileSizePrefix.Giga, FileSizeBase.Decimal, true) => "Gbit",
+        (_, FileSizePrefix.Tera, FileSizeBase.Decimal, true) => "Tbit",
+        (_, FileSizePrefix.Peta, FileSizeBase.Decimal, true) => "Pbit",
+        (_, FileSizePrefix.Exa, FileSizeBase.Decimal, true) => "Ebit",
+        (_, FileSizePrefix.Zetta, FileSizeBase.Decimal, true) => "Zbit",
+        (_, FileSizePrefix.Yotta, FileSizeBase.Decimal, true) => "Ybit",
+
+        (1, _, _, true) => "bit",
+        (_, _, _, true) => "bits",
+        (1, _, _, false) => "byte",
+        (_, _, _, false) => "bytes",
+    };
+
+    private FileSizePrefix DetectPrefix(double bytes)
+    {
+        if (_showBits)
         {
-            if (bytes < (GetBase(unit) * 1024))
+            bytes *= 8;
+        }
+
+        foreach (var prefix in EnumUtils.GetValues<FileSizePrefix>())
+        {
+            // Trying to find the largest unit, that the number of bytes can fit under. Ex. 40kb < 1mb
+            if (bytes < Math.Pow((int)_prefixBase, (int)prefix + 1))
             {
-                return unit;
+                return prefix;
             }
         }
 
-        return FileSizeUnit.Byte;
+        return FileSizePrefix.None;
     }
-
-    private static double GetBase(FileSizeUnit unit) => Math.Pow(1024, (int)unit);
-
-    private string GetSuffix() => (Bytes, Unit) switch
-    {
-        (_, FileSizeUnit.KiloByte) => "KB",
-        (_, FileSizeUnit.MegaByte) => "MB",
-        (_, FileSizeUnit.GigaByte) => "GB",
-        (_, FileSizeUnit.TeraByte) => "TB",
-        (_, FileSizeUnit.PetaByte) => "PB",
-        (_, FileSizeUnit.ExaByte) => "EB",
-        (_, FileSizeUnit.ZettaByte) => "ZB",
-        (_, FileSizeUnit.YottaByte) => "YB",
-        (1, _) => "byte",
-        (_, _) => "bytes",
-    };
 }

@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -16,12 +13,9 @@ public sealed class SegmentLineEnumerator : IEnumerable<Segment>
     /// <param name="lines">The lines to enumerate.</param>
     public SegmentLineEnumerator(IEnumerable<SegmentLine> lines)
     {
-        if (lines is null)
-        {
-            throw new ArgumentNullException(nameof(lines));
-        }
+        ArgumentNullException.ThrowIfNull(lines);
 
-        _lines = new(lines);
+        _lines = new List<SegmentLine>(lines);
     }
 
     /// <inheritdoc/>

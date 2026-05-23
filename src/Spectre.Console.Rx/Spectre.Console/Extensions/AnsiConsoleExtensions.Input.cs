@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,27 +5,41 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public static partial class AnsiConsoleExtensions
 {
-    private enum AutoCompleteDirection
+    internal static async Task<string> ReadLine(this IAnsiConsole console, Style? style, bool secret, char? mask,
+        IEnumerable<string>? items = null, string? initialInput = null, CancellationToken cancellationToken = default)
     {
-        Forward,
-        Backward,
-    }
-
-    internal static async Task<string> ReadLine(this IAnsiConsole console, Style? style, bool secret, char? mask, IEnumerable<string>? items = null, CancellationToken cancellationToken = default)
-    {
-        if (console is null)
-        {
-            throw new ArgumentNullException(nameof(console));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
         style ??= Style.Plain;
         var text = string.Empty;
 
-        var autocomplete = new List<string>(items ?? Enumerable.Empty<string>());
+        var autocomplete = new List<string>(items ?? []);
+
+        Queue<ConsoleKeyInfo>? injectedQueue = null;
+        if (!string.IsNullOrEmpty(initialInput))
+        {
+            injectedQueue = new Queue<ConsoleKeyInfo>();
+            foreach (var ch in initialInput)
+            {
+                var control = char.IsUpper(ch);
+                injectedQueue.Enqueue(new ConsoleKeyInfo(ch, (ConsoleKey)ch, false, false, control));
+            }
+        }
 
         while (true)
         {
-            var rawKey = await console.Input.ReadKeyAsync(true, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            ConsoleKeyInfo? rawKey;
+            if (injectedQueue != null && injectedQueue.Count > 0)
+            {
+                rawKey = injectedQueue.Dequeue();
+            }
+            else
+            {
+                rawKey = await console.Input.ReadKeyAsync(true, cancellationToken).ConfigureAwait(false);
+            }
+
             if (rawKey == null)
             {
                 continue;
@@ -60,10 +71,19 @@ public static partial class AnsiConsoleExtensions
             {
                 if (text.Length > 0)
                 {
+                    var lastChar = text.Last();
                     text = text.Substring(0, text.Length - 1);
+
                     if (mask != null)
                     {
-                        console.Write("\b \b");
+                        if (UnicodeCalculator.GetWidth(lastChar) == 1)
+                        {
+                            console.Write("\b \b");
+                        }
+                        else if (UnicodeCalculator.GetWidth(lastChar) == 2)
+                        {
+                            console.Write("\b \b\b \b");
+                        }
                     }
                 }
 
@@ -79,7 +99,8 @@ public static partial class AnsiConsoleExtensions
         }
     }
 
-    private static string AutoComplete(List<string> autocomplete, string text, AutoCompleteDirection autoCompleteDirection)
+    private static string AutoComplete(List<string> autocomplete, string text,
+        AutoCompleteDirection autoCompleteDirection)
     {
         var found = autocomplete.Find(i => i == text);
         var replace = string.Empty;
@@ -107,7 +128,8 @@ public static partial class AnsiConsoleExtensions
         return replace;
     }
 
-    private static string GetAutocompleteValue(AutoCompleteDirection autoCompleteDirection, IList<string> autocomplete, string found)
+    private static string GetAutocompleteValue(AutoCompleteDirection autoCompleteDirection, IList<string> autocomplete,
+        string found)
     {
         var foundAutocompleteIndex = autocomplete.IndexOf(found);
         var index = autoCompleteDirection switch
@@ -128,5 +150,11 @@ public static partial class AnsiConsoleExtensions
         }
 
         return autocomplete[index];
+    }
+
+    private enum AutoCompleteDirection
+    {
+        Forward,
+        Backward,
     }
 }

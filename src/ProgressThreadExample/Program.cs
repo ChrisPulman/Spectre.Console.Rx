@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Spectre.Console.Rx;
 
@@ -26,24 +28,53 @@ public static class Program
             cfs.Add($"Custom Format {i}");
         }
 
+        using var completed = new ManualResetEventSlim(false);
+        Exception? error = null;
+
         // Some time later...
-        AnsiConsoleRx.Progress()
+        using var subscription = AnsiConsoleRx.Progress()
             .AddTasks(ctx => new[]
             {
                 ctx.AddTask("Deleting Custom Formats").MaxValue(cfs.Count),
             })
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .Subscribe(
-            ctx =>
+            .SelectMany(ctx =>
             {
                 var rng = new Random();
 
-                cfs.ToObservable()
-                    .Select(_ => Observable.FromAsync(async ct => await Task.Delay(TimeSpan.FromSeconds(rng.Next(1, 5)), ct), AnsiConsoleRx.Scheduler))
+                return cfs
+                    .ToObservable()
+                    .Select(item => Observable.FromAsync(
+                        async ct =>
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(rng.Next(1, 5)), ct).ConfigureAwait(false);
+                            return item;
+                        },
+                        AnsiConsoleRx.Scheduler))
                     .Merge(8)
                     .ObserveOn(SpectreConsoleScheduler.Instance)
-                    .Subscribe(_ => ctx.tasks[0].Increment(1));
-            },
-            () => AnsiConsole.MarkupLine("[blue]Done![/]")); // Render a message when the sequence completes
+                    .Do(_ => ctx.tasks[0].Increment(1))
+                    .Select(_ => Unit.Default)
+                    .Finally(() =>
+                    {
+                        ctx.context.Complete();
+                        AnsiConsole.MarkupLine("[blue]Done![/]"); // Render a message when the sequence completes
+                    });
+            })
+            .Subscribe(
+                _ => { },
+                ex =>
+                {
+                    error = ex;
+                    completed.Set();
+                },
+                completed.Set);
+
+        completed.Wait();
+
+        if (error is not null)
+        {
+            throw new InvalidOperationException("Progress thread example failed.", error);
+        }
     }
 }

@@ -1,11 +1,13 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Json;
 
-internal sealed class JsonToken(JsonTokenType type, string lexeme)
+internal sealed class JsonToken
 {
-    public JsonTokenType Type { get; } = type;
+    public JsonTokenType Type { get; }
+    public string Lexeme { get; }
 
-    public string Lexeme { get; } = lexeme ?? throw new ArgumentNullException(nameof(lexeme));
+    public JsonToken(JsonTokenType type, string lexeme)
+    {
+        Type = type;
+        Lexeme = lexeme ?? throw new ArgumentNullException(nameof(lexeme));
+    }
 }

@@ -1,19 +1,10 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPromptTree<T>
+internal sealed class ListPromptTree<T>(IEqualityComparer<T> comparer)
     where T : notnull
 {
-    private readonly List<ListPromptItem<T>> _roots;
-    private readonly IEqualityComparer<T> _comparer;
-
-    public ListPromptTree(IEqualityComparer<T> comparer)
-    {
-        _roots = new List<ListPromptItem<T>>();
-        _comparer = comparer ?? throw new ArgumentNullException(nameof(comparer));
-    }
+    private readonly List<ListPromptItem<T>> _roots = [];
+    private readonly IEqualityComparer<T> _comparer = comparer ?? throw new ArgumentNullException(nameof(comparer));
 
     public ListPromptItem<T>? Find(T item)
     {
@@ -27,6 +18,22 @@ internal sealed class ListPromptTree<T>
             }
 
             stack.PushRange(current.Children);
+        }
+
+        return null;
+    }
+
+    public int? IndexOf(T item)
+    {
+        var index = 0;
+        foreach (var node in Traverse())
+        {
+            if (_comparer.Equals(item, node.Data))
+            {
+                return index;
+            }
+
+            index++;
         }
 
         return null;

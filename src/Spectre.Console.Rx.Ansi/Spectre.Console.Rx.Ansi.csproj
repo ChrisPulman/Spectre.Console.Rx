@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net9.0;net8.0;netstandard2.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <DefineConstants>$(DefineConstants)TRACE;WCWIDTH;WCWIDTH_VISIBILITY_INTERNAL</DefineConstants>
+    <IsAotCompatible Condition="'$(TargetFramework)' != 'netstandard2.0'">true</IsAotCompatible>
+    <DisableRepoAnalyzers>true</DisableRepoAnalyzers>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <NoWarn>$(NoWarn);CA1060;CA1062</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Exclude the output of source generators from the compilation -->
+    <Compile Remove="Generated/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Wcwidth.Sources" Version="4.0.1" PrivateAssets="all" />
+    <PackageReference Include="Polyfill" Version="10.5.1" Condition="'$(TargetFramework)' == 'netstandard2.0'" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Label="Source Generator">
+    <ProjectReference Include="..\Spectre.Console.Rx.SourceGenerator\Spectre.Console.Rx.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Data\colors.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Spectre.Console.Rx.Tests" />
+    <InternalsVisibleTo Include="Spectre.Console.Rx.Ansi.Tests" />
+  </ItemGroup>
+
+</Project>

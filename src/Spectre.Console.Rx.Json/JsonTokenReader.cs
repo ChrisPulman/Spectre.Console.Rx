@@ -1,19 +1,29 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Json;
 
-internal sealed class JsonTokenReader(List<JsonToken> tokens)
+internal sealed class JsonTokenReader
 {
-    private readonly int _length = tokens.Count;
+    private readonly List<JsonToken> _reader;
+    private readonly int _length;
 
     public int Position { get; private set; }
-
     public bool Eof => Position >= _length;
+
+    public JsonTokenReader(List<JsonToken> tokens)
+    {
+        _reader = tokens;
+        _length = tokens.Count;
+
+        Position = 0;
+    }
 
     public JsonToken Consume(JsonTokenType type)
     {
-        var read = Read() ?? throw new InvalidOperationException("Could not read token");
+        var read = Read();
+        if (read == null)
+        {
+            throw new InvalidOperationException("Could not read token");
+        }
+
         if (read.Type != type)
         {
             throw new InvalidOperationException($"Expected '{type}' token, but found '{read.Type}'");
@@ -29,7 +39,7 @@ internal sealed class JsonTokenReader(List<JsonToken> tokens)
             return null;
         }
 
-        return tokens[Position];
+        return _reader[Position];
     }
 
     public JsonToken? Read()
@@ -40,6 +50,6 @@ internal sealed class JsonTokenReader(List<JsonToken> tokens)
         }
 
         Position++;
-        return tokens[Position - 1];
+        return _reader[Position - 1];
     }
 }

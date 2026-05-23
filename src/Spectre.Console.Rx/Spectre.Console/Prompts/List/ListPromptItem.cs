@@ -1,19 +1,12 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class ListPromptItem<T>(T data, ListPromptItem<T>? parent = null) : IMultiSelectionItem<T>
     where T : notnull
 {
     public T Data { get; } = data;
-
     public ListPromptItem<T>? Parent { get; } = parent;
-
-    public List<ListPromptItem<T>> Children { get; } = new List<ListPromptItem<T>>();
-
+    public List<ListPromptItem<T>> Children { get; } = [];
     public int Depth { get; } = CalculateDepth(parent);
-
     public bool IsSelected { get; set; }
 
     public bool IsGroup => Children.Count > 0;

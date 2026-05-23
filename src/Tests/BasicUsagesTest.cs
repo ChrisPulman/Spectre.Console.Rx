@@ -13,7 +13,7 @@ public class BasicUsagesTest
     /// <summary>
     /// Whens the format character is escaped then render text with square brackets.
     /// </summary>
-    [Fact]
+    [Test]
     public void WhenFormatCharacterIsEscaped_ThenRenderTextWithSquareBrackets()
     {
         var console = new TestConsole();
@@ -25,7 +25,7 @@ public class BasicUsagesTest
     /// Whens the json data is passed then render beautified students data json.
     /// </summary>
     /// <returns>A Task.</returns>
-    [Fact]
+    [Test]
     public Task WhenJsonDataIsPassed_ThenRenderBeautifiedStudentsDataJson()
     {
         var console = new TestConsole().Size(new Size(100, 25));
@@ -38,7 +38,7 @@ public class BasicUsagesTest
     /// Whens a calendar is created then pretty print calendar.
     /// </summary>
     /// <returns>A Task.</returns>
-    [Fact]
+    [Test]
     public Task WhenACalendarIsCreated_ThenPrettyPrintCalendar()
     {
         var console = new TestConsole();

@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -13,10 +10,10 @@ public abstract class JustInTimeRenderable : Renderable
     private IRenderable? _rendered;
 
     /// <inheritdoc/>
-    protected sealed override Measurement Measure(RenderOptions options, int maxWidth) => GetInner().Measure(options, maxWidth);
+    protected sealed override Measurement Measure(RenderOptions context, int maxWidth) => GetInner().Measure(context, maxWidth);
 
     /// <inheritdoc/>
-    protected sealed override IEnumerable<Segment> Render(RenderOptions options, int maxWidth) => GetInner().Render(options, maxWidth);
+    protected sealed override IEnumerable<Segment> Render(RenderOptions context, int width) => GetInner().Render(context, width);
 
     /// <summary>
     /// Builds the inner renderable.
@@ -44,10 +41,7 @@ public abstract class JustInTimeRenderable : Renderable
     /// </param>
     protected void MarkAsDirty(Action action)
     {
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        ArgumentNullException.ThrowIfNull(action);
 
         action();
         _dirty = true;

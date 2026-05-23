@@ -1,23 +1,15 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class FallbackProgressRenderer : ProgressRenderer
+internal sealed class FallbackProgressRenderer(TimeProvider timeProvider) : ProgressRenderer
 {
     private const double FirstMilestone = 25;
     private static readonly double?[] _milestones = [FirstMilestone, 50, 75, 95, 96, 97, 98, 99, 100];
 
-    private readonly Dictionary<int, double> _taskMilestones;
-    private readonly object _lock;
+    private readonly Dictionary<int, double> _taskMilestones = new Dictionary<int, double>();
+    private readonly object _lock = new object();
+    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private IRenderable? _renderable;
     private DateTime _lastUpdate;
-
-    public FallbackProgressRenderer()
-    {
-        _taskMilestones = new Dictionary<int, double>();
-        _lock = new object();
-    }
 
     public override TimeSpan RefreshRate => TimeSpan.FromSeconds(1);
 
@@ -44,7 +36,7 @@ internal sealed class FallbackProgressRenderer : ProgressRenderer
             }
 
             // Got started tasks but no updates for 30 seconds?
-            if (hasStartedTasks && updates.Count == 0 && (DateTime.Now - _lastUpdate) > TimeSpan.FromSeconds(30))
+            if (hasStartedTasks && updates.Count == 0 && (_timeProvider.GetLocalNow().LocalDateTime - _lastUpdate) > TimeSpan.FromSeconds(30))
             {
                 foreach (var task in context.GetTasks())
                 {
@@ -54,7 +46,7 @@ internal sealed class FallbackProgressRenderer : ProgressRenderer
 
             if (updates.Count > 0)
             {
-                _lastUpdate = DateTime.Now;
+                _lastUpdate = _timeProvider.GetLocalNow().LocalDateTime;
             }
 
             _renderable = BuildTaskGrid(updates);
@@ -79,24 +71,6 @@ internal sealed class FallbackProgressRenderer : ProgressRenderer
         }
     }
 
-    private static double? GetNextMilestone(double percentage) => Array.Find(_milestones, p => p > percentage);
-
-    private static IRenderable? BuildTaskGrid(List<(string Name, double Percentage)> updates)
-    {
-        if (updates.Count > 0)
-        {
-            var renderables = new List<IRenderable>();
-            foreach (var (name, percentage) in updates)
-            {
-                renderables.Add(new Markup($"[blue]{name}[/]: {(int)percentage}%"));
-            }
-
-            return new Rows(renderables);
-        }
-
-        return null;
-    }
-
     private bool TryAdvance(int task, double percentage)
     {
         if (!_taskMilestones.TryGetValue(task, out var milestone))
@@ -116,5 +90,23 @@ internal sealed class FallbackProgressRenderer : ProgressRenderer
         }
 
         return false;
+    }
+
+    private static double? GetNextMilestone(double percentage) => Array.Find(_milestones, p => p > percentage);
+
+    private static IRenderable? BuildTaskGrid(List<(string Name, double Percentage)> updates)
+    {
+        if (updates.Count > 0)
+        {
+            var renderables = new List<IRenderable>();
+            foreach (var (name, percentage) in updates)
+            {
+                renderables.Add(new Markup($"[blue]{name}[/]: {(int)percentage}%"));
+            }
+
+            return new Rows(renderables);
+        }
+
+        return null;
     }
 }

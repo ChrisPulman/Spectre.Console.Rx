@@ -1,15 +1,46 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.Reactive.Linq;
-
 namespace Spectre.Console.Rx;
 
-internal sealed class ProgressRefreshThread(ProgressContext context, TimeSpan refreshRate) : IDisposable
+internal sealed class ProgressRefreshThread : IDisposable
 {
-    private readonly IDisposable _subscription = Observable.Interval(refreshRate)
-            .ObserveOn(AnsiConsoleRx.Scheduler)
-            .Subscribe(_ => context.Refresh());
+    private readonly CancellationTokenSource _stop = new();
+    private readonly ProgressContext _context;
+    private readonly TimeSpan _refreshRate;
+    private readonly Task _refreshTask;
 
-    public void Dispose() => _subscription.Dispose();
+    public ProgressRefreshThread(ProgressContext context, TimeSpan refreshRate)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _refreshRate = refreshRate;
+        _refreshTask = Task.Run(RefreshLoopAsync);
+    }
+
+    public void Dispose()
+    {
+        _stop.Cancel();
+
+        try
+        {
+            _refreshTask.GetAwaiter().GetResult();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            _stop.Dispose();
+        }
+    }
+
+    private async Task RefreshLoopAsync()
+    {
+        while (!_stop.IsCancellationRequested)
+        {
+            await Task.Delay(_refreshRate, _stop.Token).ConfigureAwait(false);
+
+            if (!_stop.IsCancellationRequested)
+            {
+                _context.Refresh();
+            }
+        }
+    }
 }

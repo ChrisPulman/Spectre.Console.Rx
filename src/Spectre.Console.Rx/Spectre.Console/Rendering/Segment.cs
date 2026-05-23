@@ -1,9 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System;
-using Wcwidth;
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -12,44 +6,6 @@ namespace Spectre.Console.Rx.Rendering;
 [DebuggerDisplay("{Text,nq}")]
 public class Segment
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Segment"/> class.
-    /// </summary>
-    /// <param name="text">The segment text.</param>
-    public Segment(string text)
-        : this(text, Style.Plain)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Segment"/> class.
-    /// </summary>
-    /// <param name="text">The segment text.</param>
-    /// <param name="style">The segment style.</param>
-    public Segment(string text, Style style)
-        : this(text, style, false, false)
-    {
-    }
-
-    private Segment(string text, Style style, bool lineBreak, bool control)
-    {
-        Text = text?.NormalizeNewLines() ?? throw new ArgumentNullException(nameof(text));
-        Style = style ?? throw new ArgumentNullException(nameof(style));
-        IsLineBreak = lineBreak;
-        IsWhiteSpace = string.IsNullOrWhiteSpace(text);
-        IsControlCode = control;
-    }
-
-    /// <summary>
-    /// Gets a segment representing a line break.
-    /// </summary>
-    public static Segment LineBreak { get; } = new Segment(Environment.NewLine, Style.Plain, true, false);
-
-    /// <summary>
-    /// Gets an empty segment.
-    /// </summary>
-    public static Segment Empty { get; } = new Segment(string.Empty, Style.Plain, false, false);
-
     /// <summary>
     /// Gets the segment text.
     /// </summary>
@@ -69,7 +25,7 @@ public class Segment
     public bool IsWhiteSpace { get; }
 
     /// <summary>
-    /// Gets a value indicating whether or not his is a
+    /// Gets a value indicating whether or not this is a
     /// control code such as cursor movement.
     /// </summary>
     public bool IsControlCode { get; }
@@ -80,6 +36,21 @@ public class Segment
     public Style Style { get; }
 
     /// <summary>
+    /// Gets the segment link.
+    /// </summary>
+    public Link? Link { get; }
+
+    /// <summary>
+    /// Gets a segment representing a line break.
+    /// </summary>
+    public static Segment LineBreak { get; } = new Segment(Environment.NewLine, Style.Plain, null, true, false);
+
+    /// <summary>
+    /// Gets an empty segment.
+    /// </summary>
+    public static Segment Empty { get; } = new Segment(string.Empty, Style.Plain, null, false, false);
+
+    /// <summary>
     /// Creates padding segment.
     /// </summary>
     /// <param name="size">Number of whitespace characters.</param>
@@ -87,11 +58,61 @@ public class Segment
     public static Segment Padding(int size) => new(new string(' ', size));
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="Segment"/> class.
+    /// </summary>
+    /// <param name="text">The segment text.</param>
+    public Segment(string text)
+        : this(text, Style.Plain)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Segment"/> class.
+    /// </summary>
+    /// <param name="text">The segment text.</param>
+    /// <param name="style">The segment style.</param>
+    /// <param name="link">The segment link.</param>
+    public Segment(string text, Style style, Link? link = null)
+        : this(text, style, link, false, false)
+    {
+    }
+
+    private Segment(string text, Style style, Link? link, bool lineBreak, bool control)
+    {
+        Text = text?.NormalizeNewLines() ?? throw new ArgumentNullException(nameof(text));
+        Style = style;
+        Link = link;
+        IsLineBreak = lineBreak;
+        IsWhiteSpace = string.IsNullOrWhiteSpace(text);
+        IsControlCode = control;
+    }
+
+    /// <summary>
     /// Creates a control segment.
     /// </summary>
     /// <param name="control">The control code.</param>
     /// <returns>A segment representing a control code.</returns>
-    public static Segment Control(string control) => new(control, Style.Plain, false, true);
+    public static Segment Control(string control) => new Segment(control, Style.Plain, null, false, true);
+
+    /// <summary>
+    /// Gets the number of cells that this segment
+    /// occupies in the console.
+    /// </summary>
+    /// <returns>The number of cells that this segment occupies in the console.</returns>
+    public int CellCount()
+    {
+        if (IsControlCode)
+        {
+            return 0;
+        }
+
+        if (Text == "\n") 
+        {
+            return 1;
+        }
+
+        return Cell.GetCellLength(Text);
+    }
 
     /// <summary>
     /// Gets the number of cells that the segments occupies in the console.
@@ -100,10 +121,7 @@ public class Segment
     /// <returns>The number of cells that the segments occupies in the console.</returns>
     public static int CellCount(IEnumerable<Segment> segments)
     {
-        if (segments is null)
-        {
-            throw new ArgumentNullException(nameof(segments));
-        }
+        ArgumentNullException.ThrowIfNull(segments);
 
         var sum = 0;
         foreach (var segment in segments)
@@ -115,16 +133,64 @@ public class Segment
     }
 
     /// <summary>
+    /// Returns a new segment without any trailing line endings.
+    /// </summary>
+    /// <returns>A new segment without any trailing line endings.</returns>
+    public Segment StripLineEndings() => new Segment(Text.TrimEnd('\n').TrimEnd('\r'), Style);
+
+    /// <summary>
+    /// Splits the segment at the offset.
+    /// </summary>
+    /// <param name="offset">The offset where to split the segment.</param>
+    /// <returns>One or two new segments representing the split.</returns>
+    public (Segment First, Segment? Second) Split(int offset)
+    {
+        if (offset < 0)
+        {
+            return (this, null);
+        }
+
+        if (offset >= CellCount())
+        {
+            return (this, null);
+        }
+
+        var index = 0;
+        if (offset > 0)
+        {
+            var accumulated = 0;
+            var enumerator = StringInfo.GetTextElementEnumerator(Text);
+            while (enumerator.MoveNext())
+            {
+                var cluster = enumerator.GetTextElement();
+                accumulated += Cell.GetCellLength(cluster);
+                index += cluster.Length;
+                if (accumulated >= offset)
+                {
+                    break;
+                }
+            }
+        }
+
+        return (
+            new Segment(Text.Substring(0, index), Style),
+            new Segment(Text.Substring(index, Text.Length - index), Style));
+    }
+
+    /// <summary>
+    /// Clones the segment.
+    /// </summary>
+    /// <returns>A new segment that's identical to this one.</returns>
+    public Segment Clone() => new Segment(Text, Style);
+
+    /// <summary>
     /// Splits the provided segments into lines.
     /// </summary>
     /// <param name="segments">The segments to split.</param>
     /// <returns>A collection of lines.</returns>
     public static List<SegmentLine> SplitLines(IEnumerable<Segment> segments)
     {
-        if (segments is null)
-        {
-            throw new ArgumentNullException(nameof(segments));
-        }
+        ArgumentNullException.ThrowIfNull(segments);
 
         return SplitLines(segments, int.MaxValue);
     }
@@ -138,10 +204,7 @@ public class Segment
     /// <returns>A list of lines.</returns>
     public static List<SegmentLine> SplitLines(IEnumerable<Segment> segments, int maxWidth, int? height = null)
     {
-        if (segments is null)
-        {
-            throw new ArgumentNullException(nameof(segments));
-        }
+        ArgumentNullException.ThrowIfNull(segments);
 
         var lines = new List<SegmentLine>();
         var line = new SegmentLine();
@@ -157,14 +220,13 @@ public class Segment
             var lineLength = line.CellCount();
             if (lineLength + segmentLength > maxWidth)
             {
-                var diff = -(maxWidth - (lineLength + segmentLength));
-                var offset = segment.Text.Length - diff;
+                var offset = maxWidth - lineLength;
 
                 var (first, second) = segment.Split(offset);
 
                 line.Add(first);
                 lines.Add(line);
-                line = new();
+                line = [];
 
                 if (second != null)
                 {
@@ -183,7 +245,7 @@ public class Segment
                     if (line.Length != 0 || segment.IsLineBreak)
                     {
                         lines.Add(line);
-                        line = new();
+                        line = [];
                     }
 
                     continue;
@@ -197,7 +259,7 @@ public class Segment
                     {
                         if (parts[0].Length > 0)
                         {
-                            line.Add(new(parts[0], segment.Style));
+                            line.Add(new Segment(parts[0], segment.Style));
                         }
                     }
 
@@ -206,10 +268,10 @@ public class Segment
                         if (line.Length > 0)
                         {
                             lines.Add(line);
-                            line = new();
+                            line = [];
                         }
 
-                        text = string.Concat(parts.Skip(1).Take(parts.Length - 1));
+                        text = string.Join('\n', parts.Skip(1).Take(parts.Length - 1));
                     }
                     else
                     {
@@ -242,7 +304,7 @@ public class Segment
                 var missing = height - lines.Count;
                 for (var i = 0; i < missing; i++)
                 {
-                    lines.Add(new());
+                    lines.Add([]);
                 }
             }
         }
@@ -259,14 +321,11 @@ public class Segment
     /// <returns>A list of segments that has been split.</returns>
     public static List<Segment> SplitOverflow(Segment segment, Overflow? overflow, int maxWidth)
     {
-        if (segment is null)
-        {
-            throw new ArgumentNullException(nameof(segment));
-        }
+        ArgumentNullException.ThrowIfNull(segment);
 
         if (segment.CellCount() <= maxWidth)
         {
-            return new List<Segment>(1) { segment };
+            return [segment];
         }
 
         // Default to folding
@@ -279,33 +338,32 @@ public class Segment
             var splitted = SplitSegment(segment.Text, maxWidth);
             foreach (var str in splitted)
             {
-                result.Add(new(str, segment.Style));
+                result.Add(new Segment(str, segment.Style));
             }
         }
         else if (overflow == Overflow.Crop)
         {
-            if (Math.Max(0, maxWidth - 1) == 0)
+            if (maxWidth <= 0)
             {
-                result.Add(new(string.Empty, segment.Style));
+                result.Add(new Segment(string.Empty, segment.Style));
             }
             else
             {
-                result.Add(new(segment.Text.Substring(0, maxWidth), segment.Style));
+                var truncated = Truncate(segment, maxWidth);
+                result.Add(truncated ?? new Segment(string.Empty, segment.Style));
             }
         }
         else if (overflow == Overflow.Ellipsis)
         {
             if (Math.Max(0, maxWidth - 1) == 0)
             {
-                result.Add(new("…", segment.Style));
+                result.Add(new Segment("…", segment.Style));
             }
             else
             {
-#if NETSTANDARD2_0
-                result.Add(new(segment.Text.Substring(0, maxWidth - 1) + "…", segment.Style));
-#else
-                result.Add(new(string.Concat(segment.Text.AsSpan(0, maxWidth - 1), "…"), segment.Style));
-#endif
+                var truncated = Truncate(segment, maxWidth - 1);
+                var prefix = truncated?.Text ?? string.Empty;
+                result.Add(new Segment(prefix + "…", segment.Style));
             }
         }
 
@@ -320,10 +378,7 @@ public class Segment
     /// <returns>A list of segments that has been truncated.</returns>
     public static List<Segment> Truncate(IEnumerable<Segment> segments, int maxWidth)
     {
-        if (segments is null)
-        {
-            throw new ArgumentNullException(nameof(segments));
-        }
+        ArgumentNullException.ThrowIfNull(segments);
 
         var result = new List<Segment>();
 
@@ -371,15 +426,19 @@ public class Segment
         }
 
         var builder = new StringBuilder();
-        foreach (var character in segment.Text)
+        var accumulatedCellWidth = 0;
+        var truncateEnumerator = StringInfo.GetTextElementEnumerator(segment.Text);
+        while (truncateEnumerator.MoveNext())
         {
-            var accumulatedCellWidth = builder.ToString().GetCellWidth();
-            if (accumulatedCellWidth >= maxWidth)
+            var cluster = truncateEnumerator.GetTextElement();
+            var clusterWidth = Cell.GetCellLength(cluster);
+            if (accumulatedCellWidth + clusterWidth > maxWidth)
             {
                 break;
             }
 
-            builder.Append(character);
+            builder.Append(cluster);
+            accumulatedCellWidth += clusterWidth;
         }
 
         if (builder.Length == 0)
@@ -387,88 +446,19 @@ public class Segment
             return null;
         }
 
-        return new(builder.ToString(), segment.Style);
+        return new Segment(builder.ToString(), segment.Style);
     }
-
-    /// <summary>
-    /// Returns a new segment without any trailing line endings.
-    /// </summary>
-    /// <returns>A new segment without any trailing line endings.</returns>
-    public Segment StripLineEndings() => new(Text.TrimEnd('\n').TrimEnd('\r'), Style);
-
-    /// <summary>
-    /// Gets the number of cells that this segment
-    /// occupies in the console.
-    /// </summary>
-    /// <returns>The number of cells that this segment occupies in the console.</returns>
-    public int CellCount()
-    {
-        if (IsControlCode)
-        {
-            return 0;
-        }
-
-        return Cell.GetCellLength(Text);
-    }
-
-    /// <summary>
-    /// Splits the segment at the offset.
-    /// </summary>
-    /// <param name="offset">The offset where to split the segment.</param>
-    /// <returns>One or two new segments representing the split.</returns>
-    public (Segment First, Segment? Second) Split(int offset)
-    {
-        if (offset < 0)
-        {
-            return (this, null);
-        }
-
-        if (offset >= CellCount())
-        {
-            return (this, null);
-        }
-
-        var index = 0;
-        if (offset > 0)
-        {
-            var accumulated = 0;
-            foreach (var character in Text)
-            {
-                index++;
-                accumulated += Cell.GetCellLength(character);
-                if (accumulated >= offset)
-                {
-                    break;
-                }
-            }
-        }
-
-        return (
-            new(Text.Substring(0, index), Style),
-            new(Text.Substring(index, Text.Length - index), Style));
-    }
-
-    /// <summary>
-    /// Clones the segment.
-    /// </summary>
-    /// <returns>A new segment that's identical to this one.</returns>
-    public Segment Clone() => new(Text, Style);
 
     internal static IEnumerable<Segment> Merge(IEnumerable<Segment> segments)
     {
-        if (segments is null)
-        {
-            throw new ArgumentNullException(nameof(segments));
-        }
-
-        var result = new List<Segment>();
+        ArgumentNullException.ThrowIfNull(segments);
 
         var segmentBuilder = (SegmentBuilder?)null;
         foreach (var segment in segments)
         {
             if (segmentBuilder == null)
             {
-                segmentBuilder = new(segment);
+                segmentBuilder = new SegmentBuilder(segment);
                 continue;
             }
 
@@ -479,35 +469,31 @@ public class Segment
                 continue;
             }
 
-            // Same style?
-            if (segmentBuilder.StyleEquals(segment.Style) && !segmentBuilder.IsLineBreak() && !segmentBuilder.IsControlCode())
+            // Same style and link?
+            if (segmentBuilder.StyleEquals(segment.Style) && !segmentBuilder.IsLineBreak() &&
+                !segmentBuilder.IsControlCode() && segmentBuilder.HasSameLink(segment.Link))
             {
                 segmentBuilder.Append(segment.Text);
                 continue;
             }
 
-            result.Add(segmentBuilder.Build());
+            yield return segmentBuilder.Build();
             segmentBuilder.Reset(segment);
         }
 
         if (segmentBuilder != null)
         {
-            result.Add(segmentBuilder.Build());
+            yield return segmentBuilder.Build();
         }
-
-        return result;
     }
 
     internal static List<Segment> TruncateWithEllipsis(IEnumerable<Segment> segments, int maxWidth)
     {
-        if (segments is null)
-        {
-            throw new ArgumentNullException(nameof(segments));
-        }
+        ArgumentNullException.ThrowIfNull(segments);
 
         if (CellCount(segments) <= maxWidth)
         {
-            return new List<Segment>(segments);
+            return [.. segments];
         }
 
         segments = TrimEnd(Truncate(segments, maxWidth - 1));
@@ -517,16 +503,13 @@ public class Segment
         }
 
         var result = new List<Segment>(segments);
-        result.Add(new("…", result.Last().Style));
+        result.Add(new Segment("…", result.Last().Style));
         return result;
     }
 
     internal static List<Segment> TrimEnd(IEnumerable<Segment> segments)
     {
-        if (segments is null)
-        {
-            throw new ArgumentNullException(nameof(segments));
-        }
+        ArgumentNullException.ThrowIfNull(segments);
 
         var stack = new Stack<Segment>();
         var checkForWhitespace = true;
@@ -551,10 +534,7 @@ public class Segment
     // TODO: Move this to Table
     internal static List<List<SegmentLine>> MakeSameHeight(int cellHeight, List<List<SegmentLine>> cells)
     {
-        if (cells is null)
-        {
-            throw new ArgumentNullException(nameof(cells));
-        }
+        ArgumentNullException.ThrowIfNull(cells);
 
         foreach (var cell in cells)
         {
@@ -562,7 +542,7 @@ public class Segment
             {
                 while (cell.Count != cellHeight)
                 {
-                    cell.Add(new());
+                    cell.Add([]);
                 }
             }
         }
@@ -578,7 +558,7 @@ public class Segment
             if (width < expectedWidth)
             {
                 var diff = expectedWidth - width;
-                line.Add(new(new string(' ', diff)));
+                line.Add(new Segment(new string(' ', diff)));
             }
         }
 
@@ -591,17 +571,20 @@ public class Segment
 
         var length = 0;
         var sb = new StringBuilder();
-        foreach (var ch in text)
+        var splitEnumerator = StringInfo.GetTextElementEnumerator(text);
+        while (splitEnumerator.MoveNext())
         {
-            if (length + UnicodeCalculator.GetWidth(ch) > maxCellLength)
+            var cluster = splitEnumerator.GetTextElement();
+            var clusterWidth = Cell.GetCellLength(cluster);
+            if (length + clusterWidth > maxCellLength)
             {
                 list.Add(sb.ToString());
                 sb.Clear();
                 length = 0;
             }
 
-            length += UnicodeCalculator.GetWidth(ch);
-            sb.Append(ch);
+            length += clusterWidth;
+            sb.Append(cluster);
         }
 
         list.Add(sb.ToString());
@@ -621,21 +604,33 @@ public class Segment
         }
 
         public bool IsControlCode() => _originalSegment.IsControlCode;
-
         public bool IsLineBreak() => _originalSegment.IsLineBreak;
-
         public bool StyleEquals(Style segmentStyle) => segmentStyle.Equals(_originalSegment.Style);
 
         public void Append(string text) => _textBuilder.Append(text);
 
-        public Segment Build() =>
-            new(_textBuilder.ToString(), _originalSegment.Style, _originalSegment.IsLineBreak, _originalSegment.IsControlCode);
+        public Segment Build() => new Segment(
+                _textBuilder.ToString(),
+                _originalSegment.Style,
+                _originalSegment.Link,
+                _originalSegment.IsLineBreak,
+                _originalSegment.IsControlCode);
 
         public void Reset(Segment segment)
         {
-            _textBuilder.Clear()
-                .Append(segment.Text);
+            _textBuilder.Clear();
+            _textBuilder.Append(segment.Text);
             _originalSegment = segment;
+        }
+
+        public bool HasSameLink(Link? link)
+        {
+            if (link == null && _originalSegment.Link == null)
+            {
+                return true;
+            }
+
+            return _originalSegment.Link?.Equals(link) ?? false;
         }
     }
 }

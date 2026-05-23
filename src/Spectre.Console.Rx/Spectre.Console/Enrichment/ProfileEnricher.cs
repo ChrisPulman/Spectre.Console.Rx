@@ -1,25 +1,23 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Enrichment;
 
 internal static class ProfileEnricher
 {
     private static readonly List<IProfileEnricher> _defaultEnrichers =
     [
-            new AppVeyorEnricher(),
-            new BambooEnricher(),
-            new BitbucketEnricher(),
-            new BitriseEnricher(),
-            new ContinuaEnricher(),
-            new GitHubEnricher(),
-            new GitLabEnricher(),
-            new GoCDEnricher(),
-            new JenkinsEnricher(),
-            new MyGetEnricher(),
-            new TeamCityEnricher(),
-            new TfsEnricher(),
-            new TravisEnricher(),
+        new AppVeyorEnricher(),
+        new AzurePipelinesEnricher(),
+        new BambooEnricher(),
+        new BitbucketEnricher(),
+        new BitriseEnricher(),
+        new ContinuaEnricher(),
+        new GitHubEnricher(),
+        new GitLabEnricher(),
+        new GoCDEnricher(),
+        new JenkinsEnricher(),
+        new MyGetEnricher(),
+        new TeamCityEnricher(),
+        new TfsEnricher(),
+        new TravisEnricher()
     ];
 
     public static void Enrich(
@@ -27,10 +25,7 @@ internal static class ProfileEnricher
         ProfileEnrichment settings,
         IDictionary<string, string>? environmentVariables)
     {
-        if (profile is null)
-        {
-            throw new ArgumentNullException(nameof(profile));
-        }
+        ArgumentNullException.ThrowIfNull(profile);
 
         settings ??= new ProfileEnrichment();
 
@@ -67,7 +62,7 @@ internal static class ProfileEnricher
         return enrichers;
     }
 
-    private static Dictionary<string, string> GetEnvironmentVariables(IDictionary<string, string>? variables)
+    private static IDictionary<string, string> GetEnvironmentVariables(IDictionary<string, string>? variables)
     {
         if (variables != null)
         {
@@ -75,7 +70,7 @@ internal static class ProfileEnricher
         }
 
         return Environment.GetEnvironmentVariables()
-            .Cast<DictionaryEntry>()
+            .Cast<System.Collections.DictionaryEntry>()
             .Aggregate(
                 new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
                 (dictionary, entry) =>

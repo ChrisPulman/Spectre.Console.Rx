@@ -1,22 +1,14 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class ListPrompt<T>
+internal sealed class ListPrompt<T>(IAnsiConsole console, IListPromptStrategy<T> strategy)
     where T : notnull
 {
-    private readonly IAnsiConsole _console;
-    private readonly IListPromptStrategy<T> _strategy;
-
-    public ListPrompt(IAnsiConsole console, IListPromptStrategy<T> strategy)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-        _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
-    }
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly IListPromptStrategy<T> _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
 
     public async Task<ListPromptState<T>> Show(
         ListPromptTree<T> tree,
+        Func<T, string> converter,
         SelectionMode selectionMode,
         bool skipUnselectableItems,
         bool searchEnabled,
@@ -24,10 +16,7 @@ internal sealed class ListPrompt<T>
         bool wrapAround,
         CancellationToken cancellationToken = default)
     {
-        if (tree is null)
-        {
-            throw new ArgumentNullException(nameof(tree));
-        }
+        ArgumentNullException.ThrowIfNull(tree);
 
         if (!_console.Profile.Capabilities.Interactive)
         {
@@ -44,7 +33,20 @@ internal sealed class ListPrompt<T>
         }
 
         var nodes = tree.Traverse().ToList();
-        var state = new ListPromptState<T>(nodes, _strategy.CalculatePageSize(_console, nodes.Count, requestedPageSize), wrapAround, selectionMode, skipUnselectableItems, searchEnabled);
+        if (nodes.Count == 0)
+        {
+            throw new InvalidOperationException("Cannot show an empty selection prompt. Please call the AddChoice() method to configure the prompt.");
+        }
+
+        var state = new ListPromptState<T>(
+            nodes,
+            converter,
+            _strategy.CalculatePageSize(_console, nodes.Count, requestedPageSize),
+            wrapAround,
+            selectionMode,
+            skipUnselectableItems,
+            searchEnabled,
+            _strategy.CalculateInitialIndex(nodes));
         var hook = new ListPromptRenderHook<T>(_console, () => BuildRenderable(state));
 
         using (new RenderHookScope(_console, hook))
@@ -65,6 +67,11 @@ internal sealed class ListPrompt<T>
                 var result = _strategy.HandleInput(key, state);
                 if (result == ListPromptInputResult.Submit)
                 {
+                    break;
+                }
+                else if (result == ListPromptInputResult.Abort)
+                {
+                    state.Cancel();
                     break;
                 }
 
@@ -114,8 +121,7 @@ internal sealed class ListPrompt<T>
         // Build the renderable
         return _strategy.Render(
             _console,
-            scrollable,
-            cursorIndex,
+            scrollable, cursorIndex,
             state.Items.Skip(skip).Take(take)
                 .Select((node, index) => (index, node)),
             state.SkipUnselectableItems,

@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -9,6 +6,8 @@ namespace Spectre.Console.Rx;
 /// <remarks>
 /// Initializes a new instance of the <see cref="LiveDisplay"/> class.
 /// </remarks>
+/// <param name="console">The console.</param>
+/// <param name="target">The target renderable to update.</param>
 public sealed class LiveDisplay(IAnsiConsole console, IRenderable target)
 {
     private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
@@ -65,10 +64,7 @@ public sealed class LiveDisplay(IAnsiConsole console, IRenderable target)
     /// <returns>The result.</returns>
     public async Task StartAsync(Func<LiveDisplayContext, Task> func)
     {
-        if (func is null)
-        {
-            throw new ArgumentNullException(nameof(func));
-        }
+        ArgumentNullException.ThrowIfNull(func);
 
         _ = await StartAsync<object?>(async ctx =>
         {
@@ -85,10 +81,7 @@ public sealed class LiveDisplay(IAnsiConsole console, IRenderable target)
     /// <returns>The result.</returns>
     public async Task<T> StartAsync<T>(Func<LiveDisplayContext, Task<T>> func)
     {
-        if (func is null)
-        {
-            throw new ArgumentNullException(nameof(func));
-        }
+        ArgumentNullException.ThrowIfNull(func);
 
         return await _console.RunExclusive(async () =>
         {
@@ -110,8 +103,59 @@ public sealed class LiveDisplay(IAnsiConsole console, IRenderable target)
             finally
             {
                 renderer.Completed(AutoClear);
-                _console.Dispose();
             }
         }).ConfigureAwait(false);
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="LiveDisplay"/>.
+/// </summary>
+public static class LiveDisplayExtensions
+{
+    /// <summary>
+    /// Sets whether or not auto clear is enabled.
+    /// If enabled, the live display will be cleared when done.
+    /// </summary>
+    /// <param name="live">The <see cref="LiveDisplay"/> instance.</param>
+    /// <param name="enabled">Whether or not auto clear is enabled.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static LiveDisplay AutoClear(this LiveDisplay live, bool enabled)
+    {
+        ArgumentNullException.ThrowIfNull(live);
+
+        live.AutoClear = enabled;
+
+        return live;
+    }
+
+    /// <summary>
+    /// Sets the vertical overflow strategy.
+    /// </summary>
+    /// <param name="live">The <see cref="LiveDisplay"/> instance.</param>
+    /// <param name="overflow">The overflow strategy to use.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static LiveDisplay Overflow(this LiveDisplay live, VerticalOverflow overflow)
+    {
+        ArgumentNullException.ThrowIfNull(live);
+
+        live.Overflow = overflow;
+
+        return live;
+    }
+
+    /// <summary>
+    /// Sets the vertical overflow cropping strategy.
+    /// </summary>
+    /// <param name="live">The <see cref="LiveDisplay"/> instance.</param>
+    /// <param name="cropping">The overflow cropping strategy to use.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static LiveDisplay Cropping(this LiveDisplay live, VerticalOverflowCropping cropping)
+    {
+        ArgumentNullException.ThrowIfNull(live);
+
+        live.Cropping = cropping;
+
+        return live;
     }
 }

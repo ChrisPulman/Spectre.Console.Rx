@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -18,10 +15,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> Mode<T>(this SelectionPrompt<T> obj, SelectionMode mode)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.Mode = mode;
         return obj;
@@ -37,15 +31,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> AddChoices<T>(this SelectionPrompt<T> obj, params T[] choices)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
-
-        if (choices is null)
-        {
-            throw new ArgumentNullException(nameof(choices));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         foreach (var choice in choices)
         {
@@ -65,15 +51,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> AddChoices<T>(this SelectionPrompt<T> obj, IEnumerable<T> choices)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
-
-        if (choices is null)
-        {
-            throw new ArgumentNullException(nameof(choices));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         foreach (var choice in choices)
         {
@@ -94,15 +72,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> AddChoiceGroup<T>(this SelectionPrompt<T> obj, T group, IEnumerable<T> choices)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
-
-        if (choices is null)
-        {
-            throw new ArgumentNullException(nameof(choices));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         var root = obj.AddChoice(group);
         foreach (var choice in choices)
@@ -124,15 +94,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> AddChoiceGroup<T>(this SelectionPrompt<T> obj, T group, params T[] choices)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
-
-        if (choices is null)
-        {
-            throw new ArgumentNullException(nameof(choices));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         var root = obj.AddChoice(group);
         foreach (var choice in choices)
@@ -153,10 +115,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> Title<T>(this SelectionPrompt<T> obj, string? title)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.Title = title;
         return obj;
@@ -172,10 +131,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> PageSize<T>(this SelectionPrompt<T> obj, int pageSize)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         if (pageSize <= 2)
         {
@@ -196,10 +152,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> WrapAround<T>(this SelectionPrompt<T> obj, bool shouldWrap = true)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.WrapAround = shouldWrap;
         return obj;
@@ -214,10 +167,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> EnableSearch<T>(this SelectionPrompt<T> obj)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.SearchEnabled = true;
         return obj;
@@ -232,10 +182,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> DisableSearch<T>(this SelectionPrompt<T> obj)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.SearchEnabled = false;
         return obj;
@@ -251,13 +198,41 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> SearchPlaceholderText<T>(this SelectionPrompt<T> obj, string? text)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.SearchPlaceholderText = text;
         return obj;
+    }
+
+    /// <summary>
+    /// Sets the value that will be returned if the prompt is cancelled with 'ESC'.
+    /// </summary>
+    /// <typeparam name="T">The prompt result type.</typeparam>
+    /// <param name="obj">The prompt.</param>
+    /// <param name="cancelResultFunc">A Func that is returning a value on cancel.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static SelectionPrompt<T> AddCancelResult<T>(this SelectionPrompt<T> obj, Func<T> cancelResultFunc)
+        where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.CancelResult = cancelResultFunc;
+        return obj;
+    }
+
+    /// <summary>
+    /// Sets a Func that will be triggered if the prompt is cancelled with 'ESC'.
+    /// </summary>
+    /// <typeparam name="T">The prompt result type.</typeparam>
+    /// <param name="obj">The prompt.</param>
+    /// <param name="cancelResult">The value to be returned on cancel.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static SelectionPrompt<T> AddCancelResult<T>(this SelectionPrompt<T> obj, T cancelResult)
+        where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        return obj.AddCancelResult(() => cancelResult);
     }
 
     /// <summary>
@@ -270,10 +245,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> HighlightStyle<T>(this SelectionPrompt<T> obj, Style highlightStyle)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.HighlightStyle = highlightStyle;
         return obj;
@@ -289,10 +261,7 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> MoreChoicesText<T>(this SelectionPrompt<T> obj, string? text)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.MoreChoicesText = text;
         return obj;
@@ -308,12 +277,25 @@ public static class SelectionPromptExtensions
     public static SelectionPrompt<T> UseConverter<T>(this SelectionPrompt<T> obj, Func<T, string>? displaySelector)
         where T : notnull
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.Converter = displaySelector;
+        return obj;
+    }
+
+    /// <summary>
+    /// Sets the choice that will be selected when the prompt is first displayed.
+    /// </summary>
+    /// <typeparam name="T">The prompt result type.</typeparam>
+    /// <param name="obj">The prompt.</param>
+    /// <param name="defaultValue">The choice to show as selected when the prompt is first displayed.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static SelectionPrompt<T> DefaultValue<T>(this SelectionPrompt<T> obj, T? defaultValue)
+        where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.DefaultValue = defaultValue;
         return obj;
     }
 }

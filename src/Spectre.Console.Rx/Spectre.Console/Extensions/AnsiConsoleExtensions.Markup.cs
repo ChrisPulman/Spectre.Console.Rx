@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -14,12 +11,17 @@ public static partial class AnsiConsoleExtensions
     /// <param name="console">The console to write to.</param>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void Markup(this IAnsiConsole console, string format, params object[] args) => Markup(console, CultureInfo.CurrentCulture, format, args);
+    public static void Markup(this IAnsiConsole console, string format, params object[] args)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+
+        Markup(console, CultureInfo.CurrentCulture, format, args);
+    }
 
     /// <summary>
     /// Writes the specified markup to the console.
     /// <para/>
-    /// All interpolation holes which contain a string are automatically escaped so you must not call <see cref="StringExtensions.EscapeMarkup"/>.
+    /// All interpolation holes which contain a string are automatically escaped.
     /// </summary>
     /// <example>
     /// <code>
@@ -30,7 +32,12 @@ public static partial class AnsiConsoleExtensions
     /// </example>
     /// <param name="console">The console to write to.</param>
     /// <param name="value">The interpolated string value to write.</param>
-    public static void MarkupInterpolated(this IAnsiConsole console, FormattableString value) => MarkupInterpolated(console, CultureInfo.CurrentCulture, value);
+    public static void MarkupInterpolated(this IAnsiConsole console, FormattableString value)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+
+        MarkupInterpolated(console, CultureInfo.CurrentCulture, value);
+    }
 
     /// <summary>
     /// Writes the specified markup to the console.
@@ -39,12 +46,17 @@ public static partial class AnsiConsoleExtensions
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void Markup(this IAnsiConsole console, IFormatProvider provider, string format, params object[] args) => Markup(console, string.Format(provider, format, args));
+    public static void Markup(this IAnsiConsole console, IFormatProvider provider, string format, params object[] args)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+
+        Markup(console, string.Format(provider, format, args));
+    }
 
     /// <summary>
     /// Writes the specified markup to the console.
     /// <para/>
-    /// All interpolation holes which contain a string are automatically escaped so you must not call <see cref="StringExtensions.EscapeMarkup"/>.
+    /// All interpolation holes which contain a string are automatically escaped.
     /// </summary>
     /// <example>
     /// <code>
@@ -58,12 +70,9 @@ public static partial class AnsiConsoleExtensions
     /// <param name="value">The interpolated string value to write.</param>
     public static void MarkupInterpolated(this IAnsiConsole console, IFormatProvider provider, FormattableString value)
     {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
-        Markup(console, Rx.Markup.EscapeInterpolated(provider, value));
+        Markup(console, Spectre.Console.Rx.Markup.EscapeInterpolated(provider, value));
     }
 
     /// <summary>
@@ -73,12 +82,9 @@ public static partial class AnsiConsoleExtensions
     /// <param name="value">The value to write.</param>
     public static void Markup(this IAnsiConsole console, string value)
     {
-        if (console is null)
-        {
-            throw new ArgumentNullException(nameof(console));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
-        console.Write(MarkupParser.Parse(value));
+        console.Write(new Markup(value));
     }
 
     /// <summary>
@@ -87,12 +93,17 @@ public static partial class AnsiConsoleExtensions
     /// <param name="console">The console to write to.</param>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void MarkupLine(this IAnsiConsole console, string format, params object[] args) => MarkupLine(console, CultureInfo.CurrentCulture, format, args);
+    public static void MarkupLine(this IAnsiConsole console, string format, params object[] args)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+
+        MarkupLine(console, CultureInfo.CurrentCulture, format, args);
+    }
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
     /// <para/>
-    /// All interpolation holes which contain a string are automatically escaped so you must not call <see cref="StringExtensions.EscapeMarkup"/>.
+    /// All interpolation holes which contain a string are automatically escaped.
     /// </summary>
     /// <example>
     /// <code>
@@ -103,14 +114,24 @@ public static partial class AnsiConsoleExtensions
     /// </example>
     /// <param name="console">The console to write to.</param>
     /// <param name="value">The interpolated string value to write.</param>
-    public static void MarkupLineInterpolated(this IAnsiConsole console, FormattableString value) => MarkupLineInterpolated(console, CultureInfo.CurrentCulture, value);
+    public static void MarkupLineInterpolated(this IAnsiConsole console, FormattableString value)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+
+        MarkupLineInterpolated(console, CultureInfo.CurrentCulture, value);
+    }
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
     /// </summary>
     /// <param name="console">The console to write to.</param>
     /// <param name="value">The value to write.</param>
-    public static void MarkupLine(this IAnsiConsole console, string value) => Markup(console, value + Environment.NewLine);
+    public static void MarkupLine(this IAnsiConsole console, string value)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+
+        Markup(console, value + Environment.NewLine);
+    }
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
@@ -119,12 +140,17 @@ public static partial class AnsiConsoleExtensions
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <param name="format">A composite format string.</param>
     /// <param name="args">An array of objects to write.</param>
-    public static void MarkupLine(this IAnsiConsole console, IFormatProvider provider, string format, params object[] args) => Markup(console, provider, format + Environment.NewLine, args);
+    public static void MarkupLine(this IAnsiConsole console, IFormatProvider provider, string format, params object[] args)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+
+        Markup(console, provider, format + Environment.NewLine, args);
+    }
 
     /// <summary>
     /// Writes the specified markup, followed by the current line terminator, to the console.
     /// <para/>
-    /// All interpolation holes which contain a string are automatically escaped so you must not call <see cref="StringExtensions.EscapeMarkup"/>.
+    /// All interpolation holes which contain a string are automatically escaped.
     /// </summary>
     /// <example>
     /// <code>
@@ -138,11 +164,8 @@ public static partial class AnsiConsoleExtensions
     /// <param name="value">The interpolated string value to write.</param>
     public static void MarkupLineInterpolated(this IAnsiConsole console, IFormatProvider provider, FormattableString value)
     {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
-        MarkupLine(console, Rx.Markup.EscapeInterpolated(provider, value));
+        MarkupLine(console, Spectre.Console.Rx.Markup.EscapeInterpolated(provider, value));
     }
 }

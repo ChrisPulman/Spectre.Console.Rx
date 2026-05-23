@@ -1,44 +1,14 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
-/// Represents a FIGlet font.
+/// Represents a Figlet font.
 /// </summary>
 public sealed class FigletFont
 {
     private const string StandardFont = "Spectre.Console.Rx/Spectre.Console/Widgets/Figlet/Fonts/Standard.flf";
 
-    private static readonly Lazy<FigletFont> _standard;
     private readonly Dictionary<int, FigletCharacter> _characters;
-
-    static FigletFont() => _standard = new Lazy<FigletFont>(() => Parse(
-                                    ResourceReader.ReadManifestData(StandardFont)));
-
-    internal FigletFont(IEnumerable<FigletCharacter> characters, FigletHeader header)
-    {
-        _characters = new Dictionary<int, FigletCharacter>();
-
-        foreach (var character in characters)
-        {
-            if (_characters.ContainsKey(character.Code))
-            {
-                throw new InvalidOperationException("Character already exist");
-            }
-
-            _characters[character.Code] = character;
-        }
-
-        Height = header.Height;
-        Baseline = header.Baseline;
-        MaxWidth = header.MaxLength;
-    }
-
-    /// <summary>
-    /// Gets the default FIGlet font.
-    /// </summary>
-    public static FigletFont Default => _standard.Value;
+    private static readonly Lazy<FigletFont> _standard;
 
     /// <summary>
     /// Gets the number of characters in the font.
@@ -61,10 +31,64 @@ public sealed class FigletFont
     public int MaxWidth { get; }
 
     /// <summary>
-    /// Loads a FIGlet font from the specified stream.
+    /// Gets the hardblank character used in this font's glyph definitions.
+    /// Hardblanks are rendered as spaces in output but are treated as opaque
+    /// (non-space) characters during fitting and smushing.
     /// </summary>
-    /// <param name="stream">The stream to load the FIGlet font from.</param>
-    /// <returns>The loaded FIGlet font.</returns>
+    public char Hardblank { get; }
+
+    /// <summary>
+    /// Gets the horizontal smushing rules encoded as bit flags (bits 0–5, values 1–32).
+    /// A value of 0 means universal smushing (any two non-space characters smush, right wins).
+    /// </summary>
+    public int SmushingRules { get; }
+
+    /// <summary>
+    /// Gets the default Figlet font.
+    /// </summary>
+    public static FigletFont Default => _standard.Value;
+
+    static FigletFont()
+    {
+        _standard = new Lazy<FigletFont>(() => Parse(
+            ResourceReader.ReadManifestData(StandardFont)));
+    }
+
+    internal FigletFont(IEnumerable<FigletCharacter> characters, FigletHeader header)
+    {
+        _characters = new Dictionary<int, FigletCharacter>();
+
+        foreach (var character in characters)
+        {
+            _characters[character.Code] = character;
+        }
+
+        Height = header.Height;
+        Baseline = header.Baseline;
+        MaxWidth = header.MaxLength;
+        Hardblank = header.Hardblank;
+
+        // Bits 0–5 (values 1, 2, 4, 8, 16, 32) encode the six horizontal smushing rules.
+        // A result of 0 means no specific rules are defined, i.e. use universal smushing.
+        if (header.FullLayout.HasValue)
+        {
+            SmushingRules = header.FullLayout.Value & 63;
+        }
+        else if (header.OldLayout > 0)
+        {
+            SmushingRules = header.OldLayout & 63;
+        }
+        else
+        {
+            SmushingRules = 0;
+        }
+    }
+
+    /// <summary>
+    /// Loads a Figlet font from the specified stream.
+    /// </summary>
+    /// <param name="stream">The stream to load the Figlet font from.</param>
+    /// <returns>The loaded Figlet font.</returns>
     public static FigletFont Load(Stream stream)
     {
         using (var reader = new StreamReader(stream))
@@ -74,42 +98,24 @@ public sealed class FigletFont
     }
 
     /// <summary>
-    /// Loads a FIGlet font from disk.
+    /// Loads a Figlet font from disk.
     /// </summary>
-    /// <param name="path">The path of the FIGlet font to load.</param>
-    /// <returns>The loaded FIGlet font.</returns>
+    /// <param name="path">The path of the Figlet font to load.</param>
+    /// <returns>The loaded Figlet font.</returns>
     public static FigletFont Load(string path) => Parse(File.ReadAllText(path));
 
     /// <summary>
-    /// Parses a FIGlet font from the specified <see cref="string"/>.
+    /// Parses a Figlet font from the specified <see cref="string"/>.
     /// </summary>
-    /// <param name="source">The FIGlet font source.</param>
-    /// <returns>The parsed FIGlet font.</returns>
+    /// <param name="source">The Figlet font source.</param>
+    /// <returns>The parsed Figlet font.</returns>
     public static FigletFont Parse(string source) => FigletFontParser.Parse(source);
 
-    internal int GetWidth(string text)
-    {
-        var width = 0;
-        foreach (var character in text)
-        {
-            width += GetCharacter(character)?.Width ?? 0;
-        }
-
-        return width;
-    }
-
-    internal FigletCharacter? GetCharacter(char character)
-    {
-        _characters.TryGetValue(character, out var result);
-        return result;
-    }
+    internal int GetWidth(string text) => text.Sum(character => GetCharacter(character)?.Width ?? 0);
 
     internal IEnumerable<FigletCharacter> GetCharacters(string text)
     {
-        if (text is null)
-        {
-            throw new ArgumentNullException(nameof(text));
-        }
+        ArgumentNullException.ThrowIfNull(text);
 
         var result = new List<FigletCharacter>();
         foreach (var character in text)
@@ -120,6 +126,12 @@ public sealed class FigletFont
             }
         }
 
+        return result;
+    }
+
+    private FigletCharacter? GetCharacter(char character)
+    {
+        _characters.TryGetValue(character, out var result);
         return result;
     }
 }

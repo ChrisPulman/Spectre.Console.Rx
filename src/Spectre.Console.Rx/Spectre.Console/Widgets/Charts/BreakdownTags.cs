@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
@@ -8,14 +5,10 @@ internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
     private readonly List<IBreakdownChartItem> _data = data ?? throw new ArgumentNullException(nameof(data));
 
     public int? Width { get; set; }
-
-    public Color ValueColor { get; set; } = Color.Grey;
-
     public CultureInfo? Culture { get; set; }
-
     public bool ShowTagValues { get; set; } = true;
-
     public Func<double, CultureInfo, string>? ValueFormatter { get; set; }
+    public Color ValueColor { get; set; } = Color.Grey;
 
     protected override Measurement Measure(RenderOptions options, int maxWidth)
     {
@@ -30,11 +23,9 @@ internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
         var panels = new List<Panel>();
         foreach (var item in _data)
         {
-            var panel = new Panel(GetTag(item, culture))
-            {
-                Inline = true,
-                Padding = new Padding(0, 0, 2, 0)
-            };
+            var panel = new Panel(GetTag(item, culture));
+            panel.Inline = true;
+            panel.Padding = new Padding(0, 0, 2, 0);
             panel.NoBorder();
 
             panels.Add(panel);
@@ -46,10 +37,10 @@ internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
         }
     }
 
-    private static string DefaultFormatter(double value, CultureInfo culture) => value.ToString(culture);
-
-    private string GetTag(IBreakdownChartItem item, CultureInfo culture) =>
-        string.Format(culture, "[{0}]■[/] {1}", item.Color.ToMarkup() ?? "default", FormatValue(item, culture)).Trim();
+    private string GetTag(IBreakdownChartItem item, CultureInfo culture) => string.Format(
+            culture, "[{0}]■[/] {1}",
+            item.Color.ToMarkup() ?? "default",
+            FormatValue(item, culture)).Trim();
 
     private string FormatValue(IBreakdownChartItem item, CultureInfo culture)
     {
@@ -57,9 +48,7 @@ internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
 
         if (ShowTagValues)
         {
-            return string.Format(
-                culture,
-                "{0} [{1}]{2}[/]",
+            return string.Format(culture, "{0} [{1}]{2}[/]",
                 item.Label.EscapeMarkup(),
                 ValueColor.ToMarkup(),
                 formatter(item.Value, culture));
@@ -67,4 +56,6 @@ internal sealed class BreakdownTags(List<IBreakdownChartItem> data) : Renderable
 
         return item.Label.EscapeMarkup();
     }
+
+    private static string DefaultFormatter(double value, CultureInfo culture) => value.ToString(culture);
 }

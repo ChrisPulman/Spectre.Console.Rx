@@ -36,4 +36,12 @@ public interface ISpectreConsoleScheduler : IScheduler, IStopwatchProvider, ISer
     /// Stops this instance.
     /// </summary>
     void Stop();
+
+    /// <summary>
+    /// Delays execution without blocking the scheduler thread.
+    /// </summary>
+    /// <param name="delay">The delay.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task Sleep(TimeSpan delay, CancellationToken cancellationToken = default);
 }

@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Testing;
 
 /// <summary>
@@ -24,10 +21,7 @@ public sealed class TestConsoleInput : IAnsiConsoleInput
     /// <param name="input">The input string.</param>
     public void PushText(string input)
     {
-        if (input is null)
-        {
-            throw new ArgumentNullException(nameof(input));
-        }
+        ArgumentNullException.ThrowIfNull(input);
 
         foreach (var character in input)
         {
@@ -91,8 +85,18 @@ public sealed class TestConsoleInput : IAnsiConsoleInput
     }
 
     /// <inheritdoc/>
-    public Task<ConsoleKeyInfo?> ReadKeyAsync(bool intercept, CancellationToken cancellationToken)
+    public async Task<ConsoleKeyInfo?> ReadKeyAsync(bool intercept, CancellationToken cancellationToken)
     {
-        return Task.FromResult(ReadKey(intercept));
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (IsKeyAvailable())
+            {
+                return ReadKey(intercept);
+            }
+
+            await Task.Delay(5, cancellationToken).ConfigureAwait(false);
+        }
+
+        return null;
     }
 }

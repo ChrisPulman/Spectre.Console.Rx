@@ -1,16 +1,18 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// A renderable piece of text.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="Text"/> class.
+/// </remarks>
+/// <param name="text">The text.</param>
+/// <param name="style">The style of the text or <see cref="Style.Plain"/> if <see langword="null"/>.</param>
 [DebuggerDisplay("{_text,nq}")]
-[SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification = "Deliberate")]
+[SuppressMessage("Naming", "CA1724:Type names should not match namespaces")]
 public sealed class Text(string text, Style? style = null) : Renderable, IHasJustification, IOverflowable
 {
-    private readonly Paragraph _paragraph = new(text, style);
+    private readonly Paragraph _paragraph = new Paragraph(text, style);
 
     /// <summary>
     /// Gets an empty <see cref="Text"/> instance.

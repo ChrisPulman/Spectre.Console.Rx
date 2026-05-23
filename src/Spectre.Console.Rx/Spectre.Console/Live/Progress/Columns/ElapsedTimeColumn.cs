@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,13 +5,13 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class ElapsedTimeColumn : ProgressColumn
 {
+    /// <inheritdoc/>
+    protected internal override bool NoWrap => true;
+
     /// <summary>
     /// Gets or sets the style of the remaining time text.
     /// </summary>
     public Style Style { get; set; } = Color.Blue;
-
-    /// <inheritdoc/>
-    protected internal override bool NoWrap => true;
 
     /// <inheritdoc/>
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
@@ -30,7 +27,7 @@ public sealed class ElapsedTimeColumn : ProgressColumn
             return new Markup("**:**:**");
         }
 
-        return new Text($"{elapsed.Value:hh\\:mm\\:ss}", Style ?? Style.Plain);
+        return new Text($"{elapsed.Value:hh\\:mm\\:ss}", Style);
     }
 
     /// <inheritdoc/>

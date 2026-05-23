@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -14,30 +11,27 @@ public sealed class SegmentLineIterator : IEnumerator<Segment>
     private bool _lineBreakEmitted;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SegmentLineIterator"/> class.
-    /// </summary>
-    /// <param name="lines">The lines to iterate.</param>
-    public SegmentLineIterator(IEnumerable<SegmentLine> lines)
-    {
-        if (lines is null)
-        {
-            throw new ArgumentNullException(nameof(lines));
-        }
-
-        _currentLine = 0;
-        _currentIndex = -1;
-        _lines = new(lines);
-
-        Current = Segment.Empty;
-    }
-
-    /// <summary>
     /// Gets the current segment.
     /// </summary>
     public Segment Current { get; private set; }
 
     /// <inheritdoc/>
     object? IEnumerator.Current => Current;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SegmentLineIterator"/> class.
+    /// </summary>
+    /// <param name="lines">The lines to iterate.</param>
+    public SegmentLineIterator(IEnumerable<SegmentLine> lines)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
+
+        _currentLine = 0;
+        _currentIndex = -1;
+        _lines = new List<SegmentLine>(lines);
+
+        Current = Segment.Empty;
+    }
 
     /// <inheritdoc/>
     public void Dispose()

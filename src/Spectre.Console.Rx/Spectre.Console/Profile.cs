@@ -1,34 +1,24 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Represents a console profile.
 /// </summary>
-public sealed class Profile
+/// <remarks>
+/// Initializes a new instance of the <see cref="Profile"/> class.
+/// </remarks>
+/// <param name="out">The output buffer.</param>
+/// <param name="capabilities">The capabilities.</param>
+/// <param name="encoding">The output encoding.</param>
+public sealed class Profile(IAnsiConsoleOutput @out, Capabilities capabilities, Encoding encoding)
 {
-    private static readonly string[] _defaultEnricher = new[] { "Default" };
-    private readonly HashSet<string> _enrichers;
+    private readonly HashSet<string> _enrichers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private static readonly string[] _defaultEnricher = ["Default"];
 
-    private IAnsiConsoleOutput _out;
-    private Encoding _encoding;
-    private Capabilities _capabilities;
+    private IAnsiConsoleOutput _out = @out ?? throw new ArgumentNullException(nameof(@out));
+    private Encoding _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
+    private Capabilities _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
     private int? _width;
     private int? _height;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Profile"/> class.
-    /// </summary>
-    /// <param name="out">The output buffer.</param>
-    /// <param name="encoding">The output encoding.</param>
-    public Profile(IAnsiConsoleOutput @out, Encoding encoding)
-    {
-        _enrichers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        _out = @out ?? throw new ArgumentNullException(nameof(@out));
-        _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
-        _capabilities = new Capabilities(_out);
-    }
 
     /// <summary>
     /// Gets the enrichers used to build this profile.
@@ -123,7 +113,10 @@ public sealed class Profile
     public Capabilities Capabilities
     {
         get => _capabilities;
-        set => _capabilities = value ?? throw new InvalidOperationException("Profile capabilities cannot be null");
+        set
+        {
+            _capabilities = value ?? throw new InvalidOperationException("Profile capabilities cannot be null");
+        }
     }
 
     /// <summary>
@@ -136,10 +129,7 @@ public sealed class Profile
 
     internal void AddEnricher(string name)
     {
-        if (name is null)
-        {
-            throw new ArgumentNullException(nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         _enrichers.Add(name);
     }

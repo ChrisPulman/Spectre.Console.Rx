@@ -1,15 +1,15 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<ProgressColumn> columns, TimeSpan refreshRate, bool hideCompleted, Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> renderHook) : ProgressRenderer
+internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<ProgressColumn> columns, TimeSpan refreshRate, bool hideCompleted, bool excludeVerticalPadding, Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> renderHook) : ProgressRenderer
 {
     private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
     private readonly List<ProgressColumn> _columns = columns ?? throw new ArgumentNullException(nameof(columns));
-    private readonly LiveRenderable _live = new(console);
+    private readonly LiveRenderable _live = new LiveRenderable(console);
     private readonly object _lock = new();
-    private readonly Stopwatch _stopwatch = new();
+    private readonly Stopwatch _stopwatch = new Stopwatch();
+    private readonly bool _hideCompleted = hideCompleted;
+    private readonly bool _excludeVerticalPadding = excludeVerticalPadding;
+    private readonly Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> _renderHook = renderHook;
     private TimeSpan _lastUpdate = TimeSpan.Zero;
 
     public override TimeSpan RefreshRate { get; } = refreshRate;
@@ -86,7 +86,7 @@ internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<Progres
             var layout = new Grid();
             layout.AddColumn();
 
-            foreach (var task in tasks.Where(tsk => !(hideCompleted && tsk.IsFinished)))
+            foreach (var task in tasks.Where(tsk => !((tsk.HideWhenCompleted ?? _hideCompleted) && tsk.IsFinished)))
             {
                 var columns = _columns.Select(column => column.Render(renderContext, task, delta));
                 grid.AddRow(columns.ToArray());
@@ -94,7 +94,7 @@ internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<Progres
 
             layout.AddRow(grid);
 
-            _live.SetRenderable(new Padder(renderHook(layout, tasks), new Padding(0, 1)));
+            _live.SetRenderable(_excludeVerticalPadding ? _renderHook(layout, tasks) : new Padder(_renderHook(layout, tasks), new Padding(0, 1)));
         }
     }
 
@@ -102,7 +102,7 @@ internal sealed class DefaultProgressRenderer(IAnsiConsole console, List<Progres
     {
         lock (_lock)
         {
-            yield return _live.PositionCursor();
+            yield return _live.PositionCursor(options);
 
             foreach (var renderable in renderables)
             {

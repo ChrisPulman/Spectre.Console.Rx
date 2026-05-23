@@ -1,31 +1,17 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Represents a task list.
 /// </summary>
-public sealed class Progress
+/// <remarks>
+/// Initializes a new instance of the <see cref="Progress"/> class.
+/// </remarks>
+/// <param name="console">The console to render to.</param>
+/// <param name="timeProvider">The time provider to use. Defaults to <see cref="TimeProvider.System"/>.</param>
+public sealed class Progress(IAnsiConsole console, TimeProvider? timeProvider = null)
 {
-    private readonly IAnsiConsole _console;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Progress"/> class.
-    /// </summary>
-    /// <param name="console">The console to render to.</param>
-    public Progress(IAnsiConsole console)
-    {
-        _console = console ?? throw new ArgumentNullException(nameof(console));
-
-        // Initialize with default columns
-        Columns = new List<ProgressColumn>
-            {
-                new TaskDescriptionColumn(),
-                new ProgressBarColumn(),
-                new PercentageColumn(),
-            };
-    }
+    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
     /// <summary>
     /// Gets or sets a optional custom render function.
@@ -53,12 +39,24 @@ public sealed class Progress
     public bool HideCompleted { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether or not to exclude the
+    /// vertical padding in the display.
+    /// Defaults to <c>false</c>.
+    /// </summary>
+    public bool ExcludeVerticalPadding { get; set; }
+
+    /// <summary>
     /// Gets or sets the refresh rate if <c>AutoRefresh</c> is enabled.
     /// Defaults to 10 times/second.
     /// </summary>
     public TimeSpan RefreshRate { get; set; } = TimeSpan.FromMilliseconds(100);
 
-    internal List<ProgressColumn> Columns { get; }
+    internal List<ProgressColumn> Columns { get; } =
+        [
+            new TaskDescriptionColumn(),
+            new ProgressBarColumn(),
+            new PercentageColumn()
+        ];
 
     internal ProgressRenderer? FallbackRenderer { get; set; }
 
@@ -96,15 +94,12 @@ public sealed class Progress
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task StartAsync(Func<ProgressContext, Task> action)
     {
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        ArgumentNullException.ThrowIfNull(action);
 
         _ = await StartAsync<object?>(async progressContext =>
         {
             await action(progressContext).ConfigureAwait(false);
-            return default;
+            return null;
         }).ConfigureAwait(false);
     }
 
@@ -116,10 +111,7 @@ public sealed class Progress
     /// <returns>A <see cref="Task{T}"/> representing the asynchronous operation.</returns>
     public async Task<T> StartAsync<T>(Func<ProgressContext, Task<T>> action)
     {
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        ArgumentNullException.ThrowIfNull(action);
 
         return await _console.RunExclusive(async () =>
         {
@@ -132,7 +124,7 @@ public sealed class Progress
             {
                 using (new RenderHookScope(_console, renderer))
                 {
-                    var context = new ProgressContext(_console, renderer);
+                    var context = new ProgressContext(_console, renderer, _timeProvider);
 
                     if (AutoRefresh)
                     {
@@ -152,7 +144,6 @@ public sealed class Progress
             finally
             {
                 renderer.Completed(AutoClear);
-                _console.Dispose();
             }
 
             return result;
@@ -167,9 +158,133 @@ public sealed class Progress
         if (interactive)
         {
             var columns = new List<ProgressColumn>(Columns);
-            return new DefaultProgressRenderer(_console, columns, RefreshRate, HideCompleted, RenderHook);
+            return new DefaultProgressRenderer(_console, columns, RefreshRate, HideCompleted, ExcludeVerticalPadding, RenderHook);
+        }
+        else
+        {
+            return FallbackRenderer ?? new FallbackProgressRenderer(_timeProvider);
+        }
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="Progress"/>.
+/// </summary>
+public static class ProgressExtensions
+{
+    /// <summary>
+    /// Sets the columns to be used for an <see cref="Progress"/> instance.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <param name="columns">The columns to use.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress Columns(this Progress progress, params ProgressColumn[] columns)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+
+        ArgumentNullException.ThrowIfNull(columns);
+
+        if (!columns.Any())
+        {
+            throw new InvalidOperationException("At least one column must be specified.");
         }
 
-        return FallbackRenderer ?? new FallbackProgressRenderer();
+        progress.Columns.Clear();
+        progress.Columns.AddRange(columns);
+
+        return progress;
     }
+
+    /// <summary>
+    /// Sets an optional hook to intercept rendering.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <param name="renderHook">The custom render function.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress UseRenderHook(this Progress progress, Func<IRenderable, IReadOnlyList<ProgressTask>, IRenderable> renderHook)
+    {
+        progress.RenderHook = renderHook;
+
+        return progress;
+    }
+
+    /// <summary>
+    /// Sets whether or not auto refresh is enabled.
+    /// If disabled, you will manually have to refresh the progress.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <param name="enabled">Whether or not auto refresh is enabled.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress AutoRefresh(this Progress progress, bool enabled)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+
+        progress.AutoRefresh = enabled;
+
+        return progress;
+    }
+
+    /// <summary>
+    /// Sets whether or not auto clear is enabled.
+    /// If enabled, the task tabled will be removed once
+    /// all tasks have completed.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <param name="enabled">Whether or not auto clear is enabled.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress AutoClear(this Progress progress, bool enabled)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+
+        progress.AutoClear = enabled;
+
+        return progress;
+    }
+
+    /// <summary>
+    /// Sets whether or not hide completed is enabled.
+    /// If enabled, the task tabled will be removed once it is
+    /// completed.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <param name="enabled">Whether or not hide completed is enabled.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress HideCompleted(this Progress progress, bool enabled)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+
+        progress.HideCompleted = enabled;
+
+        return progress;
+    }
+
+    /// <summary>
+    /// Sets whether or not to exclude the vertical padding in the display.
+    /// If enabled, the progress display will not include vertical padding.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <param name="enabled">Whether or not to exclude the vertical padding.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress ExcludeVerticalPadding(this Progress progress, bool enabled)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+
+        progress.ExcludeVerticalPadding = enabled;
+
+        return progress;
+    }
+
+    /// <summary>
+    /// Excludes the vertical padding in the display.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress ExcludeVerticalPadding(this Progress progress) => progress.ExcludeVerticalPadding(true);
+
+    /// <summary>
+    /// Includes the vertical padding in the display.
+    /// </summary>
+    /// <param name="progress">The <see cref="Progress"/> instance.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Progress IncludeVerticalPadding(this Progress progress) => progress.ExcludeVerticalPadding(false);
 }

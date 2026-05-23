@@ -1,40 +1,59 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using static Spectre.Console.Rx.AnsiSequences;
-
 namespace Spectre.Console.Rx;
 
 internal sealed class AnsiConsoleBackend : IAnsiConsoleBackend
 {
     private readonly IAnsiConsole _console;
+    private AnsiWriter _writer;
+    private IAnsiConsoleOutput _cachedOutput;
+
+    public IAnsiConsoleCursor Cursor { get; }
+    public Capabilities Capabilities => _console.Profile.Capabilities;
 
     public AnsiConsoleBackend(IAnsiConsole console)
     {
         _console = console ?? throw new ArgumentNullException(nameof(console));
+        _cachedOutput = _console.Profile.Out;
+        _writer = new AnsiWriter(_console.Profile.Out.Writer, _console.Profile.Capabilities);
+
         Cursor = new AnsiConsoleCursor(this);
     }
 
-    public IAnsiConsoleCursor Cursor { get; }
-
     public void Clear(bool home)
     {
-        Write(new ControlCode(ED(2)));
-        Write(new ControlCode(ED(3)));
+        Write(w =>
+        {
+            w.EraseInDisplay(2);
+            w.ClearScrollback();
+        });
 
         if (home)
         {
-            Write(new ControlCode(CUP(1, 1)));
+            Write(w => w.CursorPosition(1, 1));
         }
     }
 
     public void Write(IRenderable renderable)
     {
-        var result = AnsiBuilder.Build(_console, renderable);
-        if (result?.Length > 0)
+        EnsureWriter();
+        _writer.Write(_console, renderable);
+    }
+
+    public void Write(Action<AnsiWriter> action)
+    {
+        EnsureWriter();
+        action(_writer);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void EnsureWriter()
+    {
+        // Output has not changed?
+        if (ReferenceEquals(_cachedOutput, _console.Profile.Out))
         {
-            _console.Profile.Out.Writer.Write(result);
-            _console.Profile.Out.Writer.Flush();
+            return;
         }
+
+        _cachedOutput = _console.Profile.Out;
+        _writer = new AnsiWriter(_console.Profile.Out.Writer, _console.Profile.Capabilities);
     }
 }

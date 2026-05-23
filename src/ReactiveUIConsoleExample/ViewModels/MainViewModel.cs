@@ -10,8 +10,8 @@ namespace ReactiveUIConsoleExample.ViewModels;
 /// <summary>
 /// MainViewModel.
 /// </summary>
-/// <seealso cref="ReactiveUI.ReactiveObject" />
-/// <seealso cref="ReactiveUI.IRoutableViewModel" />
+/// <seealso cref="ReactiveObject" />
+/// <seealso cref="IRoutableViewModel" />
 public sealed class MainViewModel : ReactiveObject, IRoutableViewModel
 {
     private readonly ObservableAsPropertyHelper<DateTime> _now;
@@ -32,11 +32,7 @@ public sealed class MainViewModel : ReactiveObject, IRoutableViewModel
             .StartWith(DateTime.Now)
             .ToProperty(this, vm => vm.Now);
 
-        Exit = ReactiveCommand.Create(() =>
-        {
-            // Exit app by clearing the router and not pushing any more screens.
-            HostScreen.Router.NavigationStack.Clear();
-        });
+        Exit = ReactiveCommand.Create(ExitApplication);
 
         Back = ReactiveCommand.Create(() => HostScreen.Router.NavigateBack.Execute().Subscribe());
     }
@@ -84,4 +80,9 @@ public sealed class MainViewModel : ReactiveObject, IRoutableViewModel
     /// The back.
     /// </value>
     public ReactiveCommand<Unit, IDisposable> Back { get; }
+
+    /// <summary>
+    /// Exits the application by clearing the navigation stack.
+    /// </summary>
+    public void ExitApplication() => HostScreen.Router.NavigationStack.Clear();
 }

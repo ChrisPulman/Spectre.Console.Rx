@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,6 +5,9 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public static partial class AnsiConsole
 {
+    internal static Style CurrentStyle { get; private set; } = Style.Plain;
+    internal static bool Created { get; private set; }
+
     /// <summary>
     /// Gets or sets the foreground color.
     /// </summary>
@@ -34,10 +34,6 @@ public static partial class AnsiConsole
         get => CurrentStyle.Decoration;
         set => CurrentStyle = CurrentStyle.Decoration(value);
     }
-
-    internal static Style CurrentStyle { get; private set; } = Style.Plain;
-
-    internal static bool Created { get; private set; }
 
     /// <summary>
     /// Resets colors and text decorations.
