@@ -2,9 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using Spectre.Console.Rx;
 
 namespace Status;
@@ -17,14 +16,15 @@ public static class Program
     /// <summary>
     /// Defines the entry point of the application.
     /// </summary>
-    public static void Main()
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public static async Task Main()
     {
-        AnsiConsoleRx
+        await AnsiConsoleRx
             .Status(
                 "[yellow]Initializing warp drive[/]",
                 p => p.AutoRefresh(true).Spinner(Spinner.Known.Default))
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .Subscribe(ctx =>
+            .RunAsync(ctx =>
                 ctx.Schedule(async scheduler =>
                 {
                     // Initialize
@@ -74,6 +74,7 @@ public static class Program
 
                     // Done
                     WriteLogMessage("[bold green]Crusing at Warp 9.8[/]");
+                    ctx.IsFinished();
                 }));
     }
 

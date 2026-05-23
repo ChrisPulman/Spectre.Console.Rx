@@ -26,6 +26,17 @@ public sealed class ProgressContext
         }
     }
 
+    internal bool HasStartedTasks
+    {
+        get
+        {
+            lock (_taskLock)
+            {
+                return _tasks.Any(x => x.IsStarted);
+            }
+        }
+    }
+
     internal ProgressContext(IAnsiConsole console, ProgressRenderer renderer, TimeProvider timeProvider)
     {
         _tasks = [];

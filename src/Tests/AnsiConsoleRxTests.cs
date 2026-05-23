@@ -9,11 +9,11 @@ namespace Tests;
 public class AnsiConsoleRxTests
 {
     /// <summary>
-    /// Verifies that an empty progress observable emits a context and completes.
+    /// Verifies that a progress observable can be completed explicitly.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Test]
-    public async Task WhenProgressHasNoTasks_ThenObservableCompletes()
+    public async Task WhenProgressContextIsCompleted_ThenObservableCompletes()
     {
         var original = AnsiConsole.Console;
         AnsiConsole.Console = new TestConsole();
@@ -25,7 +25,11 @@ public class AnsiConsoleRxTests
 
             using var subscription = AnsiConsoleRx.Progress()
                 .Subscribe(
-                    _ => seenContext = true,
+                    ctx =>
+                    {
+                        seenContext = true;
+                        ctx.Complete();
+                    },
                     completed.SetException,
                     completed.SetResult);
 

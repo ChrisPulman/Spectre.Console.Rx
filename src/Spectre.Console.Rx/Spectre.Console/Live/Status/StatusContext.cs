@@ -51,6 +51,12 @@ public sealed class StatusContext
         _context.Refresh();
     }
 
+    internal void Finish()
+    {
+        _task.StopTask();
+        _context.Refresh();
+    }
+
     private void SetStatus(string status)
     {
         ArgumentNullException.ThrowIfNull(status);

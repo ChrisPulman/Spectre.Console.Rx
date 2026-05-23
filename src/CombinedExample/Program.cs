@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using ProgressDemo;
 using Spectre.Console.Rx;
@@ -11,72 +10,70 @@ using Spectre.Console.Rx;
 //       Remember to call IsFinished() on the console context when you're done with it.
 var table = new Table();
 
-AnsiConsoleRx
+await AnsiConsoleRx
     .Status(
         "[yellow]Initializing warp drive[/]",
         p => p.AutoRefresh(true).Spinner(Spinner.Known.Default))
     .ObserveOn(AnsiConsoleRx.Scheduler)
-    .Subscribe(
-        ctx => ctx.Schedule(async scheduler =>
+    .RunAsync(ctx => ctx.Schedule(async scheduler =>
+    {
+        // Initialize
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
+        WriteLogMessage("Starting gravimetric field displacement manifold");
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
+        WriteLogMessage("Warming up deuterium chamber");
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
+        WriteLogMessage("Generating antideuterium");
+
+        // Warp nacelles
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
+        ctx.Spinner(Spinner.Known.BouncingBar);
+        ctx.Status("[bold blue]Unfolding warp nacelles[/]");
+        WriteLogMessage("Unfolding left warp nacelle");
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
+        WriteLogMessage("Left warp nacelle [green]online[/]");
+        WriteLogMessage("Unfolding right warp nacelle");
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
+        WriteLogMessage("Right warp nacelle [green]online[/]");
+
+        // Warp bubble
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
+        ctx.Spinner(Spinner.Known.Star2);
+        ctx.Status("[bold blue]Generating warp bubble[/]");
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
+        ctx.Spinner(Spinner.Known.Star);
+        ctx.Status("[bold blue]Stabilizing warp bubble[/]");
+
+        // Safety
+        ctx.Spinner(Spinner.Known.Monkey);
+        ctx.Status("[bold blue]Performing safety checks[/]");
+        WriteLogMessage("Enabling interior dampening");
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
+        WriteLogMessage("Interior dampening [green]enabled[/]");
+
+        // Warp!
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
+        ctx.Spinner(Spinner.Known.Moon);
+        WriteLogMessage("Preparing for warp");
+        await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
+        for (var warp = 1; warp < 10; warp++)
         {
-            // Initialize
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            WriteLogMessage("Starting gravimetric field displacement manifold");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
-            WriteLogMessage("Warming up deuterium chamber");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
-            WriteLogMessage("Generating antideuterium");
+            ctx.Status($"[bold blue]Warp {warp}[/]");
+            await scheduler.Sleep(TimeSpan.FromMilliseconds(500));
+        }
 
-            // Warp nacelles
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.BouncingBar);
-            ctx.Status("[bold blue]Unfolding warp nacelles[/]");
-            WriteLogMessage("Unfolding left warp nacelle");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
-            WriteLogMessage("Left warp nacelle [green]online[/]");
-            WriteLogMessage("Unfolding right warp nacelle");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
-            WriteLogMessage("Right warp nacelle [green]online[/]");
+        // Finish animation and allow next animation to start
+        ctx.IsFinished();
+    }));
 
-            // Warp bubble
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.Star2);
-            ctx.Status("[bold blue]Generating warp bubble[/]");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.Star);
-            ctx.Status("[bold blue]Stabilizing warp bubble[/]");
-
-            // Safety
-            ctx.Spinner(Spinner.Known.Monkey);
-            ctx.Status("[bold blue]Performing safety checks[/]");
-            WriteLogMessage("Enabling interior dampening");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(2000));
-            WriteLogMessage("Interior dampening [green]enabled[/]");
-
-            // Warp!
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(3000));
-            ctx.Spinner(Spinner.Known.Moon);
-            WriteLogMessage("Preparing for warp");
-            await scheduler.Sleep(TimeSpan.FromMilliseconds(1000));
-            for (var warp = 1; warp < 10; warp++)
-            {
-                ctx.Status($"[bold blue]Warp {warp}[/]");
-                await scheduler.Sleep(TimeSpan.FromMilliseconds(500));
-            }
-
-            // Done
-            WriteLogMessage("[bold green]Crusing at Warp 9[/]");
-
-            // Finish animation and allow next animation to start
-            ctx.IsFinished();
-        }));
+// Done
+WriteLogMessage("[bold green]Crusing at Warp 9[/]");
 
 // Animate
-AnsiConsoleRx.Live(table, ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
+await AnsiConsoleRx.Live(table, ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
     .ObserveOn(AnsiConsoleRx.Scheduler)
-    .Subscribe(
-    ctx =>
-
+    .RunAsync(ctx =>
+    {
         // Columns
         ctx.Update(230, () => table.AddColumn("Release date"))
         .Update(230, () => table.AddColumn("Title"))
@@ -131,23 +128,24 @@ AnsiConsoleRx.Live(table, ld => ld.AutoClear(false).Overflow(VerticalOverflow.El
         .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]"))
 
         // Finish animation and allow next animation to start
-        .IsFinished());
+        .IsFinished();
+    });
 
 AnsiConsole.MarkupLine("[yellow]Initializing warp drive[/]...");
 
 // Show progress
-AnsiConsoleRx.Progress(p =>
-    p.AutoClear(false)
-    .Columns(new ProgressColumn[]
-    {
-                    new TaskDescriptionColumn(),    // Task description
-                    new ProgressBarColumn(),        // Progress bar
-                    new PercentageColumn(),         // Percentage
-                    new RemainingTimeColumn(),      // Remaining time
-                    new SpinnerColumn(),            // Spinner
-    }))
+await AnsiConsoleRx.Progress(p =>
+        p.AutoClear(false)
+        .Columns(new ProgressColumn[]
+        {
+            new TaskDescriptionColumn(),    // Task description
+            new ProgressBarColumn(),        // Progress bar
+            new PercentageColumn(),         // Percentage
+            new RemainingTimeColumn(),      // Remaining time
+            new SpinnerColumn(),            // Spinner
+        }))
     .ObserveOn(AnsiConsoleRx.Scheduler)
-    .Subscribe(async ctx =>
+    .RunAsync(async ctx =>
     {
         var random = new Random(DateTime.Now.Millisecond);
 
@@ -186,7 +184,7 @@ AnsiConsoleRx.Progress(p =>
         // Progress is finished and will automatically exit
     });
 
-WriteLogMessage("[red]Press ctrl+c to exit[/]");
+WriteLogMessage("[green]Combined demo complete[/]");
 
 static List<(ProgressTask Task, int Delay)> CreateTasks(ProgressContext context, Random random)
 {

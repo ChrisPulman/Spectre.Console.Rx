@@ -159,6 +159,38 @@ public static class ContextExtensions
     /// <summary>
     /// Schedules an asynchronous action on the Spectre console scheduler.
     /// </summary>
+    /// <param name="context">The progress context.</param>
+    /// <param name="action">The action.</param>
+    /// <returns>A <see cref="Task" /> representing the asynchronous operation.</returns>
+    public static Task Schedule(this ProgressContext context, Func<SpectreConsoleScheduler, Task> action) => ScheduleAsync(context, action);
+
+    /// <summary>
+    /// Schedules an asynchronous action on the Spectre console scheduler.
+    /// </summary>
+    /// <param name="context">The status context.</param>
+    /// <param name="action">The action.</param>
+    /// <returns>A <see cref="Task" /> representing the asynchronous operation.</returns>
+    public static Task Schedule(this StatusContext context, Func<SpectreConsoleScheduler, Task> action) => ScheduleAsync(context, action);
+
+    /// <summary>
+    /// Schedules an asynchronous action on the Spectre console scheduler.
+    /// </summary>
+    /// <param name="context">The live display context.</param>
+    /// <param name="action">The action.</param>
+    /// <returns>A <see cref="Task" /> representing the asynchronous operation.</returns>
+    public static Task Schedule(this LiveDisplayContext context, Func<SpectreConsoleScheduler, Task> action) => ScheduleAsync(context, action);
+
+    /// <summary>
+    /// Schedules an asynchronous action on the Spectre console scheduler.
+    /// </summary>
+    /// <param name="context">The legacy context.</param>
+    /// <param name="action">The action.</param>
+    /// <returns>A <see cref="Task" /> representing the asynchronous operation.</returns>
+    public static Task Schedule(this IContext context, Func<SpectreConsoleScheduler, Task> action) => ScheduleAsync(context, action);
+
+    /// <summary>
+    /// Schedules an asynchronous action on the Spectre console scheduler.
+    /// </summary>
     /// <typeparam name="T">The result type.</typeparam>
     /// <param name="context">The progress context.</param>
     /// <param name="action">The action.</param>
@@ -254,13 +286,22 @@ public static class ContextExtensions
         return Task.CompletedTask;
     }
 
+    private static Task ScheduleAsync<TContext>(TContext context, Func<SpectreConsoleScheduler, Task> action)
+        where TContext : class
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(action);
+
+        return Task.Run(() => action(CurrentScheduler));
+    }
+
     private static Task<T> ScheduleAsync<TContext, T>(TContext context, Func<SpectreConsoleScheduler, Task<T>> action)
         where TContext : class
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(action);
 
-        return action(CurrentScheduler);
+        return Task.Run(() => action(CurrentScheduler));
     }
 
     private static async Task ScheduleWhile<TContext>(TContext context, Func<bool> isComplete, Action<SpectreConsoleScheduler> action)

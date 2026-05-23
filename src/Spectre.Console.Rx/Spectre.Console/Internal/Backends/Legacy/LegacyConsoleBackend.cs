@@ -17,15 +17,18 @@ internal sealed class LegacyConsoleBackend : IAnsiConsoleBackend
 
     public void Clear(bool home)
     {
-        var (x, y) = (System.Console.CursorLeft, System.Console.CursorTop);
-
-        System.Console.Clear();
-
-        if (!home)
+        TryConsoleOperation(() =>
         {
-            // Set the cursor position
-            System.Console.SetCursorPosition(x, y);
-        }
+            var (x, y) = (System.Console.CursorLeft, System.Console.CursorTop);
+
+            System.Console.Clear();
+
+            if (!home)
+            {
+                // Set the cursor position
+                System.Console.SetCursorPosition(x, y);
+            }
+        });
     }
 
     public void Write(IRenderable renderable)
@@ -55,18 +58,35 @@ internal sealed class LegacyConsoleBackend : IAnsiConsoleBackend
     {
         _lastStyle = style;
 
-        System.Console.ResetColor();
+        TryConsoleOperation(System.Console.ResetColor);
 
         var background = Color.ToConsoleColor(style.Background);
         if (_console.Profile.Capabilities.ColorSystem != ColorSystem.NoColors && (int)background != -1)
         {
-            System.Console.BackgroundColor = background;
+            TryConsoleOperation(() => System.Console.BackgroundColor = background);
         }
 
         var foreground = Color.ToConsoleColor(style.Foreground);
         if (_console.Profile.Capabilities.ColorSystem != ColorSystem.NoColors && (int)foreground != -1)
         {
-            System.Console.ForegroundColor = foreground;
+            TryConsoleOperation(() => System.Console.ForegroundColor = foreground);
+        }
+    }
+
+    private static void TryConsoleOperation(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (IOException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
         }
     }
 }

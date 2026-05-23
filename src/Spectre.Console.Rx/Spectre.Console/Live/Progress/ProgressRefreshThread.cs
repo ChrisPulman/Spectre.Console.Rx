@@ -2,53 +2,45 @@ namespace Spectre.Console.Rx;
 
 internal sealed class ProgressRefreshThread : IDisposable
 {
+    private readonly CancellationTokenSource _stop = new();
     private readonly ProgressContext _context;
     private readonly TimeSpan _refreshRate;
-    private readonly ManualResetEvent _running;
-    private readonly ManualResetEvent _stopped;
-    private readonly Thread? _thread;
+    private readonly Task _refreshTask;
 
     public ProgressRefreshThread(ProgressContext context, TimeSpan refreshRate)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _refreshRate = refreshRate;
-        _running = new ManualResetEvent(false);
-        _stopped = new ManualResetEvent(false);
-
-        _thread = new Thread(Run);
-        _thread.IsBackground = true;
-        _thread.Start();
+        _refreshTask = Task.Run(RefreshLoopAsync);
     }
 
     public void Dispose()
     {
-        if (_thread == null || !_running.WaitOne(0))
-        {
-            return;
-        }
-
-        _stopped.Set();
-        _thread.Join();
-
-        _stopped.Dispose();
-        _running.Dispose();
-    }
-
-    private void Run()
-    {
-        _running.Set();
+        _stop.Cancel();
 
         try
         {
-            while (!_stopped.WaitOne(_refreshRate))
-            {
-                _context.Refresh();
-            }
+            _refreshTask.GetAwaiter().GetResult();
+        }
+        catch (OperationCanceledException)
+        {
         }
         finally
         {
-            _stopped.Reset();
-            _running.Reset();
+            _stop.Dispose();
+        }
+    }
+
+    private async Task RefreshLoopAsync()
+    {
+        while (!_stop.IsCancellationRequested)
+        {
+            await Task.Delay(_refreshRate, _stop.Token).ConfigureAwait(false);
+
+            if (!_stop.IsCancellationRequested)
+            {
+                _context.Refresh();
+            }
         }
     }
 }

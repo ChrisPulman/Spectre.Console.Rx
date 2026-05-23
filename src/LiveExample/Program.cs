@@ -3,6 +3,7 @@
 
 using System;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Spectre.Console.Rx;
 
 namespace Live;
@@ -15,14 +16,16 @@ public static class Program
     /// <summary>
     /// Defines the entry point of the application.
     /// </summary>
-    public static void Main()
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public static async Task Main()
     {
         var table = new Table();
 
         // Animate
-        AnsiConsoleRx.Live(Align.Center(table), ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
+        await AnsiConsoleRx.Live(Align.Center(table), ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .Subscribe(ctx =>
+            .RunAsync(ctx =>
+            {
 
                 // Columns
                 ctx.Update(230, () => table.AddColumn("Release date"))
@@ -75,6 +78,7 @@ public static class Program
                 .Update(230, () => table.SimpleHeavyBorder())
 
                 // Caption
-                .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]")).IsFinished());
+                .Update(400, () => table.Caption("[[ [blue]THE END[/] ]]")).IsFinished();
+            });
     }
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reactive;
-using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using ReactiveUI;
 
 namespace ReactiveUIConsoleExample.ViewModels;
@@ -10,8 +10,8 @@ namespace ReactiveUIConsoleExample.ViewModels;
 /// <summary>
 /// LoginViewModel.
 /// </summary>
-/// <seealso cref="ReactiveUI.ReactiveObject" />
-/// <seealso cref="ReactiveUI.IRoutableViewModel" />
+/// <seealso cref="ReactiveObject" />
+/// <seealso cref="IRoutableViewModel" />
 public sealed class LoginViewModel : ReactiveObject, IRoutableViewModel
 {
     private string _userName = string.Empty;
@@ -28,15 +28,10 @@ public sealed class LoginViewModel : ReactiveObject, IRoutableViewModel
         var canLogin = this.WhenAnyValue(x => x.UserName, x => x.Password, (u, p) => !string.IsNullOrWhiteSpace(u) && !string.IsNullOrWhiteSpace(p));
 
         Login = ReactiveCommand.CreateFromTask(
-            async () =>
-        {
-            // Simulate auth delay on background thread then navigate
-            await Task.Delay(400);
-            await HostScreen.Router.Navigate.Execute(new MainViewModel(HostScreen, UserName));
-        },
+            () => SubmitAsync(UserName, Password),
             canLogin);
 
-        Exit = ReactiveCommand.Create(() => HostScreen.Router.NavigateBack.Execute().Subscribe());
+        Exit = ReactiveCommand.Create(() => HostScreen.Router.NavigationStack.Clear());
     }
 
     /// <summary>
@@ -89,5 +84,28 @@ public sealed class LoginViewModel : ReactiveObject, IRoutableViewModel
     /// <value>
     /// The exit.
     /// </value>
-    public ReactiveCommand<Unit, IDisposable> Exit { get; }
+    public ReactiveCommand<Unit, Unit> Exit { get; }
+
+    /// <summary>
+    /// Submits credentials and navigates to the main view.
+    /// </summary>
+    /// <param name="userName">The user name.</param>
+    /// <param name="password">The password.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public async Task SubmitAsync(string userName, string password)
+    {
+        UserName = userName;
+        Password = password;
+
+        if (string.IsNullOrWhiteSpace(UserName) || string.IsNullOrWhiteSpace(Password))
+        {
+            return;
+        }
+
+        await HostScreen.Router
+            .Navigate
+            .Execute(new MainViewModel(HostScreen, UserName))
+            .ToTask()
+            .ConfigureAwait(false);
+    }
 }

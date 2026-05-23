@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Spectre.Console.Rx;
 
 namespace Progress;
@@ -16,12 +17,13 @@ public static class Program
     /// <summary>
     /// Defines the entry point of the application.
     /// </summary>
-    public static void Main()
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public static async Task Main()
     {
         AnsiConsole.MarkupLine("[yellow]Initializing warp drive[/]...");
 
         // Show progress
-        AnsiConsoleRx.Progress(p =>
+        await AnsiConsoleRx.Progress(p =>
             p.AutoClear(false)
             .Columns(new ProgressColumn[]
             {
@@ -32,7 +34,7 @@ public static class Program
                     new SpinnerColumn(),            // Spinner
             }))
             .ObserveOn(AnsiConsoleRx.Scheduler)
-            .Subscribe(async ctx =>
+            .RunAsync(async ctx =>
             {
                 var random = new Random(DateTime.Now.Millisecond);
 

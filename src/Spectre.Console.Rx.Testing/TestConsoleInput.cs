@@ -85,8 +85,18 @@ public sealed class TestConsoleInput : IAnsiConsoleInput
     }
 
     /// <inheritdoc/>
-    public Task<ConsoleKeyInfo?> ReadKeyAsync(bool intercept, CancellationToken cancellationToken)
+    public async Task<ConsoleKeyInfo?> ReadKeyAsync(bool intercept, CancellationToken cancellationToken)
     {
-        return Task.FromResult(ReadKey(intercept));
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (IsKeyAvailable())
+            {
+                return ReadKey(intercept);
+            }
+
+            await Task.Delay(5, cancellationToken).ConfigureAwait(false);
+        }
+
+        return null;
     }
 }

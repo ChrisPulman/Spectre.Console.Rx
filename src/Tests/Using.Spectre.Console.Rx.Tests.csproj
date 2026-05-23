@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Spectre.Console.Rx.ReactiveUI\Spectre.Console.Rx.ReactiveUI.csproj" />
     <ProjectReference Include="..\Spectre.Console.Rx.Testing\Spectre.Console.Rx.Testing.csproj" />
     <ProjectReference Include="..\UsingSpectreConsole\UsingSpectreConsole.csproj" />
   </ItemGroup>

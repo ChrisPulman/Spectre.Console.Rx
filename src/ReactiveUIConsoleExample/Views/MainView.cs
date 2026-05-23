@@ -4,8 +4,8 @@
 using System.Reactive.Linq;
 using ReactiveUI;
 using ReactiveUIConsoleExample.ViewModels;
-using Spectre.Console;
 using Spectre.Console.Rx;
+using Spectre.Console.Rx.ReactiveUI;
 
 namespace ReactiveUIConsoleExample.Views;
 
@@ -28,28 +28,11 @@ public sealed class MainView : ReactiveConsoleView<MainViewModel>
 
         var table = new Table().Expand().BorderColor(Color.Grey78);
         using var exitCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        IDisposable? clockSub = null;
-
-        // Start key loop on background thread to request exit
-        var keyTask = Task.Run(
-            () =>
-            {
-                while (!exitCts.IsCancellationRequested)
-                {
-                    var key = System.Console.ReadKey(true);
-                    if (key.Key == ConsoleKey.Escape)
-                    {
-                        ViewModel.Exit.Execute().Subscribe();
-                        exitCts.Cancel();
-                        break;
-                    }
-                }
-            },
-            ct);
+        var shouldExit = false;
 
         await RenderAsync(
             table,
-            ctx =>
+            async ctx =>
             {
                 // Initial build (animated)
                 ctx
@@ -59,33 +42,42 @@ public sealed class MainView : ReactiveConsoleView<MainViewModel>
                     .Update(40, () => table.AddRow(Text.Empty))
                     .Update(40, () => table.AddRow(new Markup("Press [red]Esc[/] to exit.")));
 
-                // Reactive time updates (update row index 1, column 0)
-                clockSub = Observable.Interval(TimeSpan.FromSeconds(1))
-                    .ObserveOn(AnsiConsoleRx.Scheduler)
+                var completion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                void CompleteExit()
+                {
+                    shouldExit = true;
+                    completion.TrySetResult(null);
+                    exitCts.Cancel();
+                }
+
+                using var cancellation = exitCts.Token.Register(() => completion.TrySetResult(null));
+                using var clockSub = Observable.Interval(TimeSpan.FromSeconds(1))
+                    .ObserveOn(RxSchedulers.MainThreadScheduler)
                     .Subscribe(_ =>
                     {
                         table.Rows.Update(1, 0, new Markup($"Time: [aqua]{ViewModel.Now:HH:mm:ss}[/]"));
                         ctx.Refresh();
                     });
+                using var keySub = ReadKeys(exitCts.Token).Subscribe(
+                    key =>
+                    {
+                        if (key.Key == ConsoleKey.Escape)
+                        {
+                            CompleteExit();
+                        }
+                    },
+                    _ => completion.TrySetResult(null),
+                    () => completion.TrySetResult(null));
 
-                // Stop updates and finish when exit requested
-                exitCts.Token.Register(() =>
-                {
-                    clockSub?.Dispose();
-                    ctx.IsFinished();
-                });
+                await completion.Task.ConfigureAwait(false);
+                ctx.IsFinished();
             },
             configure: ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top),
             ct: exitCts.Token);
 
-        // Ensure key loop completes
-        try
+        if (shouldExit)
         {
-            await keyTask.ConfigureAwait(false);
-        }
-        catch
-        {
-            // ignored
+            ViewModel.ExitApplication();
         }
     }
 }

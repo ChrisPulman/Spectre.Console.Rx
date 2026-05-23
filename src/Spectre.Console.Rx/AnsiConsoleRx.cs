@@ -15,6 +15,7 @@ public static class AnsiConsoleRx
     private static readonly object _lock = new();
     private static readonly List<ProgressTask> _tasks = [];
     private static readonly SemaphoreSlim _lockTillComplete = new(1, 1);
+    private static readonly ConditionalWeakTable<ProgressContext, ContextCompletion> _progressCompletions = new();
     private static readonly ConditionalWeakTable<StatusContext, ContextCompletion> _statusCompletions = new();
     private static readonly ConditionalWeakTable<LiveDisplayContext, ContextCompletion> _liveCompletions = new();
     private static readonly TimeSpan _completionPollInterval = TimeSpan.FromMilliseconds(10);
@@ -42,8 +43,9 @@ public static class AnsiConsoleRx
                 .AddProgressProperties(addProperties)
                 .StartAsync(async ctx =>
                 {
+                    var completion = GetProgressCompletion(ctx);
                     observer.OnNext(ctx);
-                    await WaitUntilAsync(() => ctx.IsFinished, cancellationToken).ConfigureAwait(false);
+                    await WaitUntilAsync(() => completion.IsCompleted || (ctx.HasStartedTasks && ctx.IsFinished), cancellationToken).ConfigureAwait(false);
                 })
                 .ConfigureAwait(false);
         }, clearProgressTasks: true);
@@ -141,6 +143,30 @@ public static class AnsiConsoleRx
     }
 
     /// <summary>
+    /// Updates the specified live display context asynchronously.
+    /// </summary>
+    /// <param name="ctx">The context.</param>
+    /// <param name="delay">The delay.</param>
+    /// <param name="action">The action.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A <see cref="Task{TResult}"/> that returns the live display context.</returns>
+    public static async Task<LiveDisplayContext> UpdateAsync(this LiveDisplayContext ctx, TimeSpan delay, Action action, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(ctx);
+        ArgumentNullException.ThrowIfNull(action);
+
+        action();
+        ctx.Refresh();
+
+        if (delay > TimeSpan.Zero)
+        {
+            await Task.Delay(delay, ct).ConfigureAwait(false);
+        }
+
+        return ctx;
+    }
+
+    /// <summary>
     /// Marks the live display observable as finished.
     /// </summary>
     /// <param name="ctx">The live display context.</param>
@@ -159,7 +185,19 @@ public static class AnsiConsoleRx
     {
         ArgumentNullException.ThrowIfNull(ctx);
 
+        ctx.Finish();
         GetStatusCompletion(ctx).Complete();
+    }
+
+    /// <summary>
+    /// Marks the progress observable as complete.
+    /// </summary>
+    /// <param name="ctx">The progress context.</param>
+    public static void Complete(this ProgressContext ctx)
+    {
+        ArgumentNullException.ThrowIfNull(ctx);
+
+        GetProgressCompletion(ctx).Complete();
     }
 
     /// <summary>
@@ -201,9 +239,7 @@ public static class AnsiConsoleRx
     private static IObservable<TContext> CreateExclusiveObservable<TContext>(
         Func<IObserver<TContext>, CancellationToken, Task> run,
         bool clearProgressTasks = false) =>
-        Observable.Using(
-            resourceFactory: () => new SemaphoreSlimReleaser(_lockTillComplete),
-            observableFactory: _resource => Observable.Create<TContext>(observer =>
+        Observable.Create<TContext>(observer =>
             {
                 var cancellation = new CancellationDisposable();
                 var scheduled = Scheduler.Schedule(Unit.Default, (_, _) =>
@@ -213,7 +249,7 @@ public static class AnsiConsoleRx
                 });
 
                 return new CompositeDisposable(scheduled, cancellation);
-            }))
+            })
             .SubscribeOn(Scheduler);
 
     private static async Task RunObserverAsync<TContext>(
@@ -222,21 +258,23 @@ public static class AnsiConsoleRx
         Func<IObserver<TContext>, CancellationToken, Task> run,
         bool clearProgressTasks)
     {
+        Exception? error = null;
+        var completed = false;
+        var locked = false;
+
         try
         {
+            await _lockTillComplete.WaitAsync(cancellationToken).ConfigureAwait(false);
+            locked = true;
             await run(observer, cancellationToken).ConfigureAwait(false);
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                observer.OnCompleted();
-            }
+            completed = !cancellationToken.IsCancellationRequested;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
-            observer.OnError(ex);
+            error = ex;
         }
         finally
         {
@@ -247,6 +285,20 @@ public static class AnsiConsoleRx
                     _tasks.Clear();
                 }
             }
+
+            if (locked)
+            {
+                _lockTillComplete.Release();
+            }
+        }
+
+        if (error is not null)
+        {
+            observer.OnError(error);
+        }
+        else if (completed)
+        {
+            observer.OnCompleted();
         }
     }
 
@@ -257,6 +309,9 @@ public static class AnsiConsoleRx
             await Task.Delay(_completionPollInterval, cancellationToken).ConfigureAwait(false);
         }
     }
+
+    private static ContextCompletion GetProgressCompletion(ProgressContext ctx) =>
+        _progressCompletions.GetValue(ctx, _ => new ContextCompletion());
 
     private static ContextCompletion GetStatusCompletion(StatusContext ctx) =>
         _statusCompletions.GetValue(ctx, _ => new ContextCompletion());
@@ -323,29 +378,6 @@ public static class AnsiConsoleRx
             }
 
             await _completion.Task.ConfigureAwait(false);
-        }
-    }
-
-    private sealed class SemaphoreSlimReleaser : IDisposable
-    {
-        private readonly SemaphoreSlim _semaphore;
-        private bool _disposed;
-
-        public SemaphoreSlimReleaser(SemaphoreSlim semaphore)
-        {
-            _semaphore = semaphore;
-            _semaphore.Wait();
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _disposed = true;
-            _semaphore.Release();
         }
     }
 }
