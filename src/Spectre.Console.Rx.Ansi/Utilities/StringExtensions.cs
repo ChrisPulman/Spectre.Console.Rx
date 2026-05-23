@@ -19,20 +19,23 @@ public static class StringExtensions
     /// <returns>A string that does not have any markup.</returns>
     public static string RemoveMarkup(this string? text) => AnsiMarkup.Remove(text);
 
-    internal static string ReplaceExact(this string text, string oldValue, string? newValue) =>
+    internal static string ReplaceExact(this string text, string oldValue, string? newValue)
+    {
 #if NETSTANDARD2_0
         return text.Replace(oldValue, newValue);
 #else
-        text.Replace(oldValue, newValue, StringComparison.Ordinal);
+        return text.Replace(oldValue, newValue, StringComparison.Ordinal);
 #endif
+    }
 
-
-    internal static bool ContainsExact(this string text, string value) =>
+    internal static bool ContainsExact(this string text, string value)
+    {
 #if NETSTANDARD2_0
         return text.Contains(value);
 #else
-        text.Contains(value, StringComparison.Ordinal);
+        return text.Contains(value, StringComparison.Ordinal);
 #endif
+    }
 
 
 #if NETSTANDARD2_0
