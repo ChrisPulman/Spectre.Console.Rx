@@ -1,29 +1,13 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// A renderable panel.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="Panel"/> class.
-/// </remarks>
-/// <param name="content">The panel content.</param>
-public sealed class Panel(IRenderable content) : Renderable, IHasBoxBorder, IHasBorder, IExpandable, IPaddable
+public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, IPaddable
 {
     private const int EdgeWidth = 2;
 
-    private readonly IRenderable _child = content ?? throw new ArgumentNullException(nameof(content));
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Panel"/> class.
-    /// </summary>
-    /// <param name="text">The panel content.</param>
-    public Panel(string text)
-        : this(new Markup(text))
-    {
-    }
+    private readonly IRenderable _child;
 
     /// <inheritdoc/>
     public BoxBorder Border { get; set; } = BoxBorder.Square;
@@ -66,11 +50,51 @@ public sealed class Panel(IRenderable content) : Renderable, IHasBoxBorder, IHas
     /// </summary>
     internal bool Inline { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Panel"/> class.
+    /// </summary>
+    /// <param name="text">The panel content.</param>
+    public Panel(string text)
+        : this(new Markup(text))
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Panel"/> class.
+    /// </summary>
+    /// <param name="content">The panel content.</param>
+    public Panel(IRenderable content)
+    {
+        _child = content ?? throw new ArgumentNullException(nameof(content));
+    }
+
     /// <inheritdoc/>
     protected override Measurement Measure(RenderOptions options, int maxWidth)
     {
         var child = new Padder(_child, Padding);
         return Measure(options, maxWidth, child);
+    }
+
+    private Measurement Measure(RenderOptions options, int maxWidth, IRenderable child)
+    {
+        var edgeWidth = (options.GetSafeBorder(this) is not NoBoxBorder) ? EdgeWidth : 0;
+        var childWidth = child.Measure(options, maxWidth - edgeWidth);
+
+        if (Width != null)
+        {
+            var width = Width.Value - edgeWidth;
+
+            // If Width is specified, constrain or expand the measurement
+            // to exactly the specified width (clamped by maxWidth)
+            var constrainedWidth = Math.Min(width, maxWidth - edgeWidth);
+            childWidth = new Measurement(
+                Math.Min(childWidth.Min, constrainedWidth),
+                constrainedWidth);
+        }
+
+        return new Measurement(
+            childWidth.Min + edgeWidth,
+            childWidth.Max + edgeWidth);
     }
 
     /// <inheritdoc/>
@@ -184,28 +208,9 @@ public sealed class Panel(IRenderable content) : Renderable, IHasBoxBorder, IHas
         return result;
     }
 
-    private Measurement Measure(RenderOptions options, int maxWidth, IRenderable child)
-    {
-        var edgeWidth = (options.GetSafeBorder(this) is not NoBoxBorder) ? EdgeWidth : 0;
-        var childWidth = child.Measure(options, maxWidth - edgeWidth);
-
-        if (Width != null)
-        {
-            var width = Width.Value - edgeWidth;
-            if (width > childWidth.Max)
-            {
-                childWidth = new Measurement(
-                    childWidth.Min,
-                    width);
-            }
-        }
-
-        return new Measurement(
-            childWidth.Min + edgeWidth,
-            childWidth.Max + edgeWidth);
-    }
-
-    private void AddTopBorder(List<Segment> result, RenderOptions options, BoxBorder border, Style borderStyle, int panelWidth)
+    private void AddTopBorder(
+        List<Segment> result, RenderOptions options, BoxBorder border,
+        Style borderStyle, int panelWidth)
     {
         var rule = new Rule
         {
@@ -226,5 +231,65 @@ public sealed class Panel(IRenderable content) : Renderable, IHasBoxBorder, IHas
         // Top right border
         result.Add(new Segment(border.GetPart(BoxBorderPart.TopRight), borderStyle));
         result.Add(Segment.LineBreak);
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="Panel"/>.
+/// </summary>
+public static class PanelExtensions
+{
+    /// <summary>
+    /// Sets the panel header.
+    /// </summary>
+    /// <param name="panel">The panel.</param>
+    /// <param name="text">The header text.</param>
+    /// <param name="alignment">The header alignment.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Panel Header(this Panel panel, string text, Justify? alignment = null)
+    {
+        ArgumentNullException.ThrowIfNull(panel);
+        ArgumentNullException.ThrowIfNull(text);
+
+        alignment ??= panel.Header?.Justification;
+        return Header(panel, new PanelHeader(text, alignment));
+    }
+
+    /// <summary>
+    /// Sets the panel header alignment.
+    /// </summary>
+    /// <param name="panel">The panel.</param>
+    /// <param name="alignment">The header alignment.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Panel HeaderAlignment(this Panel panel, Justify alignment)
+    {
+        ArgumentNullException.ThrowIfNull(panel);
+
+        if (panel.Header != null)
+        {
+            // Update existing style
+            panel.Header.Justification = alignment;
+        }
+        else
+        {
+            // Create header
+            Header(panel, string.Empty, alignment);
+        }
+
+        return panel;
+    }
+
+    /// <summary>
+    /// Sets the panel header.
+    /// </summary>
+    /// <param name="panel">The panel.</param>
+    /// <param name="header">The header to use.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Panel Header(this Panel panel, PanelHeader header)
+    {
+        ArgumentNullException.ThrowIfNull(panel);
+
+        panel.Header = header;
+        return panel;
     }
 }

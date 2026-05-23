@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -10,11 +7,17 @@ public abstract class Renderable : IRenderable
 {
     /// <inheritdoc/>
     [DebuggerStepThrough]
-    Measurement IRenderable.Measure(RenderOptions options, int maxWidth) => Measure(options, maxWidth);
+    Measurement IRenderable.Measure(RenderOptions options, int maxWidth)
+    {
+        return Measure(options, maxWidth);
+    }
 
     /// <inheritdoc/>
     [DebuggerStepThrough]
-    IEnumerable<Segment> IRenderable.Render(RenderOptions options, int maxWidth) => Render(options, maxWidth);
+    IEnumerable<Segment> IRenderable.Render(RenderOptions options, int maxWidth)
+    {
+        return Render(options, maxWidth);
+    }
 
     /// <summary>
     /// Measures the renderable object.
@@ -22,7 +25,10 @@ public abstract class Renderable : IRenderable
     /// <param name="options">The render options.</param>
     /// <param name="maxWidth">The maximum allowed width.</param>
     /// <returns>The minimum and maximum width of the object.</returns>
-    protected virtual Measurement Measure(RenderOptions options, int maxWidth) => new(maxWidth, maxWidth);
+    protected virtual Measurement Measure(RenderOptions options, int maxWidth)
+    {
+        return new Measurement(maxWidth, maxWidth);
+    }
 
     /// <summary>
     /// Renders the object.

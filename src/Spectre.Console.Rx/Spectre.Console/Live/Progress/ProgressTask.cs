@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,43 +5,34 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class ProgressTask : IProgress<double>
 {
-    private readonly List<ProgressSample> _samples;
+    private readonly Lazy<CircularBuffer<ProgressSample>> lazySamples;
     private readonly object _lock;
+    private readonly TimeProvider _timeProvider;
 
     private double _maxValue;
     private string _description;
     private double _value;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ProgressTask"/> class.
-    /// </summary>
-    /// <param name="id">The task ID.</param>
-    /// <param name="description">The task description.</param>
-    /// <param name="maxValue">The task max value.</param>
-    /// <param name="autoStart">Whether or not the task should start automatically.</param>
-    public ProgressTask(int id, string description, double maxValue, bool autoStart = true)
-    {
-        _samples = new List<ProgressSample>();
-        _lock = new object();
-        _maxValue = maxValue;
-        _value = 0;
+    private volatile bool _samplesChanged;
 
-        _description = description?.RemoveNewLines()?.Trim() ??
-                       throw new ArgumentNullException(nameof(description));
-        if (string.IsNullOrWhiteSpace(_description))
-        {
-            throw new ArgumentException("Task name cannot be empty", nameof(description));
-        }
-
-        Id = id;
-        State = new ProgressTaskState();
-        StartTime = autoStart ? DateTime.Now : null;
-    }
+    private double? _cachedLastSpeed;
+    private DateTime _lastSpeedCalculation = DateTime.MinValue;
+    private CircularBuffer<ProgressSample> Samples => lazySamples.Value;
 
     /// <summary>
     /// Gets the task ID.
     /// </summary>
     public int Id { get; }
+
+    /// <summary>
+    /// Gets or sets optional user tag data.
+    /// </summary>
+    public object? Tag { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to override the default hiding behavior of this task when completed.
+    /// </summary>
+    public bool? HideWhenCompleted { get; set; }
 
     /// <summary>
     /// Gets or sets the task description.
@@ -119,17 +107,50 @@ public sealed class ProgressTask : IProgress<double>
     public TimeSpan? RemainingTime => GetRemainingTime();
 
     /// <summary>
+    /// Gets or sets the maximum time a calculated speed value is cached.
+    /// When estimating speed, if the oldest sample is older than this value, the current time is used as the end of the timespan instead.
+    /// This causes the predicted speed to naturally decay if no new samples are received.
+    /// </summary>
+    public TimeSpan MaxTimeForSpeedCache { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
     /// Gets or sets a value indicating whether the ProgressBar shows
     /// actual values or generic, continuous progress feedback.
     /// </summary>
     public bool IsIndeterminate { get; set; }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ProgressTask"/> class.
+    /// </summary>
+    /// <param name="id">The task ID.</param>
+    /// <param name="description">The task description.</param>
+    /// <param name="maxValue">The task max value.</param>
+    /// <param name="autoStart">Whether or not the task should start automatically.</param>
+    /// <param name="timeProvider">The time provider to use. Defaults to <see cref="TimeProvider.System"/>.</param>
+    public ProgressTask(int id, string description, double maxValue, bool autoStart = true, TimeProvider? timeProvider = null)
+    {
+        lazySamples = new(() => new CircularBuffer<ProgressSample>(MaxSamplesKept) { UniqueRemovedCheck = false });
+        _lock = new object();
+        _timeProvider = timeProvider ?? TimeProvider.System;
+        _maxValue = maxValue;
+        _value = 0;
+        _description = description?.RemoveNewLines()?.Trim() ??
+                       throw new ArgumentNullException(nameof(description));
+
+        if (string.IsNullOrWhiteSpace(_description))
+        {
+            throw new ArgumentException("Task name cannot be empty", nameof(description));
+        }
+
+        Id = id;
+        State = new ProgressTaskState();
+        StartTime = autoStart ? _timeProvider.GetLocalNow().LocalDateTime : null;
+    }
+
+    /// <summary>
     /// Starts the task.
     /// </summary>
-    /// <returns>A ProgressTask.</returns>
-    /// <exception cref="InvalidOperationException">Stopped tasks cannot be restarted.</exception>
-    public ProgressTask StartTask()
+    public void StartTask()
     {
         lock (_lock)
         {
@@ -138,11 +159,9 @@ public sealed class ProgressTask : IProgress<double>
                 throw new InvalidOperationException("Stopped tasks cannot be restarted");
             }
 
-            StartTime = DateTime.Now;
+            StartTime = _timeProvider.GetLocalNow().LocalDateTime;
             StopTime = null;
         }
-
-        return this;
     }
 
     /// <summary>
@@ -152,9 +171,8 @@ public sealed class ProgressTask : IProgress<double>
     {
         lock (_lock)
         {
-            var now = DateTime.Now;
+            var now = _timeProvider.GetLocalNow().LocalDateTime;
             StartTime ??= now;
-
             StopTime = now;
         }
     }
@@ -163,10 +181,22 @@ public sealed class ProgressTask : IProgress<double>
     /// Increments the task's value.
     /// </summary>
     /// <param name="value">The value to increment with.</param>
-    public void Increment(double value) => Update(increment: value);
+    public void Increment(double value)
+    {
+        Update(increment: value);
+    }
 
-    /// <inheritdoc />
-    void IProgress<double>.Report(double value) => Update(increment: value - Value);
+    /// <summary>
+    /// Gets or sets the maximum age of samples kept for calculating speed and estimated time remaining.
+    /// Samples older than this value are discarded to more accurately reflect the current speed.
+    /// </summary>
+    public TimeSpan MaxSamplingAge { get; set; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Gets or sets the maximum number of samples to keep for calculating speed and estimated time remaining.
+    /// If set to 0, no samples are kept.
+    /// </summary>
+    public int MaxSamplesKept { get; set; } = 1000;
 
     private void Update(
         string? description = null,
@@ -210,27 +240,30 @@ public sealed class ProgressTask : IProgress<double>
                 _value = _maxValue;
             }
 
-            var timestamp = DateTime.Now;
-            var threshold = timestamp - TimeSpan.FromSeconds(30);
-
-            // Remove samples that's too old
-            while (_samples.Count > 0 && _samples[0].Timestamp < threshold)
+            if (MaxSamplesKept == 0)
             {
-                _samples.RemoveAt(0);
+                return;
             }
 
-            // Keep maximum of 1000 samples
-            while (_samples.Count > 1000)
+            _samplesChanged = true;
+
+            var timestamp = _timeProvider.GetLocalNow().LocalDateTime;
+            if (Samples.Count == 0 && StartTime != null)
             {
-                _samples.RemoveAt(0);
+                Samples.Add(new ProgressSample(StartTime.Value, 0));
             }
 
-            _samples.Add(new ProgressSample(timestamp, Value - startValue));
+            Samples.Add(new ProgressSample(timestamp, Value - startValue));
         }
     }
 
     private double GetPercentage()
     {
+        if (MaxValue == 0)
+        {
+            return 100;
+        }
+
         var percentage = (Value / MaxValue) * 100;
         percentage = Math.Min(100, Math.Max(0, percentage));
         return percentage;
@@ -238,26 +271,47 @@ public sealed class ProgressTask : IProgress<double>
 
     private double? GetSpeed()
     {
+        var now = _timeProvider.GetLocalNow().LocalDateTime;
+        if (!_samplesChanged && (now - _lastSpeedCalculation) < MaxTimeForSpeedCache)
+        {
+            return _cachedLastSpeed;
+        }
+
         lock (_lock)
         {
-            if (StartTime == null)
+            if (StartTime == null || !lazySamples.IsValueCreated || Samples.Count == 0 || StopTime != null)
             {
-                return null;
+                return _cachedLastSpeed;
             }
 
-            if (_samples.Count == 0)
+            _lastSpeedCalculation = now;
+            _samplesChanged = false;
+
+            var threshold = now - MaxSamplingAge;
+            var validSamples = Samples.Where(a => a.Timestamp >= threshold).ToList();
+            if (validSamples.Count == 0)
             {
-                return null;
+                return _cachedLastSpeed = null;
             }
 
-            var totalTime = _samples.Last().Timestamp - _samples[0].Timestamp;
+            var first = validSamples[0];
+            var newestSampleTime = Samples[Samples.Count - 1].Timestamp;
+            if (StopTime == null)
+            {
+                if (now - newestSampleTime > MaxTimeForSpeedCache)
+                {
+                    newestSampleTime = now;
+                }
+            }
+
+            var totalTime = newestSampleTime - first.Timestamp;
             if (totalTime == TimeSpan.Zero)
             {
-                return null;
+                return _cachedLastSpeed = null;
             }
 
-            var totalCompleted = _samples.Sum(x => x.Value);
-            return totalCompleted / totalTime.TotalSeconds;
+            var totalCompleted = validSamples.Sum(x => x.Value);
+            return _cachedLastSpeed = totalCompleted / totalTime.TotalSeconds;
         }
     }
 
@@ -275,7 +329,7 @@ public sealed class ProgressTask : IProgress<double>
                 return StopTime - StartTime;
             }
 
-            return DateTime.Now - StartTime;
+            return _timeProvider.GetLocalNow().LocalDateTime - StartTime;
         }
     }
 
@@ -305,5 +359,101 @@ public sealed class ProgressTask : IProgress<double>
 
             return TimeSpan.FromSeconds(estimate);
         }
+    }
+
+    /// <inheritdoc />
+    void IProgress<double>.Report(double value)
+    {
+        Update(increment: value - Value);
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="ProgressTask"/>.
+/// </summary>
+public static class ProgressTaskExtensions
+{
+    /// <summary>
+    /// Sets the task description.
+    /// </summary>
+    /// <param name="task">The task.</param>
+    /// <param name="description">The description.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressTask Description(this ProgressTask task, string description)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.Description = description;
+        return task;
+    }
+
+    /// <summary>
+    /// Sets the max value of the task.
+    /// </summary>
+    /// <param name="task">The task.</param>
+    /// <param name="value">The max value.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressTask MaxValue(this ProgressTask task, double value)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.MaxValue = value;
+        return task;
+    }
+
+    /// <summary>
+    /// Sets the value of the task.
+    /// </summary>
+    /// <param name="task">The task.</param>
+    /// <param name="value">The value.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressTask Value(this ProgressTask task, double value)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.Value = value;
+        return task;
+    }
+
+    /// <summary>
+    /// Sets whether the task is considered indeterminate or not.
+    /// </summary>
+    /// <param name="task">The task.</param>
+    /// <param name="indeterminate">Whether the task is considered indeterminate or not.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressTask IsIndeterminate(this ProgressTask task, bool indeterminate = true)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.IsIndeterminate = indeterminate;
+        return task;
+    }
+
+    /// <summary>
+    /// Sets whether to override the default hiding behavior of this task when completed.
+    /// </summary>
+    /// <param name="task">The task.</param>
+    /// <param name="hideWhenCompleted">Whether the task should be hidden once completed or not.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressTask HideWhenCompleted(this ProgressTask task, bool hideWhenCompleted = true)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.HideWhenCompleted = hideWhenCompleted;
+        return task;
+    }
+
+    /// <summary>
+    /// Sets the task's tag.
+    /// </summary>
+    /// <param name="task">The task.</param>
+    /// <param name="tag">The tag.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressTask Tag(this ProgressTask task, object? tag)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        task.Tag = tag;
+        return task;
     }
 }

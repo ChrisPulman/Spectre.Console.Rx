@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -13,10 +10,16 @@ public abstract class JustInTimeRenderable : Renderable
     private IRenderable? _rendered;
 
     /// <inheritdoc/>
-    protected sealed override Measurement Measure(RenderOptions options, int maxWidth) => GetInner().Measure(options, maxWidth);
+    protected sealed override Measurement Measure(RenderOptions context, int maxWidth)
+    {
+        return GetInner().Measure(context, maxWidth);
+    }
 
     /// <inheritdoc/>
-    protected sealed override IEnumerable<Segment> Render(RenderOptions options, int maxWidth) => GetInner().Render(options, maxWidth);
+    protected sealed override IEnumerable<Segment> Render(RenderOptions context, int width)
+    {
+        return GetInner().Render(context, width);
+    }
 
     /// <summary>
     /// Builds the inner renderable.
@@ -29,12 +32,18 @@ public abstract class JustInTimeRenderable : Renderable
     /// If so, the underlying renderable needs rebuilding.
     /// </summary>
     /// <returns><c>true</c> if the object needs rebuilding, otherwise <c>false</c>.</returns>
-    protected virtual bool HasDirtyChildren() => false;
+    protected virtual bool HasDirtyChildren()
+    {
+        return false;
+    }
 
     /// <summary>
     /// Marks this instance as dirty.
     /// </summary>
-    protected void MarkAsDirty() => _dirty = true;
+    protected void MarkAsDirty()
+    {
+        _dirty = true;
+    }
 
     /// <summary>
     /// Marks this instance as dirty.
@@ -44,10 +53,7 @@ public abstract class JustInTimeRenderable : Renderable
     /// </param>
     protected void MarkAsDirty(Action action)
     {
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        ArgumentNullException.ThrowIfNull(action);
 
         action();
         _dirty = true;

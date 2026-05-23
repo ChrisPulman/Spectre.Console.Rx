@@ -1,49 +1,73 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+namespace Spectre.Console.Rx;
 
-using static Spectre.Console.Rx.AnsiSequences;
-
-namespace Spectre.Console.Rx.Rendering;
-
-internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
+internal sealed class LiveRenderable : Renderable
 {
     private readonly object _lock = new();
-    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
+    private readonly IAnsiConsole _console;
+    private IRenderable? _renderable;
     private SegmentShape? _shape;
 
-    public LiveRenderable(IAnsiConsole console, IRenderable renderable)
-        : this(console) => Target = renderable ?? throw new ArgumentNullException(nameof(renderable));
-
-    public IRenderable? Target { get; private set; }
-
+    public IRenderable? Target => _renderable;
     public bool DidOverflow { get; private set; }
 
     [MemberNotNullWhen(true, nameof(Target))]
-    public bool HasRenderable => Target != null;
+    public bool HasRenderable => _renderable != null;
+    public VerticalOverflow Overflow { get; set; }
+    public VerticalOverflowCropping OverflowCropping { get; set; }
 
-    public VerticalOverflow Overflow { get; set; } = VerticalOverflow.Ellipsis;
+    public LiveRenderable(IAnsiConsole console)
+    {
+        _console = console ?? throw new ArgumentNullException(nameof(console));
 
-    public VerticalOverflowCropping OverflowCropping { get; set; } = VerticalOverflowCropping.Top;
+        Overflow = VerticalOverflow.Ellipsis;
+        OverflowCropping = VerticalOverflowCropping.Top;
+    }
+
+    public LiveRenderable(IAnsiConsole console, IRenderable renderable)
+        : this(console)
+    {
+        _renderable = renderable ?? throw new ArgumentNullException(nameof(renderable));
+    }
 
     public void SetRenderable(IRenderable? renderable)
     {
         lock (_lock)
         {
-            Target = renderable;
+            _renderable = renderable;
         }
     }
 
-    public IRenderable PositionCursor()
+    public IRenderable PositionCursor(RenderOptions options)
     {
         lock (_lock)
         {
             if (_shape == null)
             {
-                return new ControlCode(string.Empty);
+                return ControlCode.Empty;
+            }
+
+            // Check if the size have been reduced
+            if (_shape.Value.Height > options.ConsoleSize.Height || _shape.Value.Width > options.ConsoleSize.Width)
+            {
+                // Important reset shape, so the size can shrink
+                _shape = null;
+                return ControlCode.Create(options.Capabilities, w =>
+                {
+                    w.EraseInDisplay(2);
+                    w.ClearScrollback();
+                    w.CursorHome();
+                });
             }
 
             var linesToMoveUp = _shape.Value.Height - 1;
-            return new ControlCode("\r" + (EL(2) + CUU(1)).Repeat(linesToMoveUp));
+            return ControlCode.Create(options.Capabilities, w =>
+            {
+                w.Write("\r"); // More efficient than CHA (CSI 1 G)?
+                if (linesToMoveUp > 0)
+                {
+                    w.CursorUp(linesToMoveUp);
+                }
+            });
         }
     }
 
@@ -53,11 +77,21 @@ internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
         {
             if (_shape == null)
             {
-                return new ControlCode(string.Empty);
+                return ControlCode.Empty;
             }
 
             var linesToClear = _shape.Value.Height - 1;
-            return new ControlCode("\r" + EL(2) + (CUU(1) + EL(2)).Repeat(linesToClear));
+            return ControlCode.Create(_console.Profile.Capabilities, w =>
+            {
+                w.Write("\r"); // More efficient than CHA (CSI 1 G)?
+                w.EraseInLine(2);
+
+                for (var count = 0; count < linesToClear; count++)
+                {
+                    w.CursorUp(1);
+                    w.EraseInLine(2);
+                }
+            });
         }
     }
 
@@ -67,9 +101,9 @@ internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
         {
             DidOverflow = false;
 
-            if (Target != null)
+            if (_renderable != null)
             {
-                var segments = Target.Render(options, maxWidth);
+                var segments = _renderable.Render(options, maxWidth);
                 var lines = Segment.SplitLines(segments);
 
                 var shape = SegmentShape.Calculate(options, lines);
@@ -120,7 +154,7 @@ internal sealed class LiveRenderable(IAnsiConsole console) : Renderable
                     DidOverflow = true;
                 }
 
-                _shape = _shape == null ? shape : _shape.Value.Inflate(shape);
+                _shape = _shape?.Inflate(shape) ?? shape;
                 _shape.Value.Apply(options, ref lines);
 
                 foreach (var (_, _, last, line) in lines.Enumerate())

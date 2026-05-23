@@ -59,7 +59,8 @@ public static class Program
                     });
 
                 // Now start the "warp" task
-                warpTask.StartTask().IsIndeterminate(false);
+                warpTask.StartTask();
+                warpTask.IsIndeterminate(false);
                 await ctx.Schedule(
                     TimeSpan.FromMilliseconds(100),
                     () => warpTask.Increment(12 * random.NextDouble()));

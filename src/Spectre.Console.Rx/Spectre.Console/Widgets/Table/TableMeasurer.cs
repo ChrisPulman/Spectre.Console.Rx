@@ -1,14 +1,20 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class TableMeasurer(Table table, RenderOptions options) : TableAccessor(table, options)
+internal sealed class TableMeasurer : TableAccessor
 {
     private const int EdgeCount = 2;
-    private readonly int? _explicitWidth = table.Width;
-    private readonly TableBorder _border = table.Border;
-    private readonly bool _padRightCell = table.PadRightCell;
+
+    private readonly int? _explicitWidth;
+    private readonly TableBorder _border;
+    private readonly bool _padRightCell;
+
+    public TableMeasurer(Table table, RenderOptions options)
+        : base(table, options)
+    {
+        _explicitWidth = table.Width;
+        _border = table.Border;
+        _padRightCell = table.PadRightCell;
+    }
 
     public int CalculateTotalCellWidth(int maxWidth)
     {
@@ -29,13 +35,14 @@ internal sealed class TableMeasurer(Table table, RenderOptions options) : TableA
     public int GetNonColumnWidth()
     {
         var hideBorder = !_border.Visible;
+        var usePadding = _border.UsePadding;
         var separators = hideBorder ? 0 : Columns.Count - 1;
-        var edges = hideBorder ? 0 : EdgeCount;
-        var padding = Columns.Sum(x => x.Padding?.GetWidth() ?? 0);
+        var edges = hideBorder || !usePadding ? 0 : EdgeCount;
+        var padding = !usePadding ? 0 : Columns.Select(x => x.Padding?.GetWidth() ?? 0).Sum();
 
-        if (!_padRightCell)
+        if (usePadding && !_padRightCell)
         {
-            padding -= Columns[Columns.Count - 1].Padding.GetRightSafe();
+            padding -= Columns.Last().Padding.GetRightSafe();
         }
 
         return separators + edges + padding;
@@ -62,15 +69,20 @@ internal sealed class TableMeasurer(Table table, RenderOptions options) : TableA
             if (tableWidth > maxWidth)
             {
                 var excessWidth = tableWidth - maxWidth;
-                widths = Ratio.Reduce(excessWidth, widths.ConvertAll(_ => 1), widths, widths);
+                widths = Ratio.Reduce(excessWidth, widths.Select(_ => 1).ToList(), widths, widths);
                 tableWidth = widths.Sum();
             }
         }
 
         if (tableWidth < maxWidth && Expand)
         {
-            var padWidths = Ratio.Distribute(maxWidth - tableWidth, widths);
-            widths = widths.Zip(padWidths, (a, b) => (a, b)).Select(f => f.a + f.b).ToList();
+            var flexibleColumns = Columns.Select(column => column.Width == null).ToList();
+            if (flexibleColumns.Any(isFlexible => isFlexible))
+            {
+                var ratios = widths.Select((width, index) => flexibleColumns[index] ? Math.Max(width, 1) : 0).ToList();
+                var padWidths = Ratio.Distribute(maxWidth - tableWidth, ratios);
+                widths = widths.Zip(padWidths, (a, b) => (a, b)).Select(f => f.a + f.b).ToList();
+            }
         }
 
         return widths;
@@ -85,7 +97,6 @@ internal sealed class TableMeasurer(Table table, RenderOptions options) : TableA
         }
 
         var columnIndex = Columns.IndexOf(column);
-        var rows = Rows.Select(row => row[columnIndex]);
 
         var minWidths = new List<int>();
         var maxWidths = new List<int>();
@@ -96,11 +107,57 @@ internal sealed class TableMeasurer(Table table, RenderOptions options) : TableA
         minWidths.Add(Math.Min(headerMeasure.Min, footerMeasure.Min));
         maxWidths.Add(Math.Max(headerMeasure.Max, footerMeasure.Max));
 
-        foreach (var row in rows)
+        // Measure rows, accounting for column spanning
+        foreach (var row in Rows)
         {
-            var rowMeasure = row.Measure(Options, maxWidth);
-            minWidths.Add(rowMeasure.Min);
-            maxWidths.Add(rowMeasure.Max);
+            var currentColumnIndex = 0;
+            foreach (var item in row)
+            {
+                if (currentColumnIndex == columnIndex)
+                {
+                    // This cell starts at the column we're measuring
+                    if (item is TableCell tableCell)
+                    {
+                        // For spanning cells, distribute the measurement across spanned columns
+                        var cellMeasure = tableCell.Content.Measure(Options, maxWidth);
+
+                        if (tableCell.ColumnSpan > 1)
+                        {
+                            // Distribute the measurement evenly across spanned columns
+                            var minPerColumn = cellMeasure.Min / tableCell.ColumnSpan;
+                            var maxPerColumn = cellMeasure.Max / tableCell.ColumnSpan;
+                            minWidths.Add(minPerColumn);
+                            maxWidths.Add(maxPerColumn);
+                        }
+                        else
+                        {
+                            minWidths.Add(cellMeasure.Min);
+                            maxWidths.Add(cellMeasure.Max);
+                        }
+                    }
+                    else
+                    {
+                        var rowMeasure = item.Measure(Options, maxWidth);
+                        minWidths.Add(rowMeasure.Min);
+                        maxWidths.Add(rowMeasure.Max);
+                    }
+                    break; // Found the cell for this column, move to next row
+                }
+                else if (item is TableCell tableCell && currentColumnIndex + tableCell.ColumnSpan > columnIndex)
+                {
+                    // This column is covered by a spanning cell that started earlier
+                    // Contribute a portion of the spanning cell's measurement
+                    var cellMeasure = tableCell.Content.Measure(Options, maxWidth);
+                    var minPerColumn = cellMeasure.Min / tableCell.ColumnSpan;
+                    var maxPerColumn = cellMeasure.Max / tableCell.ColumnSpan;
+                    minWidths.Add(minPerColumn);
+                    maxWidths.Add(maxPerColumn);
+                    break;
+                }
+
+                // Advance column index
+                currentColumnIndex += item is TableCell tc ? tc.ColumnSpan : 1;
+            }
         }
 
         var padding = column.Padding?.GetWidth() ?? 0;
@@ -135,7 +192,7 @@ internal sealed class TableMeasurer(Table table, RenderOptions options) : TableA
                     break;
                 }
 
-                var maxReduce = widths.ConvertAll(_ => Math.Min(excessWidth, columnDifference));
+                var maxReduce = widths.Select(_ => Math.Min(excessWidth, columnDifference)).ToList();
                 widths = Ratio.Reduce(excessWidth, ratios, maxReduce, widths);
 
                 totalWidth = widths.Sum();

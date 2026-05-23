@@ -1,13 +1,13 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class DefaultInput : IAnsiConsoleInput
 {
     private readonly Profile _profile;
 
-    public DefaultInput(Profile profile) => _profile = profile ?? throw new ArgumentNullException(nameof(profile));
+    public DefaultInput(Profile profile)
+    {
+        _profile = profile ?? throw new ArgumentNullException(nameof(profile));
+    }
 
     public bool IsKeyAvailable()
     {

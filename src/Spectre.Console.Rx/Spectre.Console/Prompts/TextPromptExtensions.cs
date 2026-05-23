@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -16,10 +13,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> AllowEmpty<T>(this TextPrompt<T> obj)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.AllowEmpty = true;
         return obj;
@@ -34,15 +28,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> PromptStyle<T>(this TextPrompt<T> obj, Style style)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
-
-        if (style is null)
-        {
-            throw new ArgumentNullException(nameof(style));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.PromptStyle = style;
         return obj;
@@ -57,10 +43,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> ShowChoices<T>(this TextPrompt<T> obj, bool show)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.ShowChoices = show;
         return obj;
@@ -72,7 +55,10 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> ShowChoices<T>(this TextPrompt<T> obj) => ShowChoices(obj, true);
+    public static TextPrompt<T> ShowChoices<T>(this TextPrompt<T> obj)
+    {
+        return ShowChoices(obj, true);
+    }
 
     /// <summary>
     /// Hides choices.
@@ -80,7 +66,10 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> HideChoices<T>(this TextPrompt<T> obj) => ShowChoices(obj, false);
+    public static TextPrompt<T> HideChoices<T>(this TextPrompt<T> obj)
+    {
+        return ShowChoices(obj, false);
+    }
 
     /// <summary>
     /// Show or hide the default value.
@@ -91,10 +80,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> ShowDefaultValue<T>(this TextPrompt<T> obj, bool show)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.ShowDefaultValue = show;
         return obj;
@@ -106,7 +92,24 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> ShowDefaultValue<T>(this TextPrompt<T> obj) => ShowDefaultValue(obj, true);
+    public static TextPrompt<T> ShowDefaultValue<T>(this TextPrompt<T> obj)
+    {
+        return ShowDefaultValue(obj, true);
+    }
+
+    /// <summary>
+    /// Whether or not to write the default value in the text input field to be modified by the end user.
+    /// </summary>
+    /// <typeparam name="T">The prompt result type.</typeparam>
+    /// <param name="obj">The prompt.</param>
+    /// <param name="state">Whether or not the default value should be editable.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPrompt<T> EditableDefaultValue<T>(this TextPrompt<T> obj, bool state)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+        obj.EditableDefaultValue = state;
+        return obj;
+    }
 
     /// <summary>
     /// Hides the default value.
@@ -114,7 +117,10 @@ public static class TextPromptExtensions
     /// <typeparam name="T">The prompt result type.</typeparam>
     /// <param name="obj">The prompt.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public static TextPrompt<T> HideDefaultValue<T>(this TextPrompt<T> obj) => ShowDefaultValue(obj, false);
+    public static TextPrompt<T> HideDefaultValue<T>(this TextPrompt<T> obj)
+    {
+        return ShowDefaultValue(obj, false);
+    }
 
     /// <summary>
     /// Sets the validation error message for the prompt.
@@ -125,10 +131,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> ValidationErrorMessage<T>(this TextPrompt<T> obj, string message)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.ValidationErrorMessage = message;
         return obj;
@@ -143,10 +146,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> InvalidChoiceMessage<T>(this TextPrompt<T> obj, string message)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.InvalidChoiceMessage = message;
         return obj;
@@ -161,10 +161,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> DefaultValue<T>(this TextPrompt<T> obj, T value)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.DefaultValue = new DefaultPromptValue<T>(value);
         return obj;
@@ -180,13 +177,21 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> Validate<T>(this TextPrompt<T> obj, Func<T, bool> validator, string? message = null)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentNullException.ThrowIfNull(validator);
 
+        var previous = obj.Validator;
         obj.Validator = result =>
         {
+            if (previous is not null)
+            {
+                var previousResult = previous(result);
+                if (!previousResult.Successful)
+                {
+                    return previousResult;
+                }
+            }
+
             if (validator(result))
             {
                 return ValidationResult.Success();
@@ -207,12 +212,24 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> Validate<T>(this TextPrompt<T> obj, Func<T, ValidationResult> validator)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentNullException.ThrowIfNull(validator);
 
-        obj.Validator = validator;
+        var previous = obj.Validator;
+
+        obj.Validator = result =>
+        {
+            if (previous is not null)
+            {
+                var previousResult = previous(result);
+                if (!previousResult.Successful)
+                {
+                    return previousResult;
+                }
+            }
+
+            return validator(result);
+        };
 
         return obj;
     }
@@ -226,10 +243,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> AddChoice<T>(this TextPrompt<T> obj, T choice)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.Choices.Add(choice);
         return obj;
@@ -244,17 +258,14 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> AddChoices<T>(this TextPrompt<T> obj, IEnumerable<T> choices)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
-        if (choices is null)
-        {
-            throw new ArgumentNullException(nameof(choices));
-        }
+        ArgumentNullException.ThrowIfNull(choices);
 
-        obj.Choices.AddRange(choices);
+        foreach (var choice in choices)
+        {
+            obj.Choices.Add(choice);
+        }
 
         return obj;
     }
@@ -267,10 +278,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> Secret<T>(this TextPrompt<T> obj)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.IsSecret = true;
         return obj;
@@ -285,10 +293,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> Secret<T>(this TextPrompt<T> obj, char? mask)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.IsSecret = true;
         obj.Mask = mask;
@@ -304,10 +309,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> WithConverter<T>(this TextPrompt<T> obj, Func<T, string>? displaySelector)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.Converter = displaySelector;
         return obj;
@@ -322,10 +324,7 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> DefaultValueStyle<T>(this TextPrompt<T> obj, Style? style)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.DefaultValueStyle = style;
         return obj;
@@ -340,12 +339,33 @@ public static class TextPromptExtensions
     /// <returns>The same instance so that multiple calls can be chained.</returns>
     public static TextPrompt<T> ChoicesStyle<T>(this TextPrompt<T> obj, Style? style)
     {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
+        ArgumentNullException.ThrowIfNull(obj);
 
         obj.ChoicesStyle = style;
+        return obj;
+    }
+
+    /// <summary>
+    /// Clears the prompt line after successful input.
+    /// </summary>
+    /// <typeparam name="T">The prompt result type.</typeparam>
+    /// <param name="obj">The prompt.</param>
+    /// <param name="clear">Whether the prompt line should be cleared</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPrompt<T> ClearOnFinish<T>(this TextPrompt<T> obj, bool clear = true)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.ClearOnFinish = clear;
+        return obj;
+    }
+
+    internal static TextPrompt<T> UseInputHandler<T>(
+        this TextPrompt<T> obj, TextPromptInputHandler? inputHandler)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.InputHandler = inputHandler;
         return obj;
     }
 }

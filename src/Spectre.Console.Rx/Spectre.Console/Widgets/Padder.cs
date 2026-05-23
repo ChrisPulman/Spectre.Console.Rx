@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -9,6 +6,16 @@ namespace Spectre.Console.Rx;
 public sealed class Padder : Renderable, IPaddable, IExpandable
 {
     private readonly IRenderable _child;
+
+    /// <inheritdoc/>
+    public Padding? Padding { get; set; } = new Padding(1, 1, 1, 1);
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not the padding should
+    /// fit the available space. If <c>false</c>, the padding width will be
+    /// auto calculated. Defaults to <c>false</c>.
+    /// </summary>
+    public bool Expand { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Padder"/> class.
@@ -20,16 +27,6 @@ public sealed class Padder : Renderable, IPaddable, IExpandable
         _child = child;
         Padding = padding ?? Padding;
     }
-
-    /// <inheritdoc/>
-    public Padding? Padding { get; set; } = new Padding(1, 1, 1, 1);
-
-    /// <summary>
-    /// Gets or sets a value indicating whether or not the padding should
-    /// fit the available space. If <c>false</c>, the padding width will be
-    /// auto calculated. Defaults to <c>false</c>.
-    /// </summary>
-    public bool Expand { get; set; }
 
     /// <inheritdoc/>
     protected override Measurement Measure(RenderOptions options, int maxWidth)

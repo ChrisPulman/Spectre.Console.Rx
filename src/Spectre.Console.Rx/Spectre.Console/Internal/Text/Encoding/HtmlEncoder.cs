@@ -1,7 +1,4 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-namespace Spectre.Console.Rx.Internal;
+namespace Spectre.Console.Rx;
 
 internal sealed class HtmlEncoder : IAnsiConsoleEncoder
 {
@@ -28,7 +25,7 @@ internal sealed class HtmlEncoder : IAnsiConsoleEncoder
                     continue;
                 }
 
-                var parts = segment.Text.Split(new[] { '\n' }, StringSplitOptions.None);
+                var parts = segment.Text.Split(['\n'], StringSplitOptions.None);
                 foreach (var (_, _, last, line) in parts.Enumerate())
                 {
                     if (string.IsNullOrEmpty(line))
@@ -39,14 +36,14 @@ internal sealed class HtmlEncoder : IAnsiConsoleEncoder
                     builder.Append("<span");
                     if (!segment.Style.Equals(Style.Plain))
                     {
-                        builder.Append(" style=\"")
-                            .Append(BuildCss(segment.Style))
-                            .Append('"');
+                        builder.Append(" style=\"");
+                        builder.Append(BuildCss(segment.Style));
+                        builder.Append('"');
                     }
 
-                    builder.Append('>')
-                        .Append(line)
-                        .Append("</span>");
+                    builder.Append('>');
+                    builder.Append(line);
+                    builder.Append("</span>");
 
                     if (parts.Length > 1 && !last)
                     {
@@ -70,7 +67,9 @@ internal sealed class HtmlEncoder : IAnsiConsoleEncoder
 
         if ((style.Decoration & Decoration.Invert) != 0)
         {
-            (background, foreground) = (foreground, background);
+            var temp = foreground;
+            foreground = background;
+            background = temp;
         }
 
         if ((style.Decoration & Decoration.Dim) != 0)
@@ -99,7 +98,7 @@ internal sealed class HtmlEncoder : IAnsiConsoleEncoder
             css.Add("font-weight: bold");
         }
 
-        if ((style.Decoration & Decoration.Bold) != 0)
+        if ((style.Decoration & Decoration.Italic) != 0)
         {
             css.Add("font-style: italic");
         }

@@ -12,7 +12,7 @@ public class OtherUsagesTest
     /// Whens the student data is passed then render students table.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public Task WhenStudentDataIsPassed_ThenRenderStudentsTable()
     {
         var console = new TestConsole();
@@ -25,7 +25,7 @@ public class OtherUsagesTest
     /// Whens the prompting student for age then return error if validation fails.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public Task WhenPromptingStudentForAge_ThenReturnErrorIfValidationFails()
     {
         var console = new TestConsole();
@@ -42,7 +42,7 @@ public class OtherUsagesTest
     /// <summary>
     /// Whens the prompting student for hostel then display hotel selection prompt.
     /// </summary>
-    [Fact]
+    [Test]
     public void WhenPromptingStudentForHostel_ThenDisplayHotelSelectionPrompt()
     {
         var console = new TestConsole();
@@ -64,7 +64,7 @@ public class OtherUsagesTest
     /// Whens the students data is passed then display bar chart.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task WhenStudentsDataIsPassed_ThenDisplayBarChart()
     {
         var console = new TestConsole();
@@ -77,7 +77,7 @@ public class OtherUsagesTest
     /// Whens the display fig let is invoked then display figlet.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
+    [Test]
     public async Task WhenDisplayFigLetIsInvoked_ThenDisplayFiglet()
     {
         var console = new TestConsole().Width(100);

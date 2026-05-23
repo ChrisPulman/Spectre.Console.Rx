@@ -1,11 +1,13 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal readonly struct ProgressSample(DateTime timestamp, double value)
+internal readonly struct ProgressSample
 {
-    public double Value { get; } = value;
+    public double Value { get; }
+    public DateTime Timestamp { get; }
 
-    public DateTime Timestamp { get; } = timestamp;
+    public ProgressSample(DateTime timestamp, double value)
+    {
+        Timestamp = timestamp;
+        Value = value;
+    }
 }

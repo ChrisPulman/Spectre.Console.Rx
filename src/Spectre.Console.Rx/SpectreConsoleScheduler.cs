@@ -4,6 +4,7 @@
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Runtime.ExceptionServices;
+using Spectre.Console.Rx.Internal;
 
 namespace Spectre.Console.Rx;
 
@@ -96,6 +97,9 @@ public class SpectreConsoleScheduler : LocalScheduler, ISpectreConsoleScheduler
         IsRunning = false;
         _synchronizationContext.Stop();
     }
+
+    /// <inheritdoc/>
+    public Task Sleep(TimeSpan delay, CancellationToken cancellationToken = default) => Task.Delay(delay, cancellationToken);
 
     /// <summary>
     /// Schedules an action to be executed.

@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -13,5 +10,8 @@ public static partial class AnsiConsole
     /// </summary>
     /// <param name="target">The target renderable to update.</param>
     /// <returns>A <see cref="LiveDisplay"/> instance.</returns>
-    internal static LiveDisplay Live(IRenderable target) => Console.Live(target);
+    public static LiveDisplay Live(IRenderable target)
+    {
+        return Console.Live(target);
+    }
 }

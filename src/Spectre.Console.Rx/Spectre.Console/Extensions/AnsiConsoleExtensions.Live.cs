@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -16,15 +13,8 @@ public static partial class AnsiConsoleExtensions
     /// <returns>A <see cref="LiveDisplay"/> instance.</returns>
     public static LiveDisplay Live(this IAnsiConsole console, IRenderable target)
     {
-        if (console is null)
-        {
-            throw new ArgumentNullException(nameof(console));
-        }
-
-        if (target is null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
+        ArgumentNullException.ThrowIfNull(console);
+        ArgumentNullException.ThrowIfNull(target);
 
         return new LiveDisplay(console, target);
     }

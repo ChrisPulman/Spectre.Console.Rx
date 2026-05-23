@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,12 +5,8 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public static partial class AnsiConsole
 {
-#pragma warning disable CS0618 // 'AnsiConsoleFactory' is obsolete
-    private static readonly AnsiConsoleFactory _factory = new();
-#pragma warning restore CS0618
-
     private static Recorder? _recorder;
-    private static Lazy<IAnsiConsole> _console = new(
+    private static Lazy<IAnsiConsole> _console = new Lazy<IAnsiConsole>(
         () =>
         {
             var console = Create(new AnsiConsoleSettings
@@ -32,8 +25,10 @@ public static partial class AnsiConsole
     /// </summary>
     public static IAnsiConsole Console
     {
-        get => _recorder ?? _console.Value;
-
+        get
+        {
+            return _recorder ?? _console.Value;
+        }
         set
         {
             _console = new Lazy<IAnsiConsole>(() => value);
@@ -64,10 +59,16 @@ public static partial class AnsiConsole
     /// </summary>
     /// <param name="settings">The settings to use.</param>
     /// <returns>An <see cref="IAnsiConsole"/> instance.</returns>
-    public static IAnsiConsole Create(AnsiConsoleSettings settings) => _factory.Create(settings);
+    public static IAnsiConsole Create(AnsiConsoleSettings settings)
+    {
+        return AnsiConsoleFactory.Create(settings);
+    }
 
     /// <summary>
     /// Clears the console.
     /// </summary>
-    public static void Clear() => Console.Clear();
+    public static void Clear()
+    {
+        Console.Clear();
+    }
 }

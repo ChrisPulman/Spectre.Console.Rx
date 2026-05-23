@@ -4,16 +4,22 @@
     <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>true</ImplicitUsings>
     <Description>A library that extends Spectre.Console with JSON superpowers.</Description>
+    <DisableRepoAnalyzers>true</DisableRepoAnalyzers>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Spectre.Console.Rx\Spectre.Console\Internal\Extensions\CharExtensions.cs" Link="Internal\CharExtensions.cs" />
-    <Compile Include="..\Spectre.Console.Rx\Spectre.Console\Internal\Extensions\EnumerableExtensions.cs" Link="Internal\EnumerableExtensions.cs" />
+    <Compile Include="..\Spectre.Console.Rx\Spectre.Console\Extensions\Bcl\CharExtensions.cs" Link="Internal\CharExtensions.cs" />
+    <Compile Include="..\Spectre.Console.Rx\Spectre.Console\Extensions\Bcl\EnumerableExtensions.cs" Link="Internal\EnumerableExtensions.cs" />
     <Compile Include="..\Spectre.Console.Rx\Spectre.Console\Internal\Text\StringBuffer.cs" Link="Internal\StringBuffer.cs" />
   </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Spectre.Console.Rx\Spectre.Console.Rx.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Polyfill" Version="10.5.1" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

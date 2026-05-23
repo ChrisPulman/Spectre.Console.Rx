@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -10,27 +7,6 @@ namespace Spectre.Console.Rx;
 public sealed class Paragraph : Renderable, IHasJustification, IOverflowable
 {
     private readonly List<SegmentLine> _lines;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Paragraph"/> class.
-    /// </summary>
-    public Paragraph() => _lines = new List<SegmentLine>();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Paragraph"/> class.
-    /// </summary>
-    /// <param name="text">The text.</param>
-    /// <param name="style">The style of the text or <see cref="Style.Plain"/> if <see langword="null"/>.</param>
-    public Paragraph(string text, Style? style = null)
-        : this()
-    {
-        if (text is null)
-        {
-            throw new ArgumentNullException(nameof(text));
-        }
-
-        Append(text, style);
-    }
 
     /// <summary>
     /// Gets or sets the alignment of the whole paragraph.
@@ -53,58 +29,66 @@ public sealed class Paragraph : Renderable, IHasJustification, IOverflowable
     public int Lines => _lines.Count;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="Paragraph"/> class.
+    /// </summary>
+    public Paragraph()
+    {
+        _lines = [];
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Paragraph"/> class.
+    /// </summary>
+    /// <param name="text">The text.</param>
+    /// <param name="style">The style of the text or <see cref="Style.Plain"/> if <see langword="null"/>.</param>
+    /// <param name="link">The link of the text.</param>
+    public Paragraph(string text, Style? style = null, Link? link = null)
+        : this()
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        Append(text, style, link);
+    }
+
+    /// <summary>
     /// Appends some text to this paragraph.
     /// </summary>
     /// <param name="text">The text to append.</param>
     /// <param name="style">The style of the appended text or <see cref="Style.Plain"/> if <see langword="null"/>.</param>
+    /// <param name="link">The link that the appended text points at.</param>
     /// <returns>The same instance so that multiple calls can be chained.</returns>
-    public Paragraph Append(string text, Style? style = null)
+    public Paragraph Append(string text, Style? style = null, Link? link = null)
     {
-        if (text is null)
-        {
-            throw new ArgumentNullException(nameof(text));
-        }
+        ArgumentNullException.ThrowIfNull(text);
 
-        foreach (var (_, first, last, part) in text.SplitLines().Enumerate())
+        style ??= Style.Plain;
+
+        var first = true;
+        var span = text.AsSpan();
+        foreach (var lineSpan in span.EnumerateLines())
         {
-            if (first)
+            SegmentLine line;
+            if (!first || _lines.Count == 0)
             {
-                var line = _lines.LastOrDefault();
-                if (line == null)
-                {
-                    _lines.Add(new SegmentLine());
-                    line = _lines.Last();
-                }
-
-                if (string.IsNullOrEmpty(part))
-                {
-                    line.Add(Segment.Empty);
-                }
-                else
-                {
-                    foreach (var span in part.SplitWords())
-                    {
-                        line.Add(new Segment(span, style ?? Style.Plain));
-                    }
-                }
+                line = [];
+                _lines.Add(line);
             }
             else
             {
-                var line = new SegmentLine();
+                line = _lines[^1];
+            }
+            first = false;
 
-                if (string.IsNullOrEmpty(part))
+            if (lineSpan.IsEmpty)
+            {
+                line.Add(Segment.Empty);
+            }
+            else
+            {
+                foreach (var part in new WhiteSpaceSegmentEnumerator(lineSpan))
                 {
-                    line.Add(Segment.Empty);
+                    line.Add(new Segment(part.ToString(), style.Value, link));
                 }
-                else
-                {
-                    foreach (var span in part.SplitWords())
-                    {
-                        line.Add(new Segment(span, style ?? Style.Plain));
-                    }
-                }
-
-                _lines.Add(line);
             }
         }
 
@@ -128,23 +112,20 @@ public sealed class Paragraph : Renderable, IHasJustification, IOverflowable
     /// <inheritdoc/>
     protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
     {
-        if (options is null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         if (_lines.Count == 0)
         {
-            return Array.Empty<Segment>();
+            return [];
         }
 
         var lines = options.SingleLine
-            ? new List<SegmentLine>(_lines)
+            ? [.. _lines]
             : SplitLines(maxWidth);
 
         // Justify lines
-        var justification = options.Justification ?? Justification ?? Rx.Justify.Left;
-        if (justification != Rx.Justify.Left)
+        var justification = options.Justification ?? Justification ?? Justify.Left;
+        if (justification != Justify.Left)
         {
             foreach (var line in lines)
             {
@@ -184,7 +165,7 @@ public sealed class Paragraph : Renderable, IHasJustification, IOverflowable
         if (maxWidth <= 0)
         {
             // Nothing fits, so return an empty line.
-            return new List<SegmentLine>();
+            return [];
         }
 
         if (_lines.Max(x => x.CellCount()) <= maxWidth)
@@ -224,7 +205,7 @@ public sealed class Paragraph : Renderable, IHasJustification, IOverflowable
             if (current.IsLineBreak)
             {
                 lines.Add(line);
-                line = new SegmentLine();
+                line = [];
                 continue;
             }
 
@@ -239,7 +220,7 @@ public sealed class Paragraph : Renderable, IHasJustification, IOverflowable
                     if (line.CellCount() + segments[0].CellCount() > maxWidth)
                     {
                         lines.Add(line);
-                        line = new SegmentLine();
+                        line = [];
 
                         segments.ForEach(s => queue.Enqueue(s));
                         continue;
@@ -253,12 +234,15 @@ public sealed class Paragraph : Renderable, IHasJustification, IOverflowable
                     }
                 }
             }
-            else if (line.CellCount() + length > maxWidth)
+            else
             {
-                line.Add(Segment.Empty);
-                lines.Add(line);
-                line = new SegmentLine();
-                newLine = true;
+                if (line.CellCount() + length > maxWidth)
+                {
+                    line.Add(Segment.Empty);
+                    lines.Add(line);
+                    line = [];
+                    newLine = true;
+                }
             }
 
             if (newLine && current.IsWhiteSpace)

@@ -1,38 +1,66 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
-/// ControlCode.
+/// A control code.
 /// </summary>
-/// <seealso cref="Spectre.Console.Rx.Rendering.Renderable" />
-/// <remarks>
-/// Initializes a new instance of the <see cref="ControlCode"/> class.
-/// </remarks>
-/// <param name="control">The control.</param>
-public sealed class ControlCode(string control) : Renderable
+public sealed class ControlCode : Renderable
 {
-    private readonly Segment _segment = Segment.Control(control);
+    private readonly Segment _segment;
+
+    internal static ControlCode Empty { get; } = new(string.Empty);
 
     /// <summary>
-    /// Measures the renderable object.
+    /// Initializes a new instance of the <see cref="ControlCode"/> class.
     /// </summary>
-    /// <param name="options">The render options.</param>
-    /// <param name="maxWidth">The maximum allowed width.</param>
-    /// <returns>
-    /// The minimum and maximum width of the object.
-    /// </returns>
-    protected override Measurement Measure(RenderOptions options, int maxWidth) => new(0, 0);
+    /// <param name="control">The control code.</param>
+    public ControlCode(string control)
+    {
+        _segment = Segment.Control(control);
+    }
 
     /// <summary>
-    /// Renders the object.
+    /// Creates a new <see cref="ControlCode"/> using a <see cref="AnsiWriter"/>.
     /// </summary>
-    /// <param name="options">The render options.</param>
-    /// <param name="maxWidth">The maximum allowed width.</param>
-    /// <returns>
-    /// A collection of segments.
-    /// </returns>
+    /// <param name="capabilities">The capabilities.</param>
+    /// <param name="action">The <see cref="AnsiWriter"/> action.</param>
+    /// <returns>A new <see cref="ControlCode"/> instance.</returns>
+    public static ControlCode Create(
+        IReadOnlyCapabilities capabilities,
+        Action<AnsiWriter> action)
+    {
+        ArgumentNullException.ThrowIfNull(capabilities);
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new ControlCode(
+            AnsiStringWriter.Shared.Write(
+                capabilities, action));
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="ControlCode"/> using a <see cref="AnsiWriter"/>.
+    /// </summary>
+    /// <param name="console">The console.</param>
+    /// <param name="action">The <see cref="AnsiWriter"/> action.</param>
+    /// <returns>A new <see cref="ControlCode"/> instance.</returns>
+    public static ControlCode Create(
+        IAnsiConsole console,
+        Action<AnsiWriter> action)
+    {
+        ArgumentNullException.ThrowIfNull(console);
+        ArgumentNullException.ThrowIfNull(action);
+
+        return new ControlCode(
+            AnsiStringWriter.Shared.Write(
+                console.Profile.Capabilities, action));
+    }
+
+    /// <inheritdoc />
+    protected override Measurement Measure(RenderOptions options, int maxWidth)
+    {
+        return new Measurement(0, 0);
+    }
+
+    /// <inheritdoc />
     protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
     {
         if (options.Ansi)

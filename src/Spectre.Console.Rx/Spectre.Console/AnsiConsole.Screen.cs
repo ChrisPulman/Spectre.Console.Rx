@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -12,5 +9,8 @@ public static partial class AnsiConsole
     /// Switches to an alternate screen buffer if the terminal supports it.
     /// </summary>
     /// <param name="action">The action to execute within the alternate screen buffer.</param>
-    public static void AlternateScreen(Action action) => Console.AlternateScreen(action);
+    public static void AlternateScreen(Action action)
+    {
+        Console.AlternateScreen(action);
+    }
 }

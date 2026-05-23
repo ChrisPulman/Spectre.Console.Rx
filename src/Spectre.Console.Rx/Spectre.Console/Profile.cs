@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,27 +5,14 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class Profile
 {
-    private static readonly string[] _defaultEnricher = new[] { "Default" };
     private readonly HashSet<string> _enrichers;
+    private static readonly string[] _defaultEnricher = ["Default"];
 
     private IAnsiConsoleOutput _out;
     private Encoding _encoding;
     private Capabilities _capabilities;
     private int? _width;
     private int? _height;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Profile"/> class.
-    /// </summary>
-    /// <param name="out">The output buffer.</param>
-    /// <param name="encoding">The output encoding.</param>
-    public Profile(IAnsiConsoleOutput @out, Encoding encoding)
-    {
-        _enrichers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        _out = @out ?? throw new ArgumentNullException(nameof(@out));
-        _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
-        _capabilities = new Capabilities(_out);
-    }
 
     /// <summary>
     /// Gets the enrichers used to build this profile.
@@ -123,7 +107,24 @@ public sealed class Profile
     public Capabilities Capabilities
     {
         get => _capabilities;
-        set => _capabilities = value ?? throw new InvalidOperationException("Profile capabilities cannot be null");
+        set
+        {
+            _capabilities = value ?? throw new InvalidOperationException("Profile capabilities cannot be null");
+        }
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Profile"/> class.
+    /// </summary>
+    /// <param name="out">The output buffer.</param>
+    /// <param name="capabilities">The capabilities.</param>
+    /// <param name="encoding">The output encoding.</param>
+    public Profile(IAnsiConsoleOutput @out, Capabilities capabilities, Encoding encoding)
+    {
+        _enrichers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        _out = @out ?? throw new ArgumentNullException(nameof(@out));
+        _capabilities = capabilities ?? throw new ArgumentNullException(nameof(capabilities));
+        _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
     }
 
     /// <summary>
@@ -132,14 +133,14 @@ public sealed class Profile
     /// </summary>
     /// <param name="colorSystem">The color system to check.</param>
     /// <returns><c>true</c> if the color system is supported, otherwise <c>false</c>.</returns>
-    public bool Supports(ColorSystem colorSystem) => (int)colorSystem <= (int)Capabilities.ColorSystem;
+    public bool Supports(ColorSystem colorSystem)
+    {
+        return (int)colorSystem <= (int)Capabilities.ColorSystem;
+    }
 
     internal void AddEnricher(string name)
     {
-        if (name is null)
-        {
-            throw new ArgumentNullException(nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         _enrichers.Add(name);
     }

@@ -1,13 +1,15 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class BreakdownBar(List<IBreakdownChartItem> data) : Renderable
+internal sealed class BreakdownBar : Renderable
 {
-    private readonly List<IBreakdownChartItem> _data = data ?? throw new ArgumentNullException(nameof(data));
+    private readonly List<IBreakdownChartItem> _data;
 
     public int? Width { get; set; }
+
+    public BreakdownBar(List<IBreakdownChartItem> data)
+    {
+        _data = data ?? throw new ArgumentNullException(nameof(data));
+    }
 
     protected override Measurement Measure(RenderOptions options, int maxWidth)
     {

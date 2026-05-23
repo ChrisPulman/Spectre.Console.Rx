@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -12,11 +9,16 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
     private readonly IList<TableRow> _list;
     private readonly object _lock;
 
-    internal TableRowCollection(Table table)
+    /// <inheritdoc/>
+    TableRow IReadOnlyList<TableRow>.this[int index]
     {
-        _table = table ?? throw new ArgumentNullException(nameof(table));
-        _list = new List<TableRow>();
-        _lock = new object();
+        get
+        {
+            lock (_lock)
+            {
+                return _list[index];
+            }
+        }
     }
 
     /// <summary>
@@ -33,16 +35,11 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
         }
     }
 
-    /// <inheritdoc/>
-    TableRow IReadOnlyList<TableRow>.this[int index]
+    internal TableRowCollection(Table table)
     {
-        get
-        {
-            lock (_lock)
-            {
-                return _list[index];
-            }
-        }
+        _table = table ?? throw new ArgumentNullException(nameof(table));
+        _list = new List<TableRow>();
+        _lock = new object();
     }
 
     /// <summary>
@@ -52,10 +49,7 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
     /// <returns>The index of the added item.</returns>
     public int Add(IEnumerable<IRenderable> columns)
     {
-        if (columns is null)
-        {
-            throw new ArgumentNullException(nameof(columns));
-        }
+        ArgumentNullException.ThrowIfNull(columns);
 
         lock (_lock)
         {
@@ -73,10 +67,7 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
     /// <returns>The index of the inserted item.</returns>
     public int Insert(int index, IEnumerable<IRenderable> columns)
     {
-        if (columns is null)
-        {
-            throw new ArgumentNullException(nameof(columns));
-        }
+        ArgumentNullException.ThrowIfNull(columns);
 
         lock (_lock)
         {
@@ -94,10 +85,7 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
     /// <param name="cellData">The new cells details.</param>
     public void Update(int row, int column, IRenderable cellData)
     {
-        if (cellData is null)
-        {
-            throw new ArgumentNullException(nameof(cellData));
-        }
+        ArgumentNullException.ThrowIfNull(cellData);
 
         lock (_lock)
         {
@@ -110,7 +98,7 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
                 throw new IndexOutOfRangeException("Table row index cannot exceed the number of rows in the table.");
             }
 
-            var tableRow = _list[row];
+            var tableRow = _list.ElementAt(row);
             var currentRenderables = tableRow.ToList();
 
             if (column < 0)
@@ -178,21 +166,39 @@ public sealed class TableRowCollection : IReadOnlyList<TableRow>
     }
 
     /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     private TableRow CreateRow(IEnumerable<IRenderable> columns)
     {
         var row = new TableRow(columns);
 
-        if (row.Count > _table.Columns.Count)
+        // Calculate total span considering TableCell instances
+        var totalSpan = 0;
+        for (var i = 0; i < row.Count; i++)
         {
-            throw new InvalidOperationException("The number of row columns are greater than the number of table columns.");
+            var cell = row[i];
+            if (cell is TableCell tableCell)
+            {
+                totalSpan += tableCell.ColumnSpan;
+            }
+            else
+            {
+                totalSpan++;
+            }
+        }
+
+        if (totalSpan > _table.Columns.Count)
+        {
+            throw new InvalidOperationException($"The number of row columns (including spans) are greater than the number of table columns. Expected {_table.Columns.Count} but got {totalSpan}.");
         }
 
         // Need to add missing columns
-        if (row.Count < _table.Columns.Count)
+        if (totalSpan < _table.Columns.Count)
         {
-            var diff = _table.Columns.Count - row.Count;
+            var diff = _table.Columns.Count - totalSpan;
             Enumerable.Range(0, diff).ForEach(_ => row.Add(Text.Empty));
         }
 

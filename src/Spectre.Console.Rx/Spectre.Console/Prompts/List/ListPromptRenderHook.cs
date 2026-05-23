@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class ListPromptRenderHook<T> : IRenderHook
@@ -20,16 +17,19 @@ internal sealed class ListPromptRenderHook<T> : IRenderHook
         _builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
         _live = new LiveRenderable(console);
-        _lock = new object();
+        _lock = new();
         _dirty = true;
     }
 
-    public void Clear() => _console.Write(_live.RestoreCursor());
+    public void Clear()
+    {
+        _console.Write(_live.RestoreCursor());
+    }
 
     public void Refresh()
     {
         _dirty = true;
-        _console.Write(new ControlCode(string.Empty));
+        _console.Write(ControlCode.Empty);
     }
 
     public IEnumerable<IRenderable> Process(RenderOptions options, IEnumerable<IRenderable> renderables)
@@ -42,7 +42,7 @@ internal sealed class ListPromptRenderHook<T> : IRenderHook
                 _dirty = false;
             }
 
-            yield return _live.PositionCursor();
+            yield return _live.PositionCursor(options);
 
             foreach (var renderable in renderables)
             {

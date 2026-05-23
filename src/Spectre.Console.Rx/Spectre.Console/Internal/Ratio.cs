@@ -1,8 +1,5 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-//// Ported from Rich by Will McGugan, licensed under MIT.
-//// https://github.com/willmcgugan/rich/blob/527475837ebbfc427530b3ee0d4d0741d2d0fc6d/rich/_ratio.py
+// Ported from Rich by Will McGugan, licensed under MIT.
+// https://github.com/willmcgugan/rich/blob/527475837ebbfc427530b3ee0d4d0741d2d0fc6d/rich/_ratio.py
 
 namespace Spectre.Console.Rx;
 
@@ -10,7 +7,20 @@ internal static class Ratio
 {
     public static List<int> Resolve(int total, IEnumerable<IRatioResolvable> edges)
     {
-        static (int Div, float Mod) DivMod(float x, float y) => ((int)(x / y), x % y);
+        static (int Div, float Mod) DivMod(float x, float y)
+        {
+            var (div, mod) = ((int)(x / y), x % y);
+
+            // If remainder is within .0001 of 1 then we round up
+            if (!(mod > 0.9999))
+            {
+                return (div, mod);
+            }
+
+            div++;
+            mod = 0;
+            return (div, mod);
+        }
 
         static int? GetEdgeWidth(IRatioResolvable edge)
         {
@@ -22,7 +32,7 @@ internal static class Ratio
             return edge.Size;
         }
 
-        var sizes = edges.Select(x => GetEdgeWidth(x)).ToArray();
+        var sizes = edges.Select(GetEdgeWidth).ToArray();
 
         while (sizes.Any(s => s == null))
         {
@@ -35,7 +45,7 @@ internal static class Ratio
                 .ToList();
 
             // Get the remaining space
-            var remaining = total - sizes.Sum(size => size ?? 0);
+            var remaining = total - sizes.Select(size => size ?? 0).Sum();
             if (remaining <= 0)
             {
                 // No more room for flexible edges.

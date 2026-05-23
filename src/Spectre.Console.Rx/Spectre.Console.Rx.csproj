@@ -4,33 +4,45 @@
     <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <AnnotatedReferenceAssemblyVersion>6.0.0</AnnotatedReferenceAssemblyVersion>
-    <GenerateNullableAttributes>False</GenerateNullableAttributes>
+    <DefineConstants>$(DefineConstants)TRACE;WCWIDTH;WCWIDTH_VISIBILITY_INTERNAL</DefineConstants>
+    <IsAotCompatible Condition="'$(TargetFramework)' != 'netstandard2.0'">true</IsAotCompatible>
+    <DisableRepoAnalyzers>true</DisableRepoAnalyzers>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Generated/**/*.cs" />
+    <Compile Remove="Spectre.Console\Generated/**/*.cs" />
     <None Remove="Spectre.Console\Widgets\Figlet\Fonts\Standard.flf" />
     <EmbeddedResource Include="Spectre.Console\Widgets\Figlet\Fonts\Standard.flf" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="6.1.0" />
-    <PackageReference Include="Wcwidth.Sources" Version="4.0.1">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Wcwidth.Sources" Version="4.0.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="system.memory" Version="4.6.3" />
-    <PackageReference Include="TunnelVisionLabs.ReferenceAssemblyAnnotator" Version="1.0.0-alpha.160" PrivateAssets="all" />
-    <PackageDownload Include="Microsoft.NETCore.App.Ref" Version="[$(AnnotatedReferenceAssemblyVersion)]" />
-    <PackageReference Include="Nullable" Version="1.3.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Bcl.TimeProvider" Version="10.0.8" />
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+    <PackageReference Include="Polyfill" Version="10.5.1" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Spectre.Console.Rx.Ansi\Spectre.Console.Rx.Ansi.csproj" />
+    <ProjectReference Include="..\Spectre.Console.Rx.SourceGenerator\Spectre.Console.Rx.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Spectre.Console\Data\spinners_default.json" />
+    <AdditionalFiles Include="Spectre.Console\Data\spinners_sindresorhus.json" />
+    <AdditionalFiles Include="Spectre.Console\Data\emoji.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Spectre.Console.Rx.Tests" />
   </ItemGroup>
 
 </Project>

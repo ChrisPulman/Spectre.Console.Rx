@@ -1,20 +1,13 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Represents a prompt.
 /// </summary>
 /// <typeparam name="T">The prompt result type.</typeparam>
-/// <remarks>
-/// Initializes a new instance of the <see cref="TextPrompt{T}"/> class.
-/// </remarks>
-/// <param name="prompt">The prompt markup text.</param>
-/// <param name="comparer">The comparer used for choices.</param>
-public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null) : IPrompt<T>, IHasCulture
+public sealed class TextPrompt<T> : IPrompt<T>, IHasCulture
 {
-    private readonly string _prompt = prompt ?? throw new ArgumentNullException(nameof(prompt));
+    private readonly string _prompt;
+    private readonly StringComparer? _comparer;
 
     /// <summary>
     /// Gets or sets the prompt style.
@@ -24,7 +17,7 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
     /// <summary>
     /// Gets the list of choices.
     /// </summary>
-    public List<T> Choices { get; } = new List<T>();
+    public List<T> Choices { get; } = [];
 
     /// <summary>
     /// Gets or sets the culture to use when converting input to object.
@@ -66,9 +59,21 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
     public bool ShowDefaultValue { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets the default value editable state that allows the injection of the DefaultValue in the text field.
+    /// If true this places the DefaultValue in the input buffer which can then be edited by the user.
+    /// </summary>
+    public bool EditableDefaultValue { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether or not an empty result is valid.
     /// </summary>
     public bool AllowEmpty { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the prompt line
+    /// should be cleared after a successful input.
+    /// </summary>
+    public bool ClearOnFinish { get; set; }
 
     /// <summary>
     /// Gets or sets the converter to get the display string for a choice. By default
@@ -91,10 +96,19 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
     /// </summary>
     public Style? ChoicesStyle { get; set; }
 
-    /// <summary>
-    /// Gets or sets the default value.
-    /// </summary>
     internal DefaultPromptValue<T>? DefaultValue { get; set; }
+    internal TextPromptInputHandler? InputHandler { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextPrompt{T}"/> class.
+    /// </summary>
+    /// <param name="prompt">The prompt markup text.</param>
+    /// <param name="comparer">The comparer used for choices.</param>
+    public TextPrompt(string prompt, StringComparer? comparer = null)
+    {
+        _prompt = prompt ?? throw new System.ArgumentNullException(nameof(prompt));
+        _comparer = comparer ?? StringComparer.OrdinalIgnoreCase;
+    }
 
     /// <summary>
     /// Shows the prompt and requests input from the user.
@@ -102,28 +116,41 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
     /// <param name="console">The console to show the prompt in.</param>
     /// <returns>The user input converted to the expected type.</returns>
     /// <inheritdoc/>
-    public T Show(IAnsiConsole console) => ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
+    public T Show(IAnsiConsole console)
+    {
+        return ShowAsync(console, CancellationToken.None).GetAwaiter().GetResult();
+    }
 
     /// <inheritdoc/>
     public async Task<T> ShowAsync(IAnsiConsole console, CancellationToken cancellationToken)
     {
-        if (console is null)
-        {
-            throw new ArgumentNullException(nameof(console));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
         return await console.RunExclusive(async () =>
         {
             var promptStyle = PromptStyle ?? Style.Plain;
             var converter = Converter ?? TypeConverterHelper.ConvertToString;
-            var choices = Choices.ConvertAll(choice => converter(choice));
-            var choiceMap = Choices.ToDictionary(choice => converter(choice), choice => choice, comparer);
+            var choices = Choices.Select(choice => converter(choice)).ToList();
+            var choiceMap = Choices.ToDictionary(choice => converter(choice), choice => choice, _comparer);
+            var inputhandler = InputHandler ?? AnsiConsoleExtensions.ReadLine;
 
             WritePrompt(console);
 
             while (true)
             {
-                var input = await console.ReadLine(promptStyle, IsSecret, Mask, choices, cancellationToken).ConfigureAwait(false);
+                string input;
+                if (EditableDefaultValue && DefaultValue != null)
+                {
+                    input = await inputhandler(console, promptStyle, IsSecret, Mask, choices,
+                            converter(DefaultValue.Value), cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    input = await inputhandler(console, promptStyle, IsSecret, Mask, choices,
+                            null, cancellationToken)
+                        .ConfigureAwait(false);
+                }
 
                 // Nothing entered?
                 if (string.IsNullOrWhiteSpace(input))
@@ -133,6 +160,8 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
                         var defaultValue = converter(DefaultValue.Value);
                         console.Write(IsSecret ? defaultValue.Mask(Mask) : defaultValue, promptStyle);
                         console.WriteLine();
+
+                        ClearPromptLine(console);
                         return DefaultValue.Value;
                     }
 
@@ -149,15 +178,18 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
                 {
                     if (choiceMap.TryGetValue(input, out result) && result != null)
                     {
+                        ClearPromptLine(console);
                         return result;
                     }
-
-                    console.MarkupLine(InvalidChoiceMessage);
-                    WritePrompt(console);
-
-                    continue;
+                    else
+                    {
+                        console.MarkupLine(InvalidChoiceMessage);
+                        WritePrompt(console);
+                        continue;
+                    }
                 }
-                else if (!TypeConverterHelper.TryConvertFromStringWithCulture(input, Culture, out result) || result == null)
+                else if (!TypeConverterHelper.TryConvertFromStringWithCulture<T>(input, Culture, out result) ||
+                         result == null)
                 {
                     console.MarkupLine(ValidationErrorMessage);
                     WritePrompt(console);
@@ -172,6 +204,7 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
                     continue;
                 }
 
+                ClearPromptLine(console);
                 return result;
             }
         }).ConfigureAwait(false);
@@ -183,18 +216,15 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
     /// <param name="console">The console to write the prompt to.</param>
     private void WritePrompt(IAnsiConsole console)
     {
-        if (console is null)
-        {
-            throw new ArgumentNullException(nameof(console));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
         var builder = new StringBuilder();
         builder.Append(_prompt.TrimEnd());
 
-        var appendSuffix = false;
+        var hasPromptDetails = false;
         if (ShowChoices && Choices.Count > 0)
         {
-            appendSuffix = true;
+            hasPromptDetails = true;
             var converter = Converter ?? TypeConverterHelper.ConvertToString;
             var choices = string.Join("/", Choices.Select(choice => converter(choice)));
             var choicesStyle = ChoicesStyle?.ToMarkup() ?? "blue";
@@ -203,7 +233,7 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
 
         if (ShowDefaultValue && DefaultValue != null)
         {
-            appendSuffix = true;
+            hasPromptDetails = true;
             var converter = Converter ?? TypeConverterHelper.ConvertToString;
             var defaultValueStyle = DefaultValueStyle?.ToMarkup() ?? "green";
             var defaultValue = converter(DefaultValue.Value);
@@ -216,12 +246,55 @@ public sealed class TextPrompt<T>(string prompt, StringComparer? comparer = null
         }
 
         var markup = builder.ToString().Trim();
-        if (appendSuffix)
+        if (ShouldAppendColon(markup, hasPromptDetails))
         {
             markup += ":";
         }
 
         console.Markup(markup + " ");
+    }
+
+    /// <summary>
+    /// A colon should be appended when prompt details are rendered, or when a plain prompt does not already end with punctuation.
+    /// </summary>
+    /// <param name="markup">The prompt markup.</param>
+    /// <param name="hasPromptDetails">Whether the prompt includes choices or a default value.</param>
+    /// <returns>Whether a colon should be appended.</returns>
+    private static bool ShouldAppendColon(string markup, bool hasPromptDetails)
+    {
+        if (hasPromptDetails)
+        {
+            return true;
+        }
+
+        var prompt = Markup.Remove(markup).TrimEnd();
+        return prompt.Length > 0 && char.IsLetterOrDigit(prompt[^1]);
+    }
+
+    /// <summary>
+    /// Clears the prompt line when enabled.
+    /// </summary>
+    /// <param name="console">The console to clear the prompt from.</param>
+    private void ClearPromptLine(IAnsiConsole console)
+    {
+        if (!ClearOnFinish)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(console);
+
+        if (!console.Profile.Capabilities.Ansi)
+        {
+            return;
+        }
+
+        console.Cursor.MoveUp();
+        console.Write(ControlCode.Create(console, writer =>
+        {
+            writer.Write("\r");
+            writer.EraseInLine(2);
+        }));
     }
 
     private bool ValidateResult(T value, [NotNullWhen(false)] out string? message)

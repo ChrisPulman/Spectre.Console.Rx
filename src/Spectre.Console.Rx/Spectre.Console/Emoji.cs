@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -10,7 +7,10 @@ public static partial class Emoji
 {
     private static readonly Dictionary<string, string> _remappings;
 
-    static Emoji() => _remappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    static Emoji()
+    {
+        _remappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <summary>
     /// Remaps a specific emoji tag with a new emoji.
@@ -19,15 +19,8 @@ public static partial class Emoji
     /// <param name="emoji">The emoji.</param>
     public static void Remap(string tag, string emoji)
     {
-        if (tag is null)
-        {
-            throw new ArgumentNullException(nameof(tag));
-        }
-
-        if (emoji is null)
-        {
-            throw new ArgumentNullException(nameof(emoji));
-        }
+        ArgumentNullException.ThrowIfNull(tag);
+        ArgumentNullException.ThrowIfNull(emoji);
 
         tag = tag.TrimStart(':').TrimEnd(':');
         emoji = emoji.TrimStart(':').TrimEnd(':');
@@ -35,61 +28,49 @@ public static partial class Emoji
         _remappings[tag] = emoji;
     }
 
-#if NETSTANDARD2_0
     /// <summary>
     /// Replaces emoji markup with corresponding unicode characters.
     /// </summary>
     /// <param name="value">A string with emojis codes, e.g. "Hello :smiley:!".</param>
     /// <returns>A string with emoji codes replaced with actual emoji.</returns>
-    public static string Replace(string value) => Replace(value.AsSpan());
-#endif
-
-    /// <summary>
-    /// Replaces emoji markup with corresponding unicode characters.
-    /// </summary>
-    /// <param name="value">A string with emojis codes, e.g. "Hello :smiley:!".</param>
-    /// <returns>A string with emoji codes replaced with actual emoji.</returns>
-    [SuppressMessage("Roslynator", "RCS1231:Make parameter ref read-only.", Justification = "Netstandard does not suppport")]
-    public static string Replace(ReadOnlySpan<char> value)
+    public static string Replace(string value)
     {
-        var output = new StringBuilder();
         var colonPos = value.IndexOf(':');
         if (colonPos == -1)
         {
             // No colons, no emoji. return what was passed in with no changes.
-            return value.ToString();
+            return value;
         }
 
-        while ((colonPos = value.IndexOf(':')) != -1)
+        var span = value.AsSpan();
+        StringBuilder? output = null;
+
+        var index = colonPos + 1;
+        int nextColonPos;
+        while ((nextColonPos = span.IndexOf(':', index)) != -1)
         {
-            // Append text up to colon
-            output.AppendSpan(value.Slice(0, colonPos));
-
-            // Set value equal to that colon and the rest of the string
-            value = value.Slice(colonPos);
-
-            // Find colon after that. if no colon, break out
-            var nextColonPos = value.IndexOf(':', 1);
-            if (nextColonPos == -1)
-            {
-                break;
-            }
-
-            // Get the emoji text minus the colons
-            var emojiKey = value.Slice(1, nextColonPos - 1).ToString();
+            var emojiKey = span.Slice(index, nextColonPos - index).ToString();
             if (TryGetEmoji(emojiKey, out var emojiValue))
             {
+                output ??= new StringBuilder();
+                output.AppendSpan(span[..(index - 1)]);
                 output.Append(emojiValue);
-                value = value.Slice(nextColonPos + 1);
+
+                span = span.Slice(nextColonPos + 1);
+                index = 0;
             }
             else
             {
-                output.Append(':');
-                value = value.Slice(1);
+                index = nextColonPos + 1;
             }
         }
 
-        output.AppendSpan(value);
+        if (output == null)
+        {
+            return value;
+        }
+
+        output.AppendSpan(span);
         return output.ToString();
     }
 
@@ -111,7 +92,7 @@ public static partial class Emoji
         return false;
     }
 
-    private static int IndexOf(this in ReadOnlySpan<char> span, char value, int startIndex)
+    private static int IndexOf(this ReadOnlySpan<char> span, char value, int startIndex)
     {
         var indexInSlice = span.Slice(startIndex).IndexOf(value);
 

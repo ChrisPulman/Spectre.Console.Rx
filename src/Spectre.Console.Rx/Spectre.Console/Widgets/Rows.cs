@@ -1,18 +1,14 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Renders things in rows.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="Rows"/> class.
-/// </remarks>
-/// <param name="children">The items to render as rows.</param>
-public sealed class Rows(IEnumerable<IRenderable> children) : Renderable, IExpandable
+public sealed class Rows : Renderable, IExpandable
 {
-    private readonly List<IRenderable> _children = new(children ?? throw new ArgumentNullException(nameof(children)));
+    private readonly List<IRenderable> _children;
+
+    /// <inheritdoc/>
+    public bool Expand { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Rows"/> class.
@@ -23,8 +19,14 @@ public sealed class Rows(IEnumerable<IRenderable> children) : Renderable, IExpan
     {
     }
 
-    /// <inheritdoc/>
-    public bool Expand { get; set; }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rows"/> class.
+    /// </summary>
+    /// <param name="children">The items to render as rows.</param>
+    public Rows(IEnumerable<IRenderable> children)
+    {
+        _children = new List<IRenderable>(children ?? throw new ArgumentNullException(nameof(children)));
+    }
 
     /// <inheritdoc/>
     protected override Measurement Measure(RenderOptions options, int maxWidth)
@@ -33,16 +35,18 @@ public sealed class Rows(IEnumerable<IRenderable> children) : Renderable, IExpan
         {
             return new Measurement(maxWidth, maxWidth);
         }
-
-        var measurements = _children.Select(c => c.Measure(options, maxWidth)).ToArray();
-        if (measurements.Length > 0)
+        else
         {
-            return new Measurement(
-                measurements.Max(c => c.Min),
-                measurements.Max(c => c.Max));
-        }
+            var measurements = _children.Select(c => c.Measure(options, maxWidth)).ToArray();
+            if (measurements.Length > 0)
+            {
+                return new Measurement(
+                    measurements.Max(c => c.Min),
+                    measurements.Max(c => c.Max));
+            }
 
-        return new Measurement(0, 0);
+            return new Measurement(0, 0);
+        }
     }
 
     /// <inheritdoc/>
@@ -57,9 +61,12 @@ public sealed class Rows(IEnumerable<IRenderable> children) : Renderable, IExpan
             {
                 result.Add(segment);
 
-                if (last && !segment.IsLineBreak && child is not ControlCode)
+                if (last)
                 {
-                    result.Add(Segment.LineBreak);
+                    if (!segment.IsLineBreak && child is not ControlCode)
+                    {
+                        result.Add(Segment.LineBreak);
+                    }
                 }
             }
         }

@@ -9,7 +9,7 @@ using Spectre.Console.Rx;
 // NOTE: This code executes synchronously, only one instance of the console context can be executing at a time.
 //       This is because the console context is not thread safe.
 //       Remember to call IsFinished() on the console context when you're done with it.
-var table = new Table().LeftAligned();
+var table = new Table();
 
 AnsiConsoleRx
     .Status(
@@ -174,7 +174,8 @@ AnsiConsoleRx.Progress(p =>
             });
 
         // Now start the "warp" task
-        warpTask.StartTask().IsIndeterminate(false);
+        warpTask.StartTask();
+        warpTask.IsIndeterminate(false);
         await ctx.Schedule(
             TimeSpan.FromMilliseconds(100),
             () => warpTask.Increment(12 * random.NextDouble()));

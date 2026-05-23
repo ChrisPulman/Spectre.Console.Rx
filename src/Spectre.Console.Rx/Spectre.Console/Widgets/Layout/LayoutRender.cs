@@ -1,12 +1,14 @@
-﻿// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 [DebuggerDisplay("{Region,nq}")]
-internal sealed class LayoutRender(Region region, List<SegmentLine> render)
+internal sealed class LayoutRender
 {
-    public Region Region { get; } = region;
+    public Region Region { get; }
+    public List<SegmentLine> Render { get; }
 
-    public List<SegmentLine> Render { get; } = render ?? throw new ArgumentNullException(nameof(render));
+    public LayoutRender(Region region, List<SegmentLine> render)
+    {
+        Region = region;
+        Render = render ?? throw new ArgumentNullException(nameof(render));
+    }
 }

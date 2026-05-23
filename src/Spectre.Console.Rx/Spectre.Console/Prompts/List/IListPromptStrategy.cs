@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -37,5 +34,13 @@ internal interface IListPromptStrategy<T>
     /// <param name="skipUnselectableItems">A value indicating whether or not the prompt should skip unselectable items.</param>
     /// <param name="searchText">The search text.</param>
     /// <returns>A <see cref="IRenderable"/> representing the items.</returns>
-    public IRenderable Render(IAnsiConsole console, bool scrollable, int cursorIndex, IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText);
+    public IRenderable Render(IAnsiConsole console, bool scrollable, int cursorIndex,
+        IEnumerable<(int Index, ListPromptItem<T> Node)> items, bool skipUnselectableItems, string searchText);
+
+    /// <summary>
+    /// Calculates the state's initial index.
+    /// </summary>
+    /// <param name="nodes">The nodes that will be shown in the list.</param>
+    /// <returns>The initial index that should be used.</returns>
+    public int CalculateInitialIndex(IReadOnlyList<ListPromptItem<T>> nodes);
 }

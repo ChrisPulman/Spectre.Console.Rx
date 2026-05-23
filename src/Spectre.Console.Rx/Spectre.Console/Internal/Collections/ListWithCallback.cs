@@ -1,21 +1,23 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class ListWithCallback<T>(Action callback) : IList<T>, IReadOnlyList<T>
+internal sealed class ListWithCallback<T> : IList<T>, IReadOnlyList<T>
 {
-    private readonly List<T> _list = new();
-    private readonly Action _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-
-    public int Count => _list.Count;
-
-    public bool IsReadOnly => false;
+    private readonly List<T> _list;
+    private readonly Action _callback;
 
     public T this[int index]
     {
         get => _list[index];
         set => _list[index] = value;
+    }
+
+    public int Count => _list.Count;
+    public bool IsReadOnly => false;
+
+    public ListWithCallback(Action callback)
+    {
+        _list = [];
+        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
     }
 
     public void Add(T item)
@@ -30,7 +32,10 @@ internal sealed class ListWithCallback<T>(Action callback) : IList<T>, IReadOnly
         _callback();
     }
 
-    public bool Contains(T item) => _list.Contains(item);
+    public bool Contains(T item)
+    {
+        return _list.Contains(item);
+    }
 
     public void CopyTo(T[] array, int arrayIndex)
     {
@@ -38,9 +43,15 @@ internal sealed class ListWithCallback<T>(Action callback) : IList<T>, IReadOnly
         _callback();
     }
 
-    public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
+    public IEnumerator<T> GetEnumerator()
+    {
+        return _list.GetEnumerator();
+    }
 
-    public int IndexOf(T item) => _list.IndexOf(item);
+    public int IndexOf(T item)
+    {
+        return _list.IndexOf(item);
+    }
 
     public void Insert(int index, T item)
     {
@@ -65,5 +76,8 @@ internal sealed class ListWithCallback<T>(Action callback) : IList<T>, IReadOnly
         _callback();
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }

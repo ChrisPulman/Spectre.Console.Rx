@@ -1,32 +1,43 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Represents a region.
 /// </summary>
 [DebuggerDisplay("[X={X,nq}, Y={Y,nq}, W={Width,nq}, H={Height,nq}]")]
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Intensional")]
-public readonly struct Region(int x, int y, int width, int height)
+public readonly struct Region
 {
     /// <summary>
     /// Gets the x-coordinate.
     /// </summary>
-    public int X { get; } = x;
+    public int X { get; }
 
     /// <summary>
     /// Gets the y-coordinate.
     /// </summary>
-    public int Y { get; } = y;
+    public int Y { get; }
 
     /// <summary>
     /// Gets the width.
     /// </summary>
-    public int Width { get; } = width;
+    public int Width { get; }
 
     /// <summary>
     /// Gets the height.
     /// </summary>
-    public int Height { get; } = height;
+    public int Height { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Region"/> struct.
+    /// </summary>
+    /// <param name="x">The x-coordinate.</param>
+    /// <param name="y">The y-coordinate.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
+    public Region(int x, int y, int width, int height)
+    {
+        X = x;
+        Y = y;
+        Width = width;
+        Height = height;
+    }
 }

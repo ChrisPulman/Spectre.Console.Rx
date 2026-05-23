@@ -1,20 +1,19 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class LiveDisplayRenderer : IRenderHook
 {
     private readonly IAnsiConsole _console;
     private readonly LiveDisplayContext _context;
-
     public LiveDisplayRenderer(IAnsiConsole console, LiveDisplayContext context)
     {
         _console = console;
         _context = context;
     }
 
-    public void Started() => _console.Cursor.Hide();
+    public void Started()
+    {
+        _console.Cursor.Hide();
+    }
 
     public void Completed(bool autoclear)
     {
@@ -45,7 +44,7 @@ internal sealed class LiveDisplayRenderer : IRenderHook
     {
         lock (_context.Lock)
         {
-            yield return _context.Live.PositionCursor();
+            yield return _context.Live.PositionCursor(options);
 
             foreach (var renderable in renderables)
             {

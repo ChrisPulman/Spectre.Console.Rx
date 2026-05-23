@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -27,5 +24,8 @@ public abstract class ProgressColumn
     /// </summary>
     /// <param name="options">The render options.</param>
     /// <returns>The width of the column, or <c>null</c> to calculate.</returns>
-    public virtual int? GetColumnWidth(RenderOptions options) => null;
+    public virtual int? GetColumnWidth(RenderOptions options)
+    {
+        return null;
+    }
 }

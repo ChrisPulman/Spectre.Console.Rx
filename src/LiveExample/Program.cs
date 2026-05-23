@@ -17,10 +17,10 @@ public static class Program
     /// </summary>
     public static void Main()
     {
-        var table = new Table().Centered();
+        var table = new Table();
 
         // Animate
-        AnsiConsoleRx.Live(table, ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
+        AnsiConsoleRx.Live(Align.Center(table), ld => ld.AutoClear(false).Overflow(VerticalOverflow.Ellipsis).Cropping(VerticalOverflowCropping.Top))
             .ObserveOn(AnsiConsoleRx.Scheduler)
             .Subscribe(ctx =>
 

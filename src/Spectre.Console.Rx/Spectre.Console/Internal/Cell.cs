@@ -1,25 +1,45 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using Wcwidth;
-
 namespace Spectre.Console.Rx;
 
 internal static class Cell
 {
-    private static readonly int?[] _runeWidthCache = new int?[char.MaxValue];
+    private const sbyte Sentinel = -2;
+
+    /// <summary>
+    /// UnicodeCalculator.GetWidth documents the width as (-1, 0, 1, 2). We only need space for these values and a sentinel for uninitialized values.
+    /// This is only five values in total so we are storing one byte per value. We could store 2 per byte but that would add more logic to the retrieval.
+    /// We should add one to char.MaxValue because the total number of characters includes \0 too so there are 65536 valid chars.
+    /// </summary>
+    private static readonly sbyte[] _runeWidthCache = new sbyte[char.MaxValue + 1];
+
+    static Cell()
+    {
+#if !NETSTANDARD2_0
+        Array.Fill(_runeWidthCache, Sentinel);
+#else
+        for (var i = 0; i < _runeWidthCache.Length; i++)
+        {
+            _runeWidthCache[i] = Sentinel;
+        }
+#endif
+    }
 
     public static int GetCellLength(string text)
     {
+#if !NETSTANDARD2_0
+        return UnicodeCalculator.GetWidth(text);
+#else
         var sum = 0;
-        for (var index = 0; index < text.Length; index++)
+        foreach (var rune in text)
         {
-            var rune = text[index];
             sum += GetCellLength(rune);
         }
 
         return sum;
+#endif
     }
+
+    public static int GetCellLength(ReadOnlySpan<char> text)
+        => GetCellLength(text.ToString());
 
     public static int GetCellLength(char rune)
     {
@@ -34,6 +54,13 @@ internal static class Cell
             return 1;
         }
 
-        return _runeWidthCache[rune] ??= UnicodeCalculator.GetWidth(rune);
+        var width = _runeWidthCache[rune];
+        if (width == Sentinel)
+        {
+            width = (sbyte)UnicodeCalculator.GetWidth(rune);
+            _runeWidthCache[rune] = width;
+        }
+
+        return width;
     }
 }

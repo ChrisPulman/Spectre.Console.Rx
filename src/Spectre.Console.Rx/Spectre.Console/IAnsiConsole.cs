@@ -1,12 +1,9 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
 /// Represents a console.
 /// </summary>
-public interface IAnsiConsole : IDisposable
+public interface IAnsiConsole
 {
     /// <summary>
     /// Gets the console profile.
@@ -44,4 +41,10 @@ public interface IAnsiConsole : IDisposable
     /// </summary>
     /// <param name="renderable">The <see cref="IRenderable"/> to write.</param>
     void Write(IRenderable renderable);
+
+    /// <summary>
+    /// Writes ANSI/VT escapes sequences to the console.
+    /// </summary>
+    /// <param name="action">The <see cref="AnsiWriter"/> action.</param>
+    void WriteAnsi(Action<AnsiWriter> action);
 }

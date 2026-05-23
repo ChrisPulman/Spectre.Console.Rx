@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -21,7 +18,7 @@ public abstract partial class BoxBorder
     /// <summary>
     /// Gets a double border.
     /// </summary>
-    [SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "Intensional")]
+    [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     public static BoxBorder Double { get; } = new DoubleBoxBorder();
 
     /// <summary>

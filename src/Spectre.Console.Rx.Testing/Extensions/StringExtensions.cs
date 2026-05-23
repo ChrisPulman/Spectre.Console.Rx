@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Testing;
 
 /// <summary>
@@ -21,7 +18,7 @@ public static class StringExtensions
         }
 
         var result = new List<string>();
-        foreach (var line in value.NormalizeLineEndings().Split(new[] { '\n' }))
+        foreach (var line in value.NormalizeLineEndings().Split(['\n']))
         {
             result.Add(line.TrimEnd());
         }

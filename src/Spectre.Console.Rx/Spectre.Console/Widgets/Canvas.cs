@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,34 +5,12 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class Canvas : Renderable
 {
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
     private readonly Color?[,] _pixels;
-#pragma warning restore CA1814 // Prefer jagged arrays over multidimensional
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Canvas"/> class.
-    /// </summary>
-    /// <param name="width">The canvas width.</param>
-    /// <param name="height">The canvas height.</param>
-    public Canvas(int width, int height)
-    {
-        if (width < 1)
-        {
-            throw new ArgumentException("Must be > 1", nameof(width));
-        }
-
-        if (height < 1)
-        {
-            throw new ArgumentException("Must be > 1", nameof(height));
-        }
-
-        Width = width;
-        Height = height;
-
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-        _pixels = new Color?[Width, Height];
-#pragma warning restore CA1814 // Prefer jagged arrays over multidimensional
-    }
+    private const string Transparent = " ";
+    private const string DoubleTransparent = "  ";
+    private const string UpperHalfBlock = "▀";
+    private const string LowerHalfBlock = "▄";
 
     /// <summary>
     /// Gets the width of the canvas.
@@ -61,7 +36,31 @@ public sealed class Canvas : Renderable
     /// <summary>
     /// Gets or sets the pixel width.
     /// </summary>
+    [Obsolete("Not used anymore. Will be removed in future update.")]
     public int PixelWidth { get; set; } = 2;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Canvas"/> class.
+    /// </summary>
+    /// <param name="width">The canvas width.</param>
+    /// <param name="height">The canvas height.</param>
+    public Canvas(int width, int height)
+    {
+        if (width < 1)
+        {
+            throw new ArgumentException("Must be > 1", nameof(width));
+        }
+
+        if (height < 1)
+        {
+            throw new ArgumentException("Must be > 1", nameof(height));
+        }
+
+        Width = width;
+        Height = height;
+
+        _pixels = new Color?[Width, Height];
+    }
 
     /// <summary>
     /// Sets a pixel with the specified color in the canvas at the specified location.
@@ -79,85 +78,145 @@ public sealed class Canvas : Renderable
     /// <inheritdoc/>
     protected override Measurement Measure(RenderOptions options, int maxWidth)
     {
-        if (PixelWidth < 0)
-        {
-            throw new InvalidOperationException("Pixel width must be greater than zero.");
-        }
-
+        var pixelWidth = options.Unicode ? 1 : 2;
         var width = MaxWidth ?? Width;
 
-        if (maxWidth < width * PixelWidth)
-        {
-            return new Measurement(maxWidth, maxWidth);
-        }
-
-        return new Measurement(width * PixelWidth, width * PixelWidth);
+        return maxWidth < width * pixelWidth
+            ? new Measurement(maxWidth, maxWidth)
+            : new Measurement(width * pixelWidth, width * pixelWidth);
     }
 
     /// <inheritdoc/>
     protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
     {
-        if (PixelWidth < 0)
+        return options.Unicode
+            ? RenderUnicode(maxWidth)
+            : RenderNonUnicode(maxWidth);
+    }
+
+    private IEnumerable<Segment> RenderUnicode(int maxWidth)
+    {
+        var pixels = _pixels;
+        var width = Width;
+        var height = Height;
+
+        // Got a max width?
+        if (MaxWidth != null)
         {
-            throw new InvalidOperationException("Pixel width must be greater than zero.");
+            height = (int)(height * ((float)MaxWidth.Value) / Width);
+            width = MaxWidth.Value;
         }
 
-        return RenderValidation();
-
-        IEnumerable<Segment> RenderValidation()
+        // Exceed the max width when we take pixel width into account?
+        if (width > maxWidth)
         {
-            var pixels = _pixels;
-            var pixel = new string(' ', PixelWidth);
-            var width = Width;
-            var height = Height;
+            height = (int)(height * (maxWidth / (float)(width)));
+            width = maxWidth;
 
-            // Got a max width?
-            if (MaxWidth != null)
+            if (height == 0)
             {
-                height = (int)(height * ((float)MaxWidth.Value) / Width);
-                width = MaxWidth.Value;
-            }
-
-            // Exceed the max width when we take pixel width into account?
-            if (width * PixelWidth > maxWidth)
-            {
-                height = (int)(height * (maxWidth / (float)(width * PixelWidth)));
-                width = maxWidth / PixelWidth;
-
                 // If it's not possible to scale the canvas sufficiently, it's too small to render.
-                if (height == 0)
+                yield break;
+            }
+        }
+
+        // Need to rescale the pixel buffer?
+        if (Scale && (width != Width || height != Height))
+        {
+            pixels = ScaleDown(width, height);
+        }
+
+        for (var y = 0; y < height; y += 2)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var upper = pixels[x, y];
+                var lower = y < height - 1 ? pixels[x, y + 1] : null;
+
+                if (upper == null && lower == null)
                 {
-                    yield break;
+                    // None visible
+                    yield return new Segment(Transparent);
+                }
+                else if (upper != null && lower != null)
+                {
+                    // Both pixels visible
+                    yield return new Segment(
+                        UpperHalfBlock, new Style(
+                            foreground: upper,
+                            background: lower));
+                }
+                else if (upper != null)
+                {
+                    // Upper visible
+                    yield return new Segment(
+                        UpperHalfBlock, new Style(
+                            foreground: upper));
+                }
+                else if (lower != null)
+                {
+                    // Lower visible
+                    yield return new Segment(
+                        LowerHalfBlock, new Style(
+                            foreground: lower));
                 }
             }
 
-            // Need to rescale the pixel buffer?
-            if (Scale && (width != Width || height != Height))
-            {
-                pixels = ScaleDown(width, height);
-            }
-
-            for (var y = 0; y < height; y++)
-            {
-                for (var x = 0; x < width; x++)
-                {
-                    var color = pixels[x, y];
-                    if (color != null)
-                    {
-                        yield return new Segment(pixel, new Style(background: color));
-                    }
-                    else
-                    {
-                        yield return new Segment(pixel);
-                    }
-                }
-
-                yield return Segment.LineBreak;
-            }
+            yield return Segment.LineBreak;
         }
     }
 
-    [SuppressMessage("Performance", "CA1814:Prefer jagged arrays over multidimensional", Justification = "Intensional")]
+    private IEnumerable<Segment> RenderNonUnicode(int maxWidth)
+    {
+        var pixels = _pixels;
+        var width = Width;
+        var height = Height;
+
+        // Got a max width?
+        if (MaxWidth != null)
+        {
+            height = (int)(height * ((float)MaxWidth.Value) / Width);
+            width = MaxWidth.Value;
+        }
+
+        // Exceed the max width when we take pixel width into account?
+        if (width * 2 > maxWidth)
+        {
+            height = (int)(height * (maxWidth / (float)(width * 2)));
+            width = maxWidth / 2;
+
+            if (height == 0)
+            {
+                // If it's not possible to scale the canvas sufficiently, it's too small to render.
+                yield break;
+            }
+        }
+
+        // Need to rescale the pixel buffer?
+        if (Scale && (width != Width || height != Height))
+        {
+            pixels = ScaleDown(width, height);
+        }
+
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var color = pixels[x, y];
+                if (color != null)
+                {
+                    yield return new Segment(DoubleTransparent, new Style(background: color));
+                }
+                else
+                {
+                    yield return new Segment(DoubleTransparent);
+                }
+            }
+
+            yield return Segment.LineBreak;
+        }
+    }
+
     private Color?[,] ScaleDown(int newWidth, int newHeight)
     {
         var buffer = new Color?[newWidth, newHeight];

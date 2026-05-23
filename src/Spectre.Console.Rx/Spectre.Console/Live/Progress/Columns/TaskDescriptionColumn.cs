@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,13 +5,13 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class TaskDescriptionColumn : ProgressColumn
 {
+    /// <inheritdoc/>
+    protected internal override bool NoWrap => true;
+
     /// <summary>
     /// Gets or sets the alignment of the task description.
     /// </summary>
     public Justify Alignment { get; set; } = Justify.Right;
-
-    /// <inheritdoc/>
-    protected internal override bool NoWrap => true;
 
     /// <inheritdoc/>
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)

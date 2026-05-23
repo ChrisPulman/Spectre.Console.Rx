@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class ListPromptTree<T>
@@ -11,7 +8,7 @@ internal sealed class ListPromptTree<T>
 
     public ListPromptTree(IEqualityComparer<T> comparer)
     {
-        _roots = new List<ListPromptItem<T>>();
+        _roots = [];
         _comparer = comparer ?? throw new ArgumentNullException(nameof(comparer));
     }
 
@@ -32,7 +29,26 @@ internal sealed class ListPromptTree<T>
         return null;
     }
 
-    public void Add(ListPromptItem<T> node) => _roots.Add(node);
+    public int? IndexOf(T item)
+    {
+        var index = 0;
+        foreach (var node in Traverse())
+        {
+            if (_comparer.Equals(item, node.Data))
+            {
+                return index;
+            }
+
+            index++;
+        }
+
+        return null;
+    }
+
+    public void Add(ListPromptItem<T> node)
+    {
+        _roots.Add(node);
+    }
 
     public IEnumerable<ListPromptItem<T>> Traverse()
     {

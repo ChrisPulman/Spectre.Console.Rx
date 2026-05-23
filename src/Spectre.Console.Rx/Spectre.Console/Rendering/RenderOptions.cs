@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -49,10 +46,7 @@ public record class RenderOptions(IReadOnlyCapabilities Capabilities, Size Conso
     /// <returns>A <see cref="RenderOptions"/> representing the provided <see cref="IAnsiConsole"/>.</returns>
     public static RenderOptions Create(IAnsiConsole console, IReadOnlyCapabilities? capabilities = null)
     {
-        if (console is null)
-        {
-            throw new ArgumentNullException(nameof(console));
-        }
+        ArgumentNullException.ThrowIfNull(console);
 
         return new RenderOptions(
             capabilities ?? console.Profile.Capabilities,
@@ -62,5 +56,14 @@ public record class RenderOptions(IReadOnlyCapabilities Capabilities, Size Conso
             Height = null,
             SingleLine = false,
         };
+    }
+}
+
+internal static class RenderOptionsExtensions
+{
+    public static BoxBorder GetSafeBorder<T>(this RenderOptions options, T border)
+        where T : IHasBoxBorder, IHasBorder
+    {
+        return BoxExtensions.GetSafeBorder(border.Border, !options.Unicode && border.UseSafeBorder);
     }
 }

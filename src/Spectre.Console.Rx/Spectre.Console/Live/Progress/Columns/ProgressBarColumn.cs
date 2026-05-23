@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -34,15 +31,66 @@ public sealed class ProgressBarColumn : ProgressColumn
     public Style IndeterminateStyle { get; set; } = ProgressBar.DefaultPulseStyle;
 
     /// <inheritdoc/>
-    public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime) => new ProgressBar
+    public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
-        MaxValue = task.MaxValue,
-        Value = task.Value,
-        Width = Width,
-        CompletedStyle = CompletedStyle,
-        FinishedStyle = FinishedStyle,
-        RemainingStyle = RemainingStyle,
-        IndeterminateStyle = IndeterminateStyle,
-        IsIndeterminate = task.IsIndeterminate,
-    };
+        return new ProgressBar
+        {
+            MaxValue = task.MaxValue,
+            Value = task.Value,
+            Width = Width,
+            CompletedStyle = CompletedStyle,
+            FinishedStyle = FinishedStyle,
+            RemainingStyle = RemainingStyle,
+            IndeterminateStyle = IndeterminateStyle,
+            IsIndeterminate = task.IsIndeterminate,
+        };
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="ProgressBarColumn"/>.
+/// </summary>
+public static class ProgressBarColumnExtensions
+{
+    /// <summary>
+    /// Sets the style of completed portions of the progress bar.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <param name="style">The style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressBarColumn CompletedStyle(this ProgressBarColumn column, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(column);
+
+        column.CompletedStyle = style;
+        return column;
+    }
+
+    /// <summary>
+    /// Sets the style of a finished progress bar.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <param name="style">The style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressBarColumn FinishedStyle(this ProgressBarColumn column, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(column);
+
+        column.FinishedStyle = style;
+        return column;
+    }
+
+    /// <summary>
+    /// Sets the style of remaining portions of the progress bar.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <param name="style">The style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static ProgressBarColumn RemainingStyle(this ProgressBarColumn column, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(column);
+
+        column.RemainingStyle = style;
+        return column;
+    }
 }

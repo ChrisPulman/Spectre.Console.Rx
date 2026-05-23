@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,44 +5,12 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
 {
+    private LayoutSplitter _splitter;
     private Layout[] _children;
+    private IRenderable _renderable;
     private int _ratio;
     private int _minimumSize;
     private int? _size;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Layout"/> class.
-    /// </summary>
-    /// <param name="name">The layout name.</param>
-    public Layout(string name)
-        : this(name, null)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Layout"/> class.
-    /// </summary>
-    /// <param name="renderable">The renderable.</param>
-    public Layout(IRenderable renderable)
-        : this(null, renderable)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Layout"/> class.
-    /// </summary>
-    /// <param name="name">The layout name.</param>
-    /// <param name="renderable">The renderable.</param>
-    public Layout(string? name = null, IRenderable? renderable = null)
-    {
-        Splitter = LayoutSplitter.Null;
-        _children = Array.Empty<Layout>();
-        Renderable = renderable ?? new LayoutPlaceholder(this);
-        _ratio = 1;
-        _size = null;
-
-        Name = name;
-    }
 
     /// <summary>
     /// Gets or sets the name.
@@ -125,19 +90,56 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
     /// <summary>
     /// Gets the splitter used for this layout.
     /// </summary>
-    internal LayoutSplitter Splitter { get; private set; }
+    internal LayoutSplitter Splitter => _splitter;
 
     /// <summary>
     /// Gets the <see cref="IRenderable"/> associated with this layout.
     /// </summary>
-    internal IRenderable Renderable { get; private set; }
+    internal IRenderable Renderable => _renderable;
 
     /// <summary>
     /// Gets a child layout by it's name.
     /// </summary>
     /// <param name="name">The layout name.</param>
     /// <returns>The specified child <see cref="Layout"/>.</returns>
-    public Layout this[string name] => GetLayout(name);
+    public Layout this[string name]
+    {
+        get => GetLayout(name);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Layout"/> class.
+    /// </summary>
+    /// <param name="name">The layout name.</param>
+    public Layout(string name)
+        : this(name, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Layout"/> class.
+    /// </summary>
+    /// <param name="renderable">The renderable.</param>
+    public Layout(IRenderable renderable)
+        : this(null, renderable)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Layout"/> class.
+    /// </summary>
+    /// <param name="name">The layout name.</param>
+    /// <param name="renderable">The renderable.</param>
+    public Layout(string? name = null, IRenderable? renderable = null)
+    {
+        _splitter = LayoutSplitter.Null;
+        _children = [];
+        _renderable = renderable ?? new LayoutPlaceholder(this);
+        _ratio = 1;
+        _size = null;
+
+        Name = name;
+    }
 
     /// <summary>
     /// Gets a child layout by it's name.
@@ -200,7 +202,7 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
     /// /// <returns>The same instance so that multiple calls can be chained.</returns>
     public Layout Update(IRenderable renderable)
     {
-        Renderable = renderable ?? new LayoutPlaceholder(this);
+        _renderable = renderable ?? new LayoutPlaceholder(this);
         return this;
     }
 
@@ -211,17 +213,17 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
         var map = MakeRenderMap(options, maxWidth);
 
         var layoutLines = new List<SegmentLine>();
-        layoutLines.AddRange(Enumerable.Range(0, height).Select(_ => new SegmentLine()));
+        layoutLines.AddRange(Enumerable.Range(0, height).Select(x => new SegmentLine()));
 
         foreach (var (region, lines) in map.Values.Select(x => (x.Region, x.Render)))
         {
-            foreach (var (index, line1) in layoutLines
+            foreach (var line in layoutLines
                 .Skip(region.Y)
                 .Take(region.Y + region.Height)
                 .Enumerate().Select(x => (Index: x.Index + region.Y, Line: x.Item))
                 .Zip(lines, (first, second) => (first.Index, Line: second)))
             {
-                layoutLines[index].AddRange(line1);
+                layoutLines[line.Index].AddRange(line.Line);
             }
         }
 
@@ -240,9 +242,15 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
         }
     }
 
-    private IEnumerable<Layout> GetChildren(bool visibleOnly = false) => visibleOnly ? _children.Where(c => c.IsVisible) : _children;
+    private IEnumerable<Layout> GetChildren(bool visibleOnly = false)
+    {
+        return visibleOnly ? _children.Where(c => c.IsVisible) : _children;
+    }
 
-    private bool HasChildren(bool visibleOnly = false) => visibleOnly ? _children.Any(c => c.IsVisible) : _children.Length > 0;
+    private bool HasChildren(bool visibleOnly = false)
+    {
+        return visibleOnly ? _children.Any(c => c.IsVisible) : _children.Any();
+    }
 
     private void Split(LayoutSplitter splitter, Layout[] layouts)
     {
@@ -251,7 +259,7 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
             throw new InvalidOperationException("Cannot split the same layout twice");
         }
 
-        Splitter = splitter ?? throw new ArgumentNullException(nameof(splitter));
+        _splitter = splitter ?? throw new ArgumentNullException(nameof(splitter));
         _children = layouts ?? throw new ArgumentNullException(nameof(layouts));
     }
 
@@ -299,5 +307,53 @@ public sealed class Layout : Renderable, IRatioResolvable, IHasVisibility
         }
 
         return result.ReverseEnumerable();
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="Layout"/>.
+/// </summary>
+public static class LayoutExtensions
+{
+    /// <summary>
+    /// Sets the ratio of the layout.
+    /// </summary>
+    /// <param name="layout">The layout.</param>
+    /// <param name="ratio">The ratio.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Layout Ratio(this Layout layout, int ratio)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+
+        layout.Ratio = ratio;
+        return layout;
+    }
+
+    /// <summary>
+    /// Sets the size of the layout.
+    /// </summary>
+    /// <param name="layout">The layout.</param>
+    /// <param name="size">The size.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Layout Size(this Layout layout, int size)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+
+        layout.Size = size;
+        return layout;
+    }
+
+    /// <summary>
+    /// Sets the minimum width of the layout.
+    /// </summary>
+    /// <param name="layout">The layout.</param>
+    /// <param name="size">The size.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static Layout MinimumSize(this Layout layout, int size)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+
+        layout.MinimumSize = size;
+        return layout;
     }
 }

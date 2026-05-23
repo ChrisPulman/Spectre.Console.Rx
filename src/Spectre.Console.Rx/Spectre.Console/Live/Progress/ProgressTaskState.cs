@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -36,7 +33,7 @@ public sealed class ProgressTaskState
                 return default;
             }
 
-            if (value is not T)
+            if (!(value is T))
             {
                 throw new InvalidOperationException("State value is of the wrong type.");
             }
@@ -57,15 +54,12 @@ public sealed class ProgressTaskState
     {
         lock (_lock)
         {
-            if (func is null)
-            {
-                throw new ArgumentNullException(nameof(func));
-            }
+            ArgumentNullException.ThrowIfNull(func);
 
             var old = default(T);
             if (_state.TryGetValue(key, out var value))
             {
-                if (value is not T)
+                if (!(value is T))
                 {
                     throw new InvalidOperationException("State value is of the wrong type.");
                 }

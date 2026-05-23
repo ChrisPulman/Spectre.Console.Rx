@@ -1,14 +1,19 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
-internal sealed class LegacyConsoleBackend(IAnsiConsole console) : IAnsiConsoleBackend
+internal sealed class LegacyConsoleBackend : IAnsiConsoleBackend
 {
-    private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
-    private Style _lastStyle = Style.Plain;
+    private readonly IAnsiConsole _console;
+    private Style _lastStyle;
 
-    public IAnsiConsoleCursor Cursor { get; } = new LegacyConsoleCursor();
+    public IAnsiConsoleCursor Cursor { get; }
+
+    public LegacyConsoleBackend(IAnsiConsole console)
+    {
+        _console = console ?? throw new System.ArgumentNullException(nameof(console));
+        _lastStyle = Style.Plain;
+
+        Cursor = new LegacyConsoleCursor();
+    }
 
     public void Clear(bool home)
     {
@@ -32,13 +37,18 @@ internal sealed class LegacyConsoleBackend(IAnsiConsole console) : IAnsiConsoleB
                 continue;
             }
 
-            if (_lastStyle?.Equals(segment.Style) != true)
+            if (!_lastStyle.Equals(segment.Style))
             {
                 SetStyle(segment.Style);
             }
 
             _console.Profile.Out.Writer.Write(segment.Text.NormalizeNewLines(native: true));
         }
+    }
+
+    public void Write(Action<AnsiWriter> action)
+    {
+        // Do nothing. The backend is not capable of emitting ANSI/VT escape sequences.
     }
 
     private void SetStyle(Style style)

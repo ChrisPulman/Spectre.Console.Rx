@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Json;
 
 internal sealed class JsonParser : IJsonParser
@@ -21,7 +18,10 @@ internal sealed class JsonParser : IJsonParser
         }
     }
 
-    private static JsonSyntax ParseElement(JsonTokenReader reader) => ParseValue(reader);
+    private static JsonSyntax ParseElement(JsonTokenReader reader)
+    {
+        return ParseValue(reader);
+    }
 
     private static List<JsonSyntax> ParseElements(JsonTokenReader reader)
     {
@@ -44,7 +44,12 @@ internal sealed class JsonParser : IJsonParser
 
     private static JsonSyntax ParseValue(JsonTokenReader reader)
     {
-        var current = reader.Peek() ?? throw new InvalidOperationException("Could not parse value (EOF)");
+        var current = reader.Peek();
+        if (current == null)
+        {
+            throw new InvalidOperationException("Could not parse value (EOF)");
+        }
+
         if (current.Type == JsonTokenType.LeftBrace)
         {
             return ParseObject(reader);

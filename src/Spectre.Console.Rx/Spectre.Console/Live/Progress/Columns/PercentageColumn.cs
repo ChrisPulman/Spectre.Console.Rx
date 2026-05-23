@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -22,10 +19,47 @@ public sealed class PercentageColumn : ProgressColumn
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
         var percentage = (int)task.Percentage;
-        var style = percentage == 100 ? CompletedStyle : Style ?? Style.Plain;
+        var style = percentage == 100 ? CompletedStyle : Style;
         return new Text($"{percentage}%", style).RightJustified();
     }
 
     /// <inheritdoc/>
-    public override int? GetColumnWidth(RenderOptions options) => 4;
+    public override int? GetColumnWidth(RenderOptions options)
+    {
+        return 4;
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="PercentageColumn"/>.
+/// </summary>
+public static class PercentageColumnExtensions
+{
+    /// <summary>
+    /// Sets the style for a non-complete task.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <param name="style">The style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static PercentageColumn Style(this PercentageColumn column, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(column);
+
+        column.Style = style;
+        return column;
+    }
+
+    /// <summary>
+    /// Sets the style for a completed task.
+    /// </summary>
+    /// <param name="column">The column.</param>
+    /// <param name="style">The style.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static PercentageColumn CompletedStyle(this PercentageColumn column, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(column);
+
+        column.CompletedStyle = style;
+        return column;
+    }
 }

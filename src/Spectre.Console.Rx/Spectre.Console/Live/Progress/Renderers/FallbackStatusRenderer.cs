@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 internal sealed class FallbackStatusRenderer : ProgressRenderer
@@ -9,9 +6,12 @@ internal sealed class FallbackStatusRenderer : ProgressRenderer
     private IRenderable? _renderable;
     private string? _lastStatus;
 
-    public FallbackStatusRenderer() => _lock = new object();
-
     public override TimeSpan RefreshRate => TimeSpan.FromMilliseconds(100);
+
+    public FallbackStatusRenderer()
+    {
+        _lock = new object();
+    }
 
     public override void Update(ProgressContext context)
     {

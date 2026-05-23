@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx.Rendering;
 
 /// <summary>
@@ -25,5 +22,8 @@ public sealed class RenderHookScope : IDisposable
     }
 
     /// <inheritdoc/>
-    public void Dispose() => _console.Pipeline.Detach(_hook);
+    public void Dispose()
+    {
+        _console.Pipeline.Detach(_hook);
+    }
 }

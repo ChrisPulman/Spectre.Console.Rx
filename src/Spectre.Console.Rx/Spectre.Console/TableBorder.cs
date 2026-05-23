@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -16,12 +13,17 @@ public abstract partial class TableBorder
     /// <summary>
     /// Gets the safe border for this border or <c>null</c> if none exist.
     /// </summary>
-    public virtual TableBorder? SafeBorder { get; }
+    public virtual TableBorder? SafeBorder { get; } = null;
 
     /// <summary>
     /// Gets a value indicating whether the border supports row separators or not.
     /// </summary>
     public virtual bool SupportsRowSeparator { get; } = true;
+
+    /// <summary>
+    /// Gets a value indicating whether or not the border uses cell padding.
+    /// </summary>
+    public virtual bool UsePadding { get; } = true;
 
     /// <summary>
     /// Gets the string representation of a specified table border part.
@@ -39,15 +41,8 @@ public abstract partial class TableBorder
     /// <returns>A string representing the column row.</returns>
     public virtual string GetColumnRow(TablePart part, IReadOnlyList<int> widths, IReadOnlyList<IColumn> columns)
     {
-        if (widths is null)
-        {
-            throw new ArgumentNullException(nameof(widths));
-        }
-
-        if (columns is null)
-        {
-            throw new ArgumentNullException(nameof(columns));
-        }
+        ArgumentNullException.ThrowIfNull(widths);
+        ArgumentNullException.ThrowIfNull(columns);
 
         var (left, center, separator, right) = GetTableParts(part);
 
@@ -75,29 +70,61 @@ public abstract partial class TableBorder
     /// </summary>
     /// <param name="part">The table part.</param>
     /// <returns>The table parts used to render the specific table row.</returns>
-    protected (string Left, string Center, string Separator, string Right) GetTableParts(TablePart part) => part switch
+    protected (string Left, string Center, string Separator, string Right) GetTableParts(TablePart part)
     {
-        // Top part
-        TablePart.Top =>
-            (GetPart(TableBorderPart.HeaderTopLeft), GetPart(TableBorderPart.HeaderTop),
-            GetPart(TableBorderPart.HeaderTopSeparator), GetPart(TableBorderPart.HeaderTopRight)),
+        return part switch
+        {
+            // Top part
+            TablePart.Top =>
+                (GetPart(TableBorderPart.HeaderTopLeft), GetPart(TableBorderPart.HeaderTop),
+                GetPart(TableBorderPart.HeaderTopSeparator), GetPart(TableBorderPart.HeaderTopRight)),
 
-        // Separator between header and cells
-        TablePart.HeaderSeparator =>
-            (GetPart(TableBorderPart.HeaderBottomLeft), GetPart(TableBorderPart.HeaderBottom),
-            GetPart(TableBorderPart.HeaderBottomSeparator), GetPart(TableBorderPart.HeaderBottomRight)),
+            // Separator between header and cells
+            TablePart.HeaderSeparator =>
+                (GetPart(TableBorderPart.HeaderBottomLeft), GetPart(TableBorderPart.HeaderBottom),
+                GetPart(TableBorderPart.HeaderBottomSeparator), GetPart(TableBorderPart.HeaderBottomRight)),
 
-        // Separator between footer and cells
-        TablePart.FooterSeparator =>
-            (GetPart(TableBorderPart.FooterTopLeft), GetPart(TableBorderPart.FooterTop),
-            GetPart(TableBorderPart.FooterTopSeparator), GetPart(TableBorderPart.FooterTopRight)),
+            // Separator between header and cells
+            TablePart.RowSeparator =>
+                (GetPart(TableBorderPart.RowLeft), GetPart(TableBorderPart.RowCenter),
+                    GetPart(TableBorderPart.RowSeparator), GetPart(TableBorderPart.RowRight)),
 
-        // Bottom part
-        TablePart.Bottom =>
-            (GetPart(TableBorderPart.FooterBottomLeft), GetPart(TableBorderPart.FooterBottom),
-            GetPart(TableBorderPart.FooterBottomSeparator), GetPart(TableBorderPart.FooterBottomRight)),
+            // Separator between footer and cells
+            TablePart.FooterSeparator =>
+                (GetPart(TableBorderPart.FooterTopLeft), GetPart(TableBorderPart.FooterTop),
+                GetPart(TableBorderPart.FooterTopSeparator), GetPart(TableBorderPart.FooterTopRight)),
 
-        // Unknown
-        _ => throw new NotSupportedException("Unknown column row part"),
-    };
+            // Bottom part
+            TablePart.Bottom =>
+                (GetPart(TableBorderPart.FooterBottomLeft), GetPart(TableBorderPart.FooterBottom),
+                GetPart(TableBorderPart.FooterBottomSeparator), GetPart(TableBorderPart.FooterBottomRight)),
+
+            // Unknown
+            _ => throw new NotSupportedException("Unknown column row part"),
+        };
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="TableBorder"/>.
+/// </summary>
+public static class TableBorderExtensions
+{
+    /// <summary>
+    /// Gets the safe border for a border.
+    /// </summary>
+    /// <param name="border">The border to get the safe border for.</param>
+    /// <param name="safe">Whether or not to return the safe border.</param>
+    /// <returns>The safe border if one exist, otherwise the original border.</returns>
+    public static TableBorder GetSafeBorder(this TableBorder border, bool safe)
+    {
+        ArgumentNullException.ThrowIfNull(border);
+
+        if (safe && border.SafeBorder != null)
+        {
+            border = border.SafeBorder;
+        }
+
+        return border;
+    }
 }

@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -14,34 +11,6 @@ public sealed class TextPath : IRenderable, IHasJustification
     private readonly string[] _parts;
     private readonly bool _rooted;
     private readonly bool _windows;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TextPath"/> class.
-    /// </summary>
-    /// <param name="path">The path to render.</param>
-    public TextPath(string path)
-    {
-        // Normalize the path
-        path ??= string.Empty;
-        path = path.Replace('\\', '/')
-            .TrimEnd('/').Trim();
-
-        // Get the distinct parts
-        _parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-        // Rooted Unix path?
-        if (path.StartsWith("/", StringComparison.Ordinal))
-        {
-            _rooted = true;
-            _parts = new[] { "/" }.Concat(_parts).ToArray();
-        }
-        else if (_parts.Length > 0 && _parts[0].EndsWith(":", StringComparison.Ordinal))
-        {
-            // Rooted Windows path
-            _rooted = true;
-            _windows = true;
-        }
-    }
 
     /// <summary>
     /// Gets or sets the root style.
@@ -68,14 +37,37 @@ public sealed class TextPath : IRenderable, IHasJustification
     /// </summary>
     public Justify? Justification { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextPath"/> class.
+    /// </summary>
+    /// <param name="path">The path to render.</param>
+    public TextPath(string path)
+    {
+        // Normalize the path
+        path ??= string.Empty;
+        path = path.Replace('\\', '/');
+        path = path.TrimEnd('/').Trim();
+
+        // Get the distinct parts
+        _parts = path.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
+
+        // Rooted Unix path?
+        if (path.StartsWith("/", StringComparison.Ordinal))
+        {
+            _rooted = true;
+            _parts = new[] { "/" }.Concat(_parts).ToArray();
+        }
+        else if (_parts.Length > 0 && _parts[0].EndsWith(":", StringComparison.Ordinal))
+        {
+            // Rooted Windows path
+            _rooted = true;
+            _windows = true;
+        }
+    }
+
     /// <inheritdoc/>
     public Measurement Measure(RenderOptions options, int maxWidth)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
-
         var fitted = Fit(options, maxWidth);
         var separatorCount = fitted.Length - 1;
         var length = fitted.Sum(f => f.Length) + separatorCount;
@@ -88,11 +80,6 @@ public sealed class TextPath : IRenderable, IHasJustification
     /// <inheritdoc/>
     public IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
-
         var rootStyle = RootStyle ?? Style.Plain;
         var separatorStyle = SeparatorStyle ?? Style.Plain;
         var stemStyle = StemStyle ?? Style.Plain;
@@ -107,22 +94,25 @@ public sealed class TextPath : IRenderable, IHasJustification
             {
                 parts.Add(new Segment(item, leafStyle));
             }
-            else if (first && _rooted)
-            {
-                // Root
-                parts.Add(new Segment(item, rootStyle));
-
-                if (_windows)
-                {
-                    // Windows root has a slash
-                    parts.Add(new Segment("/", separatorStyle));
-                }
-            }
             else
             {
-                // Normal path segment
-                parts.Add(new Segment(item, stemStyle));
-                parts.Add(new Segment("/", separatorStyle));
+                if (first && _rooted)
+                {
+                    // Root
+                    parts.Add(new Segment(item, rootStyle));
+
+                    if (_windows)
+                    {
+                        // Windows root has a slash
+                        parts.Add(new Segment("/", separatorStyle));
+                    }
+                }
+                else
+                {
+                    // Normal path segment
+                    parts.Add(new Segment(item, stemStyle));
+                    parts.Add(new Segment("/", separatorStyle));
+                }
             }
         }
 
@@ -195,6 +185,112 @@ public sealed class TextPath : IRenderable, IHasJustification
         var take = Math.Min(last.Length, Math.Max(0, maxWidth - ellipsisLength));
         var start = Math.Max(0, last.Length - take);
 
-        return new[] { string.Concat(ellipsis, last.Substring(start, take)) };
+        return [string.Concat(ellipsis, last.Substring(start, take))];
+    }
+}
+
+/// <summary>
+/// Contains extension methods for <see cref="TextPath"/>.
+/// </summary>
+public static class TextPathExtensions
+{
+    /// <summary>
+    /// Sets the separator style.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="style">The separator style to set.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath SeparatorStyle(this TextPath obj, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.SeparatorStyle = style;
+        return obj;
+    }
+
+    /// <summary>
+    /// Sets the separator color.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="color">The separator color.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath SeparatorColor(this TextPath obj, Color color)
+    {
+        return SeparatorStyle(obj, new Style(foreground: color));
+    }
+
+    /// <summary>
+    /// Sets the root style.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="style">The root style to set.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath RootStyle(this TextPath obj, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.RootStyle = style;
+        return obj;
+    }
+
+    /// <summary>
+    /// Sets the root color.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="color">The root color.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath RootColor(this TextPath obj, Color color)
+    {
+        return RootStyle(obj, new Style(foreground: color));
+    }
+
+    /// <summary>
+    /// Sets the stem style.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="style">The stem style to set.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath StemStyle(this TextPath obj, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.StemStyle = style;
+        return obj;
+    }
+
+    /// <summary>
+    /// Sets the stem color.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="color">The stem color.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath StemColor(this TextPath obj, Color color)
+    {
+        return StemStyle(obj, new Style(foreground: color));
+    }
+
+    /// <summary>
+    /// Sets the leaf style.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="style">The stem leaf to set.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath LeafStyle(this TextPath obj, Style style)
+    {
+        ArgumentNullException.ThrowIfNull(obj);
+
+        obj.LeafStyle = style;
+        return obj;
+    }
+
+    /// <summary>
+    /// Sets the leaf color.
+    /// </summary>
+    /// <param name="obj">The path.</param>
+    /// <param name="color">The leaf color.</param>
+    /// <returns>The same instance so that multiple calls can be chained.</returns>
+    public static TextPath LeafColor(this TextPath obj, Color color)
+    {
+        return LeafStyle(obj, new Style(foreground: color));
     }
 }

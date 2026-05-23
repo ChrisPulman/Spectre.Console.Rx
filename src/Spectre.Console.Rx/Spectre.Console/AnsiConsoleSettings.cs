@@ -1,6 +1,3 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Spectre.Console.Rx;
 
 /// <summary>
@@ -8,11 +5,6 @@ namespace Spectre.Console.Rx;
 /// </summary>
 public sealed class AnsiConsoleSettings
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AnsiConsoleSettings"/> class.
-    /// </summary>
-    public AnsiConsoleSettings() => Enrichment = new ProfileEnrichment();
-
     /// <summary>
     /// Gets or sets a value indicating whether or
     /// not ANSI escape sequences are supported.
@@ -50,4 +42,12 @@ public sealed class AnsiConsoleSettings
     /// If not value is provided the default environment variables will be used.
     /// </summary>
     public Dictionary<string, string>? EnvironmentVariables { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnsiConsoleSettings"/> class.
+    /// </summary>
+    public AnsiConsoleSettings()
+    {
+        Enrichment = new ProfileEnrichment();
+    }
 }
