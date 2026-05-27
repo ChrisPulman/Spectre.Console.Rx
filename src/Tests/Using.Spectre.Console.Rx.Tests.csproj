@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Shouldly" Version="4.3.0" />
     <PackageReference Include="TUnit" Version="1.45.29" />
-    <PackageReference Include="Verify.TUnit" Version="31.17.0" />
+    <PackageReference Include="Verify.TUnit" Version="31.18.0" />
   </ItemGroup>
 
   <ItemGroup>
